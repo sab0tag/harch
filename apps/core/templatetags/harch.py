@@ -33,3 +33,16 @@ def role_label(role):
     from apps.accounts.models import Role
 
     return dict(Role.choices).get(role, role)
+
+
+@register.filter
+def ago(value):
+    """«щойно» for under a minute, otherwise «N хвилин тому»."""
+    from django.utils import timezone
+    from django.utils.timesince import timesince
+
+    if not value:
+        return ""
+    if (timezone.now() - value).total_seconds() < 60:
+        return "щойно"
+    return f"{timesince(value).split(',')[0]} тому"

@@ -135,3 +135,14 @@ def test_chain_visible_in_ui(client, hospital):
     assert "План меню на день" in html
     html = as_user(client, hospital.dietician).get(f"/tasks/{plan.pk}/").content.decode()
     assert "Попередній етап" in html
+
+
+def test_badge_polls_into_itself(client, hospital):
+    """Regression: the badge sits inside the bell button whose hx-target is the dropdown;
+    without its own hx-target the count was swapped into the dropdown and never shown."""
+    html = as_user(client, hospital.chef).get("/").content.decode()
+    assert 'id="notification-badge"' in html and 'hx-target="this"' in html
+
+
+def test_fresh_notification_says_just_now(client, hospital, order):
+    assert "щойно" in as_user(client, hospital.nurses[0]).get("/tasks/notifications/").content.decode()
