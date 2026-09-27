@@ -111,29 +111,34 @@ class Command(BaseCommand):
             self.count("departments", created)
 
     def load_dishes(self):
-        self.new_ingredients = []
-        for d in self.read("dishes.json"):
-            dish, created = Dish.objects.get_or_create(
-                card_no=d["card_no"],
-                defaults=dict(name=d["name"], category=d.get("category", ""), output_g=D(d["output_g"]),
-                              origin=Origin.SEED, verified=False),
-            )
-            self.count("dishes", created)
-            if not created:
-                continue
+        data = self.read("dishes.json")
+        existing = set(Dish.objects.values_list("card_no", flat=True))
+        fresh = [d for d in data if d["card_no"] not in existing]
+        for d in data:
+            self.count("dishes", d["card_no"] not in existing)
+        bulk_create_with_history(
+            [Dish(card_no=d["card_no"], name=d["name"], category=d.get("category", ""),
+                  output_g=D(d["output_g"]), origin=Origin.SEED, verified=False) for d in fresh],
+            Dish, batch_size=500,
+        )
+        by_card = {d.card_no: d for d in Dish.objects.filter(card_no__in=[d["card_no"] for d in fresh])}
+        links, ingredients = [], []
+        for d in fresh:
+            dish = by_card[d["card_no"]]
             unknown = [c for c in d["diets"] if c not in self.diets]
             if unknown:
                 self.warnings.append(f"Dish №{d['card_no']}: unknown diets {unknown}")
-            dish.diets.set([self.diets[c] for c in d["diets"] if c in self.diets])
+            links += [Dish.diets.through(dish=dish, diet=self.diets[c]) for c in d["diets"] if c in self.diets]
             for order, ing in enumerate(d["ingredients"]):
                 product = self.products.get(ing["product"])
                 if product is None:
                     raise CommandError(f"Dish №{d['card_no']}: unknown product {ing['product']!r}")
-                self.new_ingredients.append(DishIngredient(
+                ingredients.append(DishIngredient(
                     dish=dish, product=product, brutto_g=D(ing["brutto_g"]),
                     netto_g=D(ing["netto_g"]), sort_order=order,
                 ))
-        bulk_create_with_history(self.new_ingredients, DishIngredient, batch_size=500)
+        Dish.diets.through.objects.bulk_create(links, batch_size=1000)
+        bulk_create_with_history(ingredients, DishIngredient, batch_size=1000)
         self.dishes = {d.card_no: d for d in Dish.objects.prefetch_related("diets")}
 
     def load_menus(self):
