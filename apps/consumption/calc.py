@@ -13,6 +13,7 @@ from typing import Iterable
 from django.db.models import Prefetch
 
 from apps.catalog.models import DishIngredient
+from apps.core.text import uk_sort_key
 from apps.menus.models import Menu, MenuItem
 
 
@@ -120,4 +121,4 @@ def totals_by_product(lines: Iterable[Line]) -> list[ProductTotal]:
         row[1] += line.brutto_total
         row[2] += line.netto_total
     totals = [ProductTotal(pid, name, b, n) for pid, (name, b, n) in acc.items()]
-    return sorted(totals, key=lambda t: t.product_name)
+    return sorted(totals, key=lambda t: uk_sort_key(t.product_name))
