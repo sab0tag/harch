@@ -7,6 +7,7 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("s/<slug:slug>/", views.section, name="section"),
     path("healthz/", views.healthz, name="healthz"),
+    path("healthz/full/", views.healthz_full, name="healthz_full"),
     path(
         "login/",
         auth_views.LoginView.as_view(template_name="registration/login.html", redirect_authenticated_user=True),
