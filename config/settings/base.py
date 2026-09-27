@@ -25,10 +25,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "simple_history",
     "apps.core",
     "apps.accounts",
     "apps.orgstructure",
+    "apps.catalog",
+    "apps.menus",
+    "apps.consumption",
 ]
 
 MIDDLEWARE = [

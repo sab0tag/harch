@@ -3,10 +3,7 @@ from simple_history.models import HistoricalRecords
 
 
 class Department(models.Model):
-    """Відділення лікарні.
-
-    `default_diet` (FK на catalog.Diet) добавляется в Sprint 1 вместе с моделью Diet.
-    """
+    """Відділення лікарні."""
 
     class PatientCategory(models.TextChoices):
         ADULTS = "adults", "Дорослі"
@@ -19,6 +16,14 @@ class Department(models.Model):
         max_length=20,
         choices=PatientCategory.choices,
         default=PatientCategory.ADULTS,
+    )
+    default_diet = models.ForeignKey(
+        "catalog.Diet",
+        verbose_name="Дієта за замовчуванням",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="departments",
     )
     beds = models.PositiveIntegerField("Ліжок", null=True, blank=True)
     sort_order = models.PositiveIntegerField("Порядок", default=0)
