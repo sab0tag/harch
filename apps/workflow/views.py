@@ -155,6 +155,8 @@ class NotificationOpenView(RoleRequiredMixin, View):
             note.save(update_fields=["read_at"])
         if note.task_id:
             return redirect("workflow:task_detail", pk=note.task_id)
+        if note.url and url_has_allowed_host_and_scheme(note.url, allowed_hosts={request.get_host()}):
+            return redirect(note.url)
         return redirect("workflow:my_tasks")
 
 
