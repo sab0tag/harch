@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Відділення{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0 me-auto">Відділення</h1>
+  {% if user.role == 'admin' %}<a href="/admin/orgstructure/department/" class="btn btn-outline-secondary"><i class="bi bi-gear me-1"></i>Керувати</a>{% endif %}
+</div>
+<div class="card"><div class="table-responsive">
+  <table class="table align-middle mb-0">
+    <thead class="table-light"><tr><th>Відділення</th><th>Категорія пацієнтів</th><th>Дієта за замовчуванням</th><th class="text-end">Ліжок</th><th></th></tr></thead>
+    <tbody>
+    {% for d in departments %}
+      <tr>
+        <td class="fw-medium">{{ d.name }}</td>
+        <td>{{ d.get_patient_category_display }}</td>
+        <td>{% if d.default_diet %}<span class="badge rounded-pill text-bg-light border">{{ d.default_diet.code }}</span> <span class="small text-secondary">{{ d.default_diet.name }}</span>{% else %}<span class="text-danger small">не вказана</span>{% endif %}</td>
+        <td class="text-end">{{ d.beds|default:"—" }}</td>
+        <td>{% if not d.is_active %}<span class="badge text-bg-secondary">неактивне</span>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="text-center text-secondary py-4">Відділень ще немає</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}

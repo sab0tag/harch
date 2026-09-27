@@ -1,0 +1,52 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Меню{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Меню</h1>
+<p class="text-secondary mb-3">Кожне меню — раціон на 1 пацієнта на добу для однієї дієти. Колір показує відповідність нормі дієти:
+  <span class="text-success">у нормі</span> · <span class="text-warning">до 10% поза нормою</span> · <span class="text-danger">більше 10%</span>.</p>
+
+<div class="row g-2 mb-3">
+  <div class="col-4 col-md-2"><a href="?{% if filters.diet %}diet={{ filters.diet|urlencode }}&{% endif %}status=ok" class="card card-body py-2 text-decoration-none"><div class="small text-secondary">У нормі</div><div class="h4 mb-0 text-success">{{ summary.ok }}</div></a></div>
+  <div class="col-4 col-md-2"><a href="?{% if filters.diet %}diet={{ filters.diet|urlencode }}&{% endif %}status=warn" class="card card-body py-2 text-decoration-none"><div class="small text-secondary">Близько</div><div class="h4 mb-0 text-warning">{{ summary.warn }}</div></a></div>
+  <div class="col-4 col-md-2"><a href="?{% if filters.diet %}diet={{ filters.diet|urlencode }}&{% endif %}status=bad" class="card card-body py-2 text-decoration-none"><div class="small text-secondary">Поза нормою</div><div class="h4 mb-0 text-danger">{{ summary.bad }}</div></a></div>
+</div>
+
+<form method="get" class="card card-body mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-6 col-md-2"><label class="form-label small">№ меню</label><input type="search" name="q" value="{{ filters.q }}" inputmode="numeric" class="form-control"></div>
+    <div class="col-6 col-md-3"><label class="form-label small">Дієта</label>
+      <select name="diet" class="form-select"><option value="">Усі</option>
+        {% for d in diets %}<option value="{{ d.code }}"{% if d.code == filters.diet %} selected{% endif %}>{{ d.code }} — {{ d.name }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-3"><label class="form-label small">Калорійність</label>
+      <select name="status" class="form-select"><option value="">Усі</option>
+        <option value="ok"{% if filters.status == 'ok' %} selected{% endif %}>У нормі</option>
+        <option value="warn"{% if filters.status == 'warn' %} selected{% endif %}>Близько до норми</option>
+        <option value="bad"{% if filters.status == 'bad' %} selected{% endif %}>Поза нормою</option></select></div>
+    <div class="col-6 col-md-2"><label class="form-label small">Стан</label>
+      <select name="state" class="form-select"><option value="">Усі</option>
+        <option value="unverified"{% if filters.state == 'unverified' %} selected{% endif %}>Не перевірені</option></select></div>
+    <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-secondary">Показати</button></div>
+  </div>
+</form>
+
+<div class="card"><div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead class="table-light"><tr><th class="text-end">№</th><th>Дієта</th><th class="text-end">Ккал</th>
+      <th class="text-end">Білки</th><th class="text-end">Жири</th><th class="text-end">Вуглеводи</th><th></th></tr></thead>
+    <tbody>
+    {% for m in page %}
+      <tr>
+        <td class="text-end"><a href="{% url 'menus:detail' m.number %}" class="fw-medium text-decoration-none">№{{ m.number }}</a></td>
+        <td><span class="badge rounded-pill text-bg-light border">{{ m.diet.code }}</span></td>
+        <td class="text-end">{% include "menus/_norm_cell.html" with r=m.norms.kcal %}</td>
+        <td class="text-end">{% include "menus/_norm_cell.html" with r=m.norms.protein %}</td>
+        <td class="text-end">{% include "menus/_norm_cell.html" with r=m.norms.fat %}</td>
+        <td class="text-end">{% include "menus/_norm_cell.html" with r=m.norms.carbs %}</td>
+        <td>{% include "catalog/_verified_badge.html" with obj=m %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="7" class="text-center text-secondary py-4">Нічого не знайдено</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% include "partials/pagination.html" %}
+{% endblock %}

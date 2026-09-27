@@ -41,3 +41,7 @@ body { background: #f4f6f5; }
 .badge-status-submitted   { background: #ffc107; color: #212529; }
 .badge-status-approved    { background: #198754; }
 .badge-status-rejected    { background: #dc3545; }
+
+/* Bootstrap's warning yellow is unreadable as text on white — darker amber for text */
+.text-warning { color: #9a6700 !important; }
+.badge-norm { white-space: nowrap; }

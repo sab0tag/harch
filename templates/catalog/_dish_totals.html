@@ -1,0 +1,11 @@
+{% load harch %}
+<tfoot id="dish-totals" class="table-group-divider">
+  <tr class="fw-semibold">
+    <td colspan="4">Разом на порцію</td>
+    <td class="text-end">{{ totals.protein|num }}</td>
+    <td class="text-end">{{ totals.fat|num }}</td>
+    <td class="text-end">{{ totals.carbs|num }}</td>
+    <td class="text-end">{{ totals.kcal|num }}</td>
+    {% if can_edit %}<td></td>{% endif %}
+  </tr>
+</tfoot>

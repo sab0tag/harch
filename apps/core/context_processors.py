@@ -11,8 +11,8 @@ def site(request):
 def _href(item):
     if item.url_name:
         return reverse(item.url_name)
-    if item.slug:
-        return reverse("section", args=[item.slug])
+    if item.is_placeholder:
+        return reverse("section", args=[item.key])
     return item.url
 
 

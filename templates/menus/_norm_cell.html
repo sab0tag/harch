@@ -1,0 +1,1 @@
+{% load harch %}<span class="text-{{ r.status|status_color }}{% if r.status == 'bad' %} fw-semibold{% endif %}"{% if r.low is not None %} title="Норма {{ r.low|num:0 }}–{{ r.high|num:0 }}"{% endif %}>{% if r.status == 'bad' %}<i class="bi bi-exclamation-circle me-1"></i>{% elif r.status == 'warn' %}<i class="bi bi-dash-circle me-1"></i>{% endif %}{{ r.value|num:0 }}</span>
