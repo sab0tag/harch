@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8">
+<title>Інструкція — {{ role_label }}</title>
+<style>
+  @page { size: A4; margin: 14mm 16mm 14mm; }
+  body { font-family: "DejaVu Sans", sans-serif; font-size: 10pt; line-height: 1.4; color: #111; }
+  .top { color: #555; font-size: 8.5pt; }
+  h1 { font-size: 15pt; margin: 2mm 0 1mm; }
+  h2 { font-size: 11pt; margin: 0 0 4mm; color: #1f5f3f; }
+  h3 { font-size: 10.5pt; margin: 4mm 0 1.5mm; border-bottom: 0.4pt solid #bbb; padding-bottom: 0.8mm; }
+  ol, ul { margin: 0 0 1mm; padding-left: 6mm; }
+  li { margin-bottom: 1.2mm; }
+  p { margin: 0 0 2mm; }
+  .lead-in { font-size: 10.5pt; }
+  .red { color: #b3261e; font-weight: bold; }
+  .note { margin-top: 3mm; padding: 2mm 3mm; background: #f3f5f4; border-left: 1mm solid #1f5f3f; }
+  code { font-size: 9pt; }
+</style></head>
+<body>
+<div class="top">{{ hospital }} · Харчоблок</div>
+<h1>Що я роблю щодня в системі</h1>
+<h2>{{ role_label }}</h2>
+{% include content %}
+</body></html>

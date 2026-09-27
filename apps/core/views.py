@@ -1,7 +1,11 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.template.loader import render_to_string
+
+from apps.accounts.models import Role
 
 from . import health
 from .navigation import PLACEHOLDERS
@@ -38,3 +42,32 @@ def section(request, slug):
     if not request.user.has_role(*item.roles):
         raise PermissionDenied
     return render(request, "core/placeholder.html", {"item": item})
+
+
+def _help_context(role):
+    if role not in Role.values:
+        raise Http404
+    return {
+        "role": role,
+        "role_label": Role(role).label,
+        "roles": Role.choices,
+        "hospital": settings.HOSPITAL_NAME,
+        "order_deadline": settings.ORDER_DEADLINE,
+        "content": f"help/roles/{role}.html",
+    }
+
+
+@login_required
+def help_page(request, role=None):
+    """S5-04: «що я роблю щодня в системі». Own role by default; every role's page is readable by all."""
+    return render(request, "help/index.html", _help_context(role or request.user.role))
+
+
+@login_required
+def help_pdf(request, role):
+    from weasyprint import HTML
+
+    html = render_to_string("help/print.html", _help_context(role), request=request)
+    response = HttpResponse(HTML(string=html).write_pdf(), content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="instrukciya_{role}.pdf"'
+    return response
