@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Пропозиція продуктів{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:product_list' %}">Продукти</a></li><li class="breadcrumb-item active">Пропозиція ШІ</li></ol></nav>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><h1 class="h3 mb-0 me-auto">Пропозиція продуктів</h1>
+  <span class="badge text-bg-info"><i class="bi bi-stars"></i> Оцінка ШІ · {{ model }}</span></div>
+<p class="text-secondary">На 100 г їстівної частини. Відмітьте, що додати; значення можна виправити. Рядки з <span class="text-danger">червоними ккал</span> не сходяться з БЖУ — перевірте особливо уважно.</p>
+{% for e in errors %}<div class="alert alert-danger py-2 mb-2">{{ e }}</div>{% endfor %}
+<form method="post">{% csrf_token %}
+<div class="card"><div class="table-responsive"><table class="table table-sm align-middle mb-0">
+  <thead><tr><th></th><th>Назва</th><th class="d-none d-md-table-cell">Категорія</th><th class="text-end">Б</th><th class="text-end">Ж</th><th class="text-end">В</th><th class="text-end">Ккал</th><th class="d-none d-lg-table-cell">Примітка</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr{% if r.exists %} class="table-secondary"{% endif %}>
+      <td><input class="form-check-input" type="checkbox" name="take_{{ forloop.counter0 }}" aria-label="Додати {{ r.name }}"{% if not r.exists and draft.status == 'ready' %} checked{% endif %}{% if r.exists %} disabled{% endif %}></td>
+      <td style="min-width: 12rem"><input name="name_{{ forloop.counter0 }}" value="{{ r.name }}" class="form-control form-control-sm" aria-label="Назва">
+        {% if r.exists %}<div class="small text-secondary">вже є: «{{ r.exists }}»</div>{% endif %}
+        <div class="small text-secondary">довіра: {% if r.confidence == 'high' %}висока{% elif r.confidence == 'medium' %}середня{% else %}низька{% endif %}{% if r.waste_pct is not None %} · відходи ≈{{ r.waste_pct|num }}%{% endif %}</div></td>
+      <td class="d-none d-md-table-cell"><select name="category_{{ forloop.counter0 }}" class="form-select form-select-sm" aria-label="Категорія"><option value="">—</option>{% for c in categories %}<option{% if c.name == r.category %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></td>
+      {% for f in "protein fat carbs kcal"|split %}<td><input name="{{ f }}_{{ forloop.parentloop.counter0 }}" value="{{ r|get:f }}" inputmode="decimal" class="form-control form-control-sm text-end{% if f == 'kcal' and r.kcal_mismatch %} border-danger text-danger{% endif %}" style="width: 4.8rem" aria-label="{{ f }}"></td>{% endfor %}
+      <td class="d-none d-lg-table-cell small">{{ r.note }}</td>
+    </tr>
+  {% endfor %}</tbody>
+</table></div>
+{% if draft.status == 'ready' %}
+<div class="card-body border-top d-flex flex-wrap gap-2">
+  <button name="action" value="create" class="btn btn-success">Додати позначені</button>
+  <button name="action" value="discard" class="btn btn-link text-danger">Відхилити все</button>
+</div>{% else %}<div class="card-body border-top small text-secondary">{{ draft.get_status_display }}.</div>{% endif %}
+</div>
+</form>
+{% endblock %}

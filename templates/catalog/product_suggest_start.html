@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Нові продукти з ШІ{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:product_list' %}">Продукти</a></li><li class="breadcrumb-item active">Нові продукти з ШІ</li></ol></nav>
+<h1 class="h3">Нові продукти з ШІ</h1>
+<div class="alert alert-warning" style="max-width: 760px">Значення БЖУ і ккал ШІ дає з типових довідкових таблиць «з пам'яті». Це <strong>оцінка</strong>:
+  продукти створюються з позначкою «Оцінка ШІ» і «Не перевірено», і нічна перевірка нагадуватиме про них, доки дієтсестра не звірить їх із довідником хімічного складу.</div>
+<form method="post" class="card card-body" style="max-width: 760px">{% csrf_token %}
+  <input type="hidden" name="back" value="{{ back }}">
+  <label class="form-label" for="names">Назви продуктів — по одній у рядку (до 15)</label>
+  <textarea id="names" name="names" rows="8" class="form-control" placeholder="Сир кисломолочний 9%&#10;Судак свіжомороженний&#10;Броколі">{{ names }}</textarea>
+  <div class="mt-3"><button class="btn btn-primary" onclick="this.disabled=true;this.form.submit();this.innerHTML='Запитую ШІ… (10–30 с)'"><i class="bi bi-stars me-1"></i>Запропонувати значення</button></div>
+</form>
+{% endblock %}

@@ -52,7 +52,7 @@ class IngredientForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ["name", "category", "unit", "protein", "fat", "carbs", "kcal", "price_per_kg", "is_active", "verified"]
+        fields = ["name", "category", "unit", "protein", "fat", "carbs", "kcal", "source", "price_per_kg", "is_active", "verified"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

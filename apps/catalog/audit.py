@@ -47,7 +47,9 @@ class Found:
 
 def normalize(name: str) -> str:
     name = name.lower().replace("ё", "е").replace("’", "'").replace("ʼ", "'")
+    name = re.sub(r"(\d),(\d)", r"\1.\2", name)       # 2,5% = 2.5%
     name = re.sub(r"[^\w%.' ]+", " ", name)
+    name = re.sub(r"\s*%", "%", name)                    # "2.5 %" = "2.5%"
     return re.sub(r"\s+", " ", name).strip()
 
 

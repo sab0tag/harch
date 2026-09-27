@@ -87,3 +87,8 @@ def jsonify(value):
     import json
 
     return json.dumps(value, ensure_ascii=False)
+
+
+@register.filter
+def split(value, sep=" "):
+    return str(value).split(sep)
