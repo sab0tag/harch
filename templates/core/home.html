@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Головна{% endblock %}
+{% block content %}
+  <h1 class="h3 mb-1">Вітаємо, {{ user.first_name|default:user.username }}!</h1>
+  <p class="text-secondary mb-4">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</p>
+
+  <div class="card">
+    <div class="card-body">
+      <h2 class="h5">Робочий стіл ролі</h2>
+      <p class="mb-0 text-secondary">
+        Тут з'являться ваші задачі на сьогодні та стан замовлень. Розділи в меню ліворуч
+        відкриваються по мірі готовності системи.
+      </p>
+    </div>
+  </div>
+{% endblock %}

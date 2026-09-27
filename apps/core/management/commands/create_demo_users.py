@@ -1,0 +1,35 @@
+"""Dev-only: one user per role so the UI can be clicked through. Refuses to run with DEBUG=False."""
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+
+from apps.accounts.models import Role, User
+from apps.orgstructure.models import Department
+
+PASSWORD = "demo12345"
+DEMO = [
+    ("admin", "Адмін", "Системний", Role.ADMIN),
+    ("dietician", "Олена", "Дієтсестра", Role.DIETICIAN),
+    ("chef", "Галина", "Шеф", Role.CHEF),
+    ("nurse", "Марія", "Медсестра", Role.DEPT_NURSE),
+    ("accountant", "Ірина", "Бухгалтер", Role.ACCOUNTANT),
+]
+
+
+class Command(BaseCommand):
+    help = f"Create demo users (one per role), password '{PASSWORD}'. DEBUG only."
+
+    def handle(self, *args, **options):
+        if not settings.DEBUG:
+            raise CommandError("create_demo_users is disabled when DEBUG=False")
+        dept, _ = Department.objects.get_or_create(name="Терапевтичне")
+        for username, first, last, role in DEMO:
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={"first_name": first, "last_name": last, "role": role,
+                          "department": dept if role == Role.DEPT_NURSE else None,
+                          "is_staff": role == Role.ADMIN, "is_superuser": role == Role.ADMIN},
+            )
+            if created:
+                user.set_password(PASSWORD)
+                user.save()
+            self.stdout.write(f"{'created' if created else 'exists '}  {username:<11} {user.get_role_display()}")

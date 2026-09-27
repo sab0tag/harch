@@ -1,0 +1,31 @@
+<header class="harch-topbar sticky-top">
+  <div class="d-flex align-items-center gap-2 px-3 py-2">
+    <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas"
+            data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Відкрити меню">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="me-auto">
+      <div class="fw-semibold text-truncate">{{ HOSPITAL_NAME }}</div>
+      <div class="small text-secondary">Сьогодні: {% now "l, j E Y" %}</div>
+    </div>
+    <a href="{% url 'section' 'tasks' %}" class="btn btn-light position-relative" aria-label="Сповіщення">
+      <i class="bi bi-bell"></i>
+      {# Counter wired to notifications in Sprint 2 (S2-03) #}
+    </a>
+    <div class="dropdown">
+      <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-person-circle"></i>
+        <span class="d-none d-sm-inline text-truncate" style="max-width: 14rem">{{ user }}</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><span class="dropdown-item-text small text-secondary">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</span></li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Вийти</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>

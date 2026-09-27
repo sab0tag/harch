@@ -1,0 +1,43 @@
+:root {
+  --harch-sidebar-w: 248px;
+  --harch-accent: #2f6f4f;
+}
+html { font-size: 15.5px; }
+body { background: #f4f6f5; }
+
+/* offcanvas-lg forces a transparent background at >=lg; override it */
+.harch-sidebar { background-color: #1f3a2d !important; color: #dfe9e3; }
+.harch-sidebar .brand { color: #fff; font-weight: 600; letter-spacing: .2px; }
+.harch-sidebar .nav-heading {
+  font-size: .72rem; text-transform: uppercase; letter-spacing: .08em;
+  color: #9fb8aa; padding: 1rem 1rem .35rem;
+}
+.harch-sidebar .nav-link {
+  color: #dfe9e3; border-radius: .5rem; padding: .55rem .85rem;
+  display: flex; align-items: center; gap: .7rem;
+}
+.harch-sidebar .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
+.harch-sidebar .nav-link.active { background: var(--harch-accent); color: #fff; }
+.harch-sidebar .nav-link .bi { font-size: 1.1rem; }
+
+@media (min-width: 992px) {
+  .harch-sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; width: var(--harch-sidebar-w);
+    overflow-y: auto;
+  }
+  .harch-main { margin-left: var(--harch-sidebar-w); }
+}
+
+.harch-topbar { background: #fff; border-bottom: 1px solid #e3e8e5; }
+.harch-content { padding: 1.5rem; }
+@media (max-width: 575.98px) { .harch-content { padding: 1rem; } }
+
+.btn { padding: .55rem 1rem; }
+.card { border: 1px solid #e3e8e5; border-radius: .75rem; }
+
+/* Task status badges — single palette for the whole app (docs/04_ui.md) */
+.badge-status-pending     { background: #6c757d; }
+.badge-status-in_progress { background: #0d6efd; }
+.badge-status-submitted   { background: #ffc107; color: #212529; }
+.badge-status-approved    { background: #198754; }
+.badge-status-rejected    { background: #dc3545; }

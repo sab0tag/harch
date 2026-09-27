@@ -17,6 +17,7 @@
 ## Sprint 1 — Справочники и seed
 
 **S1-01 Модели catalog/orgstructure/menus** по `02_data_model.md`, simple-history, admin-регистрация.
+  `Department` уже создан в S0-02 (нужен для FK пользователя) — здесь добавить `default_diet` (FK на `Diet`).
 **S1-02 `load_seed`** — management command, идемпотентная (повторный запуск не дублирует), грузит `seed/*.json` в порядке diets → products → departments → dishes → menus → substitutions/seasonal. Все записи `verified=False`.
 - ✅ после загрузки: 8 дієт, 72 продукти, 15 відділень, 130 карток, 250 меню; каждое меню проходит валидацию «страва допустима для дієти меню» (если нет — лог предупреждения, не падение).
 

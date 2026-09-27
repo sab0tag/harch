@@ -1,5 +1,10 @@
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import connection
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
+from django.shortcuts import render
+
+from .navigation import PLACEHOLDERS
 
 
 def healthz(request):
@@ -11,3 +16,19 @@ def healthz(request):
         db = "error"
     status = 200 if db == "ok" else 503
     return JsonResponse({"status": "ok" if status == 200 else "degraded", "db": db}, status=status)
+
+
+@login_required
+def home(request):
+    return render(request, "core/home.html")
+
+
+@login_required
+def section(request, slug):
+    """Placeholder for screens planned in later sprints. Enforces the nav item's roles."""
+    item = PLACEHOLDERS.get(slug)
+    if item is None:
+        raise Http404
+    if not request.user.has_role(*item.roles):
+        raise PermissionDenied
+    return render(request, "core/placeholder.html", {"item": item})

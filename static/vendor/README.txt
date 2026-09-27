@@ -1,0 +1,5 @@
+Vendored static assets (no Node build step):
+- bootstrap 5.3.8 (MIT)
+- bootstrap-icons 1.11.4 (MIT)
+- htmx.org 2.0.11 (0BSD)
+Update by replacing files; keep versions in this note.

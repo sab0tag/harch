@@ -1,0 +1,24 @@
+<aside class="harch-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+  <div class="d-flex align-items-center justify-content-between px-3 py-3">
+    <a href="{% url 'home' %}" class="brand text-decoration-none d-flex align-items-center gap-2" id="sidebarLabel">
+      <i class="bi bi-egg-fried fs-4"></i><span>Харчоблок</span>
+    </a>
+    <button type="button" class="btn-close btn-close-white d-lg-none" data-bs-dismiss="offcanvas"
+            data-bs-target="#sidebar" aria-label="Закрити меню"></button>
+  </div>
+  <nav class="px-2 pb-4" aria-label="Головне меню">
+    {% for group in nav_groups %}
+      {% if group.label %}<div class="nav-heading">{{ group.label }}</div>{% endif %}
+      <ul class="nav flex-column gap-1">
+        {% for link in group.links %}
+          <li class="nav-item">
+            <a class="nav-link{% if link.active %} active{% endif %}" href="{{ link.href }}"
+               {% if link.active %}aria-current="page"{% endif %} data-nav="{{ link.item.label }}">
+              <i class="bi bi-{{ link.item.icon }}"></i><span>{{ link.item.label }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </nav>
+</aside>
