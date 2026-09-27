@@ -1,0 +1,16 @@
+{% load harch %}<div class="d-flex align-items-center px-3 py-2 border-bottom">
+  <span class="fw-semibold me-auto">Сповіщення</span>
+  {% if unread %}<button class="btn btn-sm btn-link p-0" hx-post="{% url 'workflow:notification_read_all' %}" hx-target="#notification-menu">Прочитати всі</button>{% endif %}
+</div>
+<div class="list-group list-group-flush" style="max-height: 60vh; overflow-y: auto">
+  {% for n in items %}
+    <a href="{% url 'workflow:notification_open' n.pk %}" class="list-group-item list-group-item-action{% if not n.read_at %} fw-semibold{% endif %}">
+      <div class="d-flex gap-2"><span class="small">{% if not n.read_at %}<i class="bi bi-circle-fill text-primary me-1" style="font-size:.5rem;vertical-align:middle"></i>{% endif %}{{ n.title }}</span></div>
+      {% if n.body %}<div class="small text-secondary fw-normal text-truncate">{{ n.body }}</div>{% endif %}
+      <div class="small text-secondary fw-normal">{{ n.created_at|ago }}</div>
+    </a>
+  {% empty %}
+    <div class="p-3 text-secondary small text-center">Сповіщень немає</div>
+  {% endfor %}
+</div>
+<a href="{% url 'workflow:my_tasks' %}" class="d-block text-center small py-2 border-top">Усі задачі</a>

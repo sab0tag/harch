@@ -1,0 +1,1 @@
+<span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% if task.status == 'pending' or task.status == 'in_progress' or task.status == 'rejected' %}{% if task.deadline and task.deadline < now %} <span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> Прострочено</span>{% endif %}{% endif %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Журнал подій{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Журнал подій</h1>
+<form method="get" class="mb-3" style="max-width: 320px">
+  <select name="kind" class="form-select" onchange="this.form.submit()">
+    <option value="">Усі події</option>
+    {% for value, label in kinds %}<option value="{{ value }}"{% if value == kind %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+</form>
+<div class="card"><div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Час</th><th>Подія</th><th>Задача</th><th>Хто</th><th>Коментар</th></tr></thead>
+    <tbody>
+    {% for e in page %}
+      <tr>
+        <td class="text-nowrap small">{{ e.created_at|date:"d.m.Y H:i" }}</td>
+        <td>{{ e.get_kind_display }}</td>
+        <td><a href="{% url 'workflow:task_detail' e.task_id %}">{{ e.task }}</a></td>
+        <td class="small">{{ e.actor|default:"система" }}</td>
+        <td class="small text-secondary">{{ e.comment|truncatechars:80 }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="text-center text-secondary py-4">Подій ще немає</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% include "partials/pagination.html" %}
+{% endblock %}

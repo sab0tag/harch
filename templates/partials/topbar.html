@@ -4,14 +4,21 @@
             data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Відкрити меню">
       <i class="bi bi-list"></i>
     </button>
-    <div class="me-auto">
+    <div class="me-auto" style="min-width: 0">
       <div class="fw-semibold text-truncate">{{ HOSPITAL_NAME }}</div>
-      <div class="small text-secondary">Сьогодні: {% now "l, j E Y" %}</div>
+      <div class="small text-secondary text-truncate">Сьогодні: {% now "l, j E Y" %}</div>
     </div>
-    <a href="{% url 'section' 'tasks' %}" class="btn btn-light position-relative" aria-label="Сповіщення">
-      <i class="bi bi-bell"></i>
-      {# Counter wired to notifications in Sprint 2 (S2-03) #}
-    </a>
+    <div class="dropdown">
+      <button class="btn btn-light position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+              aria-label="Сповіщення" data-bs-auto-close="outside"
+              hx-get="{% url 'workflow:notification_list' %}" hx-target="#notification-menu" hx-trigger="click">
+        <i class="bi bi-bell"></i>
+        <span id="notification-badge" hx-get="{% url 'workflow:notification_count' %}" hx-trigger="load, every 60s" hx-target="this" hx-swap="innerHTML"></span>
+      </button>
+      <div class="dropdown-menu dropdown-menu-end p-0 shadow" id="notification-menu" style="width: min(24rem, 92vw)">
+        <div class="p-3 text-secondary small">Завантаження…</div>
+      </div>
+    </div>
     <div class="dropdown">
       <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle"></i>

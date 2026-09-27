@@ -4,13 +4,19 @@
   <h1 class="h3 mb-1">Вітаємо, {{ user.first_name|default:user.username }}!</h1>
   <p class="text-secondary mb-4">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</p>
 
-  <div class="card">
-    <div class="card-body">
-      <h2 class="h5">Робочий стіл ролі</h2>
-      <p class="mb-0 text-secondary">
-        Тут з'являться ваші задачі на сьогодні та стан замовлень. Розділи в меню ліворуч
-        відкриваються по мірі готовності системи.
-      </p>
+  <div class="row g-3">
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'workflow:my_tasks' %}?tab=todo" class="card card-body text-decoration-none h-100">
+        <div class="text-secondary">Мені виконати</div>
+        <div class="display-6 fw-semibold">{{ todo_count }}</div>
+        {% if overdue_count %}<div class="text-danger small"><i class="bi bi-alarm"></i> прострочено: {{ overdue_count }}</div>{% endif %}
+      </a>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'workflow:my_tasks' %}?tab=review" class="card card-body text-decoration-none h-100">
+        <div class="text-secondary">Мені перевірити</div>
+        <div class="display-6 fw-semibold">{{ review_count }}</div>
+      </a>
     </div>
   </div>
 {% endblock %}
