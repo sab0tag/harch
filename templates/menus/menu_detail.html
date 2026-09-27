@@ -32,7 +32,8 @@
 <div class="card mb-3">
   <div class="card-header bg-white d-flex"><span class="fw-semibold me-auto">{{ slot.label }}</span>
     <span class="small text-secondary">{{ slot.total.kcal|num:0 }} ккал</span></div>
-  <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+  <div class="table-responsive"><table class="table table-sm align-middle mb-0" style="table-layout: fixed; min-width: 560px">
+    <colgroup><col><col style="width: 6.5rem"><col style="width: 4.5rem"><col style="width: 4.5rem"><col style="width: 4.5rem"><col style="width: 5.5rem"></colgroup>
     <thead class="small text-secondary"><tr><th class="ps-3">Страва</th><th class="text-end">Вихід, г</th><th class="text-end">Б</th><th class="text-end">Ж</th><th class="text-end">В</th><th class="text-end pe-3">Ккал</th></tr></thead>
     <tbody>
     {% for row in slot.rows %}
