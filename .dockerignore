@@ -1,0 +1,15 @@
+# Keep secrets and local state out of the image (COPY . . in Dockerfile).
+.env
+.env.*
+!.env.example
+!.env.prod.example
+.git/
+.venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+staticfiles/
+media/
+backups/
+*.sqlite3

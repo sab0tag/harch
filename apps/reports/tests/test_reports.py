@@ -1,4 +1,5 @@
-"""S4-04: printable menu-rozkladka, accumulative statement, and the full day end to end."""
+"""S4-04/S4-05: printable menu-rozkladka, typical forms З-4а / З-13, and the full day end to end."""
+import calendar
 from datetime import timedelta
 from decimal import Decimal
 from io import BytesIO
@@ -48,9 +49,14 @@ def test_accumulative_statement_from_approved_write_offs(client, write_off_day):
     ws = load_workbook(BytesIO(r.content)).active
     wo = WriteOff.objects.get(plan=w.plan)
     line = wo.lines.order_by("product_name").first()
-    row = next(i for i in range(6, ws.max_row + 1) if ws.cell(row=i, column=1).value == line.product_name)
-    assert ws.cell(row=row, column=1 + DAY.day).value == pytest.approx(float(line.quantity_g / 1000), abs=0.001)
-    assert ws.cell(row=row, column=1 + DAY.day + 1).value is None           # next day has no write-off
+    assert ws["A1"].value and any(c.value == "Типова форма № З-13" for c in ws[1])
+    row = next(i for i in range(7, ws.max_row + 1) if ws.cell(row=i, column=2).value == line.product_name)
+    assert ws.cell(row=row, column=3).value == "кг"
+    assert ws.cell(row=row, column=3 + DAY.day).value == pytest.approx(float(line.quantity_g / 1000), abs=0.001)
+    assert ws.cell(row=row, column=3 + DAY.day + 1).value is None           # next day has no write-off
+    days = calendar.monthrange(DAY.year, DAY.month)[1]
+    assert ws.cell(row=row, column=5 + days).value == 20.0                  # average price
+    assert ws.cell(row=row, column=6 + days).value == pytest.approx(float(line.cost))
 
 
 def test_reports_access(client, world):
@@ -98,3 +104,75 @@ def test_full_day_end_to_end(client, world):
     assert wo.approved_at and wo.total_cost == sum(l.cost for l in wo.lines.all()) > 0
     # the accountant was told the write-off was approved
     assert Notification.objects.filter(user=world.accountant, task=write_off, title__startswith="Затверджено").exists()
+
+
+# ---------------------------------------------------------------- S4-05 меню-вимога З-4а
+def _vymoha(client, user):
+    r = as_user(client, user).get(f"/reports/menu-vymoha/{DAY.isoformat()}.xlsx")
+    assert r.status_code == 200, r.status_code
+    return load_workbook(BytesIO(r.content)).active
+
+
+def _vymoha_rows(ws):
+    """{product: [values…]} for the table body (header is two rows at 10–11)."""
+    rows = {}
+    for r in range(12, ws.max_row + 1):
+        name = ws.cell(row=r, column=2).value
+        if name == "РАЗОМ":
+            break
+        rows[name] = [ws.cell(row=r, column=c).value for c in range(1, ws.max_column + 1)]
+    return rows
+
+
+def test_menu_vymoha_from_plan_before_write_off(client, cooking_day):
+    """Eaters by diet and per-meal quantities come from the frozen snapshot; slots add up to the total."""
+    from apps.consumption.services import snapshot_by_product
+
+    ws = _vymoha(client, cooking_day.accountant)
+    assert any(c.value == "Типова форма № З-4а" for c in ws[1])
+    assert "Попередньо" in ws["A6"].value
+    eaters = " ".join(str(c.value) for c in ws[8] if c.value)
+    assert "ОВД: 32" in eaters and "ЩД: 20" in eaters and "№9: 8" in eaters and "Разом: 60" in eaters
+    slot_cols = [c for c in range(4, ws.max_column + 1) if ws.cell(row=11, column=c).value]
+    total_col = slot_cols[-1] + 1
+    assert ws.cell(row=10, column=total_col).value == "Разом до закладки"
+    rows = _vymoha_rows(ws)
+    planned = {name: g for name, g in snapshot_by_product(cooking_day.plan).values()}
+    assert set(rows) == set(planned)
+    for name, values in rows.items():
+        by_slot = sum(values[c - 1] or 0 for c in slot_cols)
+        assert values[total_col - 1] == pytest.approx(float(planned[name] / 1000), abs=0.002)
+        assert by_slot == pytest.approx(values[total_col - 1], abs=0.005)
+
+
+def test_menu_vymoha_uses_write_off_quantities_and_prices(client, write_off_day):
+    w = write_off_day
+    Product.objects.update(price_per_kg=Decimal("20.00"))
+    a = w.plan.actuals.order_by("product_name").first()
+    a.actual_brutto_g = a.planned_brutto_g * 2
+    a.reason = "брак"
+    a.save()
+    as_user(client, w.accountant).post(f"/write-off/{DAY.isoformat()}/", {"action": "submit"})
+    Product.objects.update(price_per_kg=Decimal("99.00"))      # later price change must not leak in
+    ws = _vymoha(client, w.accountant)
+    assert "поданого на перевірку" in ws["A6"].value
+    line = WriteOff.objects.get(plan=w.plan).lines.get(product=a.product)
+    values = _vymoha_rows(ws)[line.product_name]
+    planned, issued, price, cost = values[-4:]
+    assert issued == pytest.approx(float(line.quantity_g / 1000), abs=0.001)
+    assert issued == pytest.approx(2 * planned, abs=0.002)                   # fact ≠ plan is visible
+    assert price == 20.0 and cost == pytest.approx(float(line.cost))
+    as_user(client, w.dietician).post(f"/tasks/{w.write_off.pk}/approve/")
+    assert "затвердженого списання" in _vymoha(client, w.accountant)["A6"].value
+
+
+def test_menu_vymoha_refused_before_approval(client, world):
+    r = as_user(client, world.accountant).get(f"/reports/menu-vymoha/{DAY.isoformat()}.xlsx")
+    assert r.status_code == 302 and r.url == "/reports/"
+
+
+def test_menu_vymoha_access(client, cooking_day):
+    url = f"/reports/menu-vymoha/{DAY.isoformat()}.xlsx"
+    assert as_user(client, cooking_day.chef).get(url).status_code == 403
+    assert as_user(client, cooking_day.nurse["Терапевтичне"]).get(url).status_code == 403
+    assert as_user(client, cooking_day.dietician).get(url).status_code == 200

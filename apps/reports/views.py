@@ -11,7 +11,7 @@ from apps.core.navigation import roles_for
 from apps.orders.views import parse_date
 from apps.planning.models import DailyPlan
 
-from .exports import accumulative_data, accumulative_xlsx
+from .exports import accumulative_data, accumulative_xlsx, menu_vymoha_xlsx
 
 
 class ReportsIndexView(RoleRequiredMixin, View):
@@ -36,6 +36,19 @@ class MenuPdfView(RoleRequiredMixin, View):
         from .pdf import menu_rozkladka_pdf
 
         return menu_rozkladka_pdf(plan)
+
+
+class MenuVymohaView(RoleRequiredMixin, View):
+    """Меню-вимога (typical form З-4а) for a day, XLSX. Accounting document: reports roles."""
+
+    allowed_roles = roles_for("reports")
+
+    def get(self, request, day):
+        plan = DailyPlan.objects.filter(service_date=parse_date(day)).first()
+        if plan is None or not plan.is_frozen:
+            messages.error(request, "Меню-вимога формується лише для затвердженого плану.")
+            return redirect("reports:index")
+        return menu_vymoha_xlsx(plan)
 
 
 def parse_month(value):

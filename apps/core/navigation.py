@@ -48,6 +48,7 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
         NavItem("consumption", "Розхід продуктів", "box-seam", (A, D, C, B), url_name="consumption:report"),
         NavItem("write-off", "Списання", "receipt", (A, D, B), url_name="consumption:write_off"),
         NavItem("reports", "Звіти", "bar-chart", (A, D, B), url_name="reports:index"),
+        NavItem("checks", "Перевірки довідників", "clipboard-check", (A, D), url_name="checks:list"),
     )),
     NavGroup("Довідники", (
         NavItem("dishes", "Картки-розкладки", "journal-text", (A, D, C, B), url_name="catalog:dish_list"),

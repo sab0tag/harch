@@ -4,6 +4,8 @@ from decimal import Decimal
 
 from django.db import transaction
 
+from apps.core.text import uk_sort_key
+
 from .calc import PlanInput, compute_lines
 from .models import ConsumptionSnapshotLine
 
@@ -90,7 +92,7 @@ def kitchen_board(plan):
         dish["portions"] += portions
     order = slot_order()
     board = {}
-    for (slot, _), dish in sorted(dishes.items(), key=lambda kv: (order.get(kv[0][0], 99), kv[1]["name"])):
+    for (slot, _), dish in sorted(dishes.items(), key=lambda kv: (order.get(kv[0][0], 99), uk_sort_key(kv[1]["name"]))):
         dish["output_total_g"] = (dish["output_g"] or 0) * dish["portions"]
         board.setdefault(slot, []).append(dish)
     return [{"slot": s, "label": slot_label(s), "dishes": d} for s, d in board.items()]
@@ -272,7 +274,7 @@ def live_write_off_rows(plan):
         base = [(pid, name, b, b, "") for pid, (name, b) in snapshot_by_product(plan).items()]
     prices = dict(Product.objects.filter(pk__in=[r[0] for r in base]).values_list("pk", "price_per_kg"))
     rows = []
-    for pid, name, planned, qty, reason in sorted(base, key=lambda r: r[1]):
+    for pid, name, planned, qty, reason in sorted(base, key=lambda r: uk_sort_key(r[1])):
         if not qty and not planned:
             continue
         price = prices.get(pid)
@@ -389,7 +391,7 @@ def period_consumption(date_from, date_to, group="product"):
     groups, total_b, total_c, missing = [], Decimal(0), Decimal(0), False
     for label, bucket in acc.items():
         rows = []
-        for pid, (name, b, n) in sorted(bucket.items(), key=lambda kv: kv[1][0]):
+        for pid, (name, b, n) in sorted(bucket.items(), key=lambda kv: uk_sort_key(kv[1][0])):
             price = prices.get(pid)
             cost = cost_of(b, price)
             missing |= price is None

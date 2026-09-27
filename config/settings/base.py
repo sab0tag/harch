@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.planning",
     "apps.assist",
     "apps.reports",
+    "apps.checks",
 ]
 
 MIDDLEWARE = [
