@@ -4,6 +4,11 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 TZ=Europe/Kyiv
 WORKDIR /app
 
+# WeasyPrint (menu-rozkladka PDF) needs Pango/HarfBuzz and a font with Cyrillic glyphs.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
 # supercronic — cron for containers (scheduler service, deploy/crontab). Checksums pinned.
 ARG TARGETARCH
 ARG SUPERCRONIC_VERSION=v0.2.33

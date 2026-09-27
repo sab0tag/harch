@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.orders",
     "apps.planning",
     "apps.assist",
+    "apps.reports",
 ]
 
 MIDDLEWARE = [

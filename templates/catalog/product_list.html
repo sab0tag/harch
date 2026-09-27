@@ -23,7 +23,7 @@
         <td class="d-none d-md-table-cell small text-secondary">{{ p.category|default:"—" }}</td>
         <td class="text-end">{{ p.protein|num }}</td><td class="text-end">{{ p.fat|num }}</td>
         <td class="text-end">{{ p.carbs|num }}</td><td class="text-end">{{ p.kcal|num }}</td>
-        <td class="text-end">{% if p.price_per_kg is not None %}{{ p.price_per_kg|num:2 }}{% else %}<span class="text-secondary">—</span>{% endif %}</td>
+        <td class="text-end">{% if p.price_per_kg is not None %}{{ p.price_per_kg|money }}{% else %}<span class="text-secondary">—</span>{% endif %}</td>
         <td class="text-end d-none d-md-table-cell">{{ p.dish_count }}</td>
         <td>{% include "catalog/_verified_badge.html" with obj=p %}</td>
         {% if can_edit %}<td class="text-end"><a href="{% url 'catalog:product_edit' p.pk %}" class="btn btn-sm btn-outline-secondary" title="{% if full_edit %}Редагувати{% else %}Змінити ціну{% endif %}"><i class="bi bi-pencil"></i></a></td>{% endif %}

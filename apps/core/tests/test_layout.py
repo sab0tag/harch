@@ -43,7 +43,7 @@ def test_admin_group_headings_hidden_for_nurse(login):
 
 
 def test_active_item_is_highlighted(login):
-    html = login(Role.CHEF).get("/s/kitchen/").content.decode()
+    html = login(Role.CHEF).get("/kitchen/").content.decode()
     assert re.search(r'class="nav-link active"[^>]*data-nav="Сьогодні на кухні"', html)
 
 
@@ -58,11 +58,17 @@ def test_active_item_is_highlighted(login):
         (Role.CHEF, "reports", 403),
     ],
 )
-def test_placeholder_urls_enforce_roles(login, role, slug, status):
-    assert login(role).get(f"/s/{slug}/").status_code == status
+def test_section_urls_enforce_roles(login, role, slug, status):
+    from django.urls import reverse
+
+    from apps.core.navigation import ITEMS
+
+    item = ITEMS[slug]
+    url = reverse(item.url_name) if item.url_name else f"/s/{slug}/"
+    assert login(role).get(url).status_code == status
 
 
-@pytest.mark.parametrize("slug", sorted(PLACEHOLDERS))
+@pytest.mark.parametrize("slug", sorted(PLACEHOLDERS) or [pytest.param("none", marks=pytest.mark.skip("no placeholders left"))])
 def test_every_placeholder_renders_for_admin(login, slug):
     response = login(Role.ADMIN).get(f"/s/{slug}/")
     assert "Розділ у розробці" in response.content.decode()

@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Розхід продуктів{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Розхід продуктів</h1>
+<form method="get" class="card card-body mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-6 col-md-3"><label class="form-label small" for="from">З</label><input id="from" type="date" name="from" value="{{ d_from.isoformat }}" class="form-control"></div>
+    <div class="col-6 col-md-3"><label class="form-label small" for="to">По</label><input id="to" type="date" name="to" value="{{ d_to.isoformat }}" class="form-control"></div>
+    <div class="col-12 col-md-3"><label class="form-label small" for="group">Групування</label>
+      <select id="group" name="group" class="form-select">{% for k, label in groups.items %}<option value="{{ k }}"{% if k == group %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-12 col-md-3 d-flex gap-2"><button class="btn btn-primary flex-grow-1">Показати</button>
+      <button name="format" value="xlsx" class="btn btn-outline-success" title="Завантажити XLSX"><i class="bi bi-file-earmark-excel"></i> XLSX</button></div>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mt-2 small">{% for label, a, b in presets %}
+    <a href="?from={{ a.isoformat }}&to={{ b.isoformat }}&group={{ group }}" class="link-secondary">{{ label }}</a>{% endfor %}</div>
+</form>
+
+{% if not data.groups %}
+<div class="card card-body text-center text-secondary py-5">За цей період немає затверджених планів — розхід рахується лише із зафіксованих даних.</div>
+{% else %}
+<p class="text-secondary small">Днів із затвердженим планом: {{ data.days|length }}. Джерело — зафіксований розхід; сума — за поточними цінами довідника{% if data.missing_prices %} (у частини продуктів ціни ще немає){% endif %}.</p>
+<div class="card">
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead><tr><th>Продукт</th><th class="text-end">Брутто, кг</th><th class="text-end d-none d-md-table-cell">Брутто, г</th><th class="text-end">Нетто, кг</th><th class="text-end d-none d-sm-table-cell">Ціна/кг</th><th class="text-end">Сума, грн</th></tr></thead>
+    <tbody>
+    {% for g in data.groups %}
+      {% if g.label %}<tr class="table-light"><th colspan="6">{{ g.label }}</th></tr>{% endif %}
+      {% for r in g.rows %}
+      <tr><td>{{ r.product_name }}</td><td class="text-end">{{ r.brutto_g|kg }}</td><td class="text-end d-none d-md-table-cell">{{ r.brutto_g|num:0 }}</td>
+        <td class="text-end">{{ r.netto_g|kg }}</td><td class="text-end d-none d-sm-table-cell">{{ r.price_per_kg|money }}</td><td class="text-end">{{ r.cost|money }}</td></tr>
+      {% endfor %}
+      {% if g.label %}<tr><td class="fw-semibold">Разом</td><td class="text-end fw-semibold">{{ g.brutto_g|kg }}</td><td class="d-none d-md-table-cell"></td><td></td><td class="d-none d-sm-table-cell"></td><td class="text-end fw-semibold">{{ g.cost|money }}</td></tr>{% endif %}
+    {% endfor %}
+    </tbody>
+    <tfoot><tr class="border-top border-dark"><th>РАЗОМ</th><th class="text-end">{{ data.brutto_g|kg }}</th><th class="d-none d-md-table-cell"></th><th></th><th class="d-none d-sm-table-cell"></th><th class="text-end">{{ data.cost|money }}</th></tr></tfoot>
+  </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

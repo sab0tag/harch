@@ -63,3 +63,19 @@ def kg(grams):
     if grams in (None, ""):
         return "—"
     return floatformat(Decimal(grams) / 1000, "3g")
+
+
+@register.filter
+def kg_input(grams):
+    """Grams → '1.250' for form inputs: no grouping, dot decimal (parse_kg accepts comma too)."""
+    if grams in (None, ""):
+        return ""
+    return f"{Decimal(grams) / 1000:.3f}"
+
+
+@register.filter
+def money(value):
+    """Hryvnias: always two decimals, grouped (156,00)."""
+    if value in (None, ""):
+        return "—"
+    return floatformat(value, "2g")

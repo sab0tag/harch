@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Накопичувальна відомість {{ first|date:"m.Y" }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0 me-auto">Накопичувальна відомість · {{ first|date:"F Y" }}</h1>
+  <a href="?format=xlsx" class="btn btn-success"><i class="bi bi-file-earmark-excel me-1"></i>Завантажити XLSX</a>
+</div>
+<p class="text-secondary small">Кілограми із затверджених списань. Днів закрито: {{ data.closed_days|length }} з {{ data.days }}. Сума: <strong>{{ data.cost|money }} грн</strong>.</p>
+{% if not data.products %}
+<div class="card card-body text-center text-secondary py-5">За цей місяць ще немає затверджених списань.</div>
+{% else %}
+<div class="card"><div class="table-responsive">
+<table class="table table-sm table-bordered mb-0 small" style="white-space: nowrap">
+  <thead class="table-light"><tr><th class="position-sticky start-0 bg-light">Продукт</th>{% for d in day_range %}<th class="text-center{% if d not in data.closed_days %} text-secondary{% endif %}">{{ d }}</th>{% endfor %}<th class="text-end">Разом, кг</th><th class="text-end">Сума</th></tr></thead>
+  <tbody>{% for p in data.products %}
+    <tr><td class="position-sticky start-0 bg-white">{{ p.name }}</td>{% for d in day_range %}<td class="text-end">{% with v=p.days|get:d %}{% if v %}{{ v|kg }}{% endif %}{% endwith %}</td>{% endfor %}
+      <td class="text-end fw-semibold">{{ p.total_g|kg }}</td><td class="text-end">{{ p.cost|money }}</td></tr>
+  {% endfor %}</tbody>
+</table></div></div>
+{% endif %}
+{% endblock %}

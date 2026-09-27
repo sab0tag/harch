@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Звіти{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Звіти</h1>
+<div class="row g-3">
+  <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
+    <h2 class="h6"><i class="bi bi-printer me-1"></i>Меню-розкладка (PDF)</h2>
+    <p class="small text-secondary">Друкована форма на дату з блоком підписів. Лише для затвердженого плану.</p>
+    <form class="d-flex gap-2" onsubmit="window.open('{% url 'reports:index' %}menu/' + this.day.value + '.pdf'); return false;">
+      <input type="date" name="day" value="{{ today.isoformat }}" class="form-control" aria-label="Дата" required>
+      <button class="btn btn-primary">Відкрити</button></form>
+  </div></div></div>
+  <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
+    <h2 class="h6"><i class="bi bi-box-seam me-1"></i>Розхід за період (XLSX)</h2>
+    <p class="small text-secondary">За продуктами, дієтами або стравами — на екрані «Розхід продуктів», кнопка XLSX.</p>
+    <a href="{% url 'consumption:report' %}" class="btn btn-outline-primary">До розходу</a>
+  </div></div></div>
+  <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
+    <h2 class="h6"><i class="bi bi-calendar3 me-1"></i>Накопичувальна відомість (XLSX)</h2>
+    <p class="small text-secondary">Продукт × дні місяця, кг — із затверджених списань.</p>
+    <form class="d-flex gap-2" onsubmit="location.href='{% url 'reports:index' %}accumulative/' + this.month.value + '/'; return false;">
+      <input type="month" name="month" value="{{ month }}" class="form-control" aria-label="Місяць" required>
+      <button class="btn btn-primary">Відкрити</button></form>
+  </div></div></div>
+</div>
+{% endblock %}

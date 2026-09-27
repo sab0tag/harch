@@ -1,0 +1,81 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Списання · {{ plan.service_date|date:"d.m" }}{% endblock %}
+{% block content %}
+{% include "consumption/_day_header.html" with url_name="consumption:write_off_day" heading="Списання за" day=plan.service_date %}
+<p class="text-secondary">Кількість — з фактичного розходу кухні; ціни — з довідника продуктів{% if task.status == 'submitted' or task.status == 'approved' %}, зафіксовані при поданні {{ wo.prepared_at|date:"d.m H:i" }}{% endif %}.</p>
+
+{% if rejection %}
+<div class="alert alert-danger"><div class="fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Повернуто: {{ rejection.actor }}</div>
+  <div style="white-space: pre-line">{{ rejection.comment }}</div></div>
+{% endif %}
+
+<form method="post" action="{% url 'consumption:write_off_day' plan.service_date.isoformat %}">{% csrf_token %}
+{% if editable and missing %}
+<div class="alert alert-warning">
+  <div class="fw-semibold mb-2"><i class="bi bi-exclamation-triangle me-1"></i>Немає ціни у {{ missing|length }} продукт(ів). Вкажіть ціну за кг — вона збережеться в довіднику.</div>
+  {% if can_edit_prices %}
+  <div class="row g-2">{% for r in missing %}
+    <div class="col-sm-6 col-lg-4"><div class="input-group input-group-sm">
+      <span class="input-group-text text-truncate" style="max-width: 60%">{{ r.product_name }}</span>
+      <input name="price_{{ r.product_id }}" inputmode="decimal" class="form-control text-end" placeholder="грн/кг" aria-label="Ціна за кг: {{ r.product_name }}"></div></div>
+  {% endfor %}</div>
+  <button name="action" value="prices" class="btn btn-sm btn-warning mt-2">Зберегти ціни</button>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead><tr><th>Продукт</th><th class="text-end d-none d-sm-table-cell">План, кг</th><th class="text-end">До списання, кг</th><th class="text-end">Ціна/кг</th><th class="text-end">Сума, грн</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr{% if r.price_per_kg is None %} class="table-warning"{% endif %}>
+        <td>{{ r.product_name }}{% if r.reason %}<div class="small text-secondary">{{ r.reason }}</div>{% endif %}</td>
+        <td class="text-end d-none d-sm-table-cell text-secondary">{{ r.planned_brutto_g|kg }}</td>
+        <td class="text-end fw-semibold">{{ r.quantity_g|kg }}</td>
+        <td class="text-end">{% if can_edit_prices and r.price_per_kg is not None %}<input name="price_{{ r.product_id }}" value="{{ r.price_per_kg }}" inputmode="decimal" class="form-control form-control-sm text-end ms-auto" style="width: 6.5rem" aria-label="Ціна за кг: {{ r.product_name }}">{% else %}{{ r.price_per_kg|money }}{% endif %}</td>
+        <td class="text-end">{{ r.cost|money }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr class="border-top border-dark"><th>Разом</th><th class="d-none d-sm-table-cell"></th><th></th><th></th><th class="text-end">{{ total|money }}</th></tr></tfoot>
+  </table>
+  </div>
+  {% if editable %}
+  <div class="card-body border-top">
+    <label class="form-label small" for="comment">Коментар для дієтсестри (необов'язково)</label>
+    <textarea id="comment" name="comment" rows="2" class="form-control mb-3"></textarea>
+    <div class="d-flex flex-wrap gap-2">
+      <button name="action" value="submit" class="btn btn-success"><i class="bi bi-send me-1"></i>{% if task.status == 'rejected' %}Подати повторно{% else %}Подати на звірку{% endif %}</button>
+      {% if can_edit_prices %}<button name="action" value="prices" class="btn btn-outline-secondary">Зберегти ціни</button>{% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="card-body border-top small text-secondary">
+    {% if task.status == 'submitted' %}Подано на звірку{% if task.submitted_by %} ({{ task.submitted_by }}, {{ task.submitted_at|date:"d.m H:i" }}){% endif %}. Потрібно виправити — попросіть дієтсестру повернути.
+    {% elif task.status == 'approved' %}<i class="bi bi-lock"></i> День закрито: списання затверджено {{ wo.approved_at|date:"d.m H:i" }}.
+    {% else %}Списання готує бухгалтер.{% endif %}
+  </div>
+  {% endif %}
+</div>
+</form>
+
+{% if can_review %}
+<div class="card card-body mt-3">
+  <p class="mb-2">Звірте кількості з фактом кухні. Після затвердження день закривається.</p>
+  <div class="d-flex flex-wrap gap-2">
+    <form method="post" action="{% url 'workflow:task_action' task.pk 'approve' %}">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Затвердити списання</button></form>
+    <button class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#wo-reject">Повернути</button>
+  </div>
+  <form method="post" action="{% url 'workflow:task_action' task.pk 'reject' %}" class="collapse mt-3" id="wo-reject">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <textarea name="comment" rows="2" class="form-control mb-2" required aria-label="Коментар"></textarea>
+    <button class="btn btn-danger">Повернути бухгалтеру</button></form>
+</div>
+{% endif %}
+<p class="mt-3 small"><a href="{% url 'workflow:task_detail' task.pk %}">Хронологія задачі</a> ·
+  <a href="{% url 'reports:accumulative' plan.service_date|date:'Y-m' %}">Накопичувальна відомість за місяць</a></p>
+{% endblock %}

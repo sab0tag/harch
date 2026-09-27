@@ -2,8 +2,7 @@
 
 замовлення (кожне відділення) → план меню → приготування → списання
 
-Subject objects (DailyOrder, DailyPlan, ...) and their submit validation arrive in Sprint 3;
-the chain itself already works on tasks alone.
+Subjects: order → DailyOrder, menu_planning and cooking → DailyPlan, write_off → WriteOff.
 """
 from datetime import datetime, time, timedelta
 
@@ -85,6 +84,36 @@ def _after_plan_approved(task):
     _next(COOKING)(task)
 
 
+def _validate_cooking(task):
+    from apps.consumption.services import validate_cooking_task
+
+    return validate_cooking_task(task)
+
+
+def _kitchen_url(task):
+    from django.urls import reverse
+
+    return reverse("consumption:kitchen_day", args=[task.service_date.isoformat()])
+
+
+def _validate_write_off(task):
+    from apps.consumption.services import validate_write_off_task
+
+    return validate_write_off_task(task)
+
+
+def _write_off_url(task):
+    from django.urls import reverse
+
+    return reverse("consumption:write_off_day", args=[task.service_date.isoformat()])
+
+
+def _after_write_off_approved(task):
+    from apps.consumption.services import approve_write_off
+
+    approve_write_off(task)
+
+
 def _next(type_):
     def hook(task):
         from .services import ensure_task
@@ -129,7 +158,10 @@ register(TaskDefinition(
     maker_role=Role.CHEF,
     checker_role=Role.DIETICIAN,
     deadline=lambda d: _at(d, "20:00"),
-    description="Відмітьте виконання та відхилення факту від плану.",
+    description="Внесіть фактичний розхід продуктів; відхилення понад 10% — з причиною.",
+    validate_submit=_validate_cooking,
+    subject_url=_kitchen_url,
+    action_label="Внести факт",
     on_approved=_next(WRITE_OFF),
 ))
 
@@ -139,5 +171,9 @@ register(TaskDefinition(
     maker_role=Role.ACCOUNTANT,
     checker_role=Role.DIETICIAN,
     deadline=lambda d: _at(d + timedelta(days=1), "12:00"),
-    description="Списання продуктів за день на підставі затвердженого плану.",
+    description="Списання продуктів за день: кількість з факту кухні, ціни з довідника.",
+    validate_submit=_validate_write_off,
+    subject_url=_write_off_url,
+    action_label="Списати продукти",
+    on_approved=_after_write_off_approved,
 ))
