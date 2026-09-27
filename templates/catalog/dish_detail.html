@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}№{{ dish.card_no }} {{ dish.name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:dish_list' %}">Картки-розкладки</a></li>
+  <li class="breadcrumb-item active">№{{ dish.card_no }}</li></ol></nav>
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+  <div class="me-auto">
+    <h1 class="h3 mb-1">{{ dish.name }}</h1>
+    <div class="text-secondary">Картка №{{ dish.card_no }} · {{ dish.category|default:"без категорії" }} · вихід {{ dish.output_g|num:0 }} г</div>
+  </div>
+  {% include "catalog/_verified_badge.html" with obj=dish %}
+  {% if not dish.is_active %}<span class="badge text-bg-secondary">Неактивна</span>{% endif %}
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  {% for d in dish.diets.all %}<span class="badge rounded-pill text-bg-light border fs-6 fw-normal">{{ d.code }}</span>{% empty %}<span class="text-danger small">Дієти не вказані</span>{% endfor %}
+  <span class="ms-2 small text-secondary align-self-center">Походження: {{ dish.get_origin_display }}</span>
+</div>
+
+{% if can_edit %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a href="{% url 'catalog:dish_edit' dish.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Редагувати опис</a>
+  <form method="post" action="{% url 'catalog:dish_verify' dish.pk %}">{% csrf_token %}
+    {% if dish.verified %}<input type="hidden" name="verified" value="0"><button class="btn btn-outline-warning">Зняти «перевірено»</button>
+    {% else %}<input type="hidden" name="verified" value="1"><button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Позначити як перевірено</button>{% endif %}
+  </form>
+</div>
+{% endif %}
+
+{% include "catalog/_ingredients_card.html" %}
+
+{% if dish.technology or dish.source %}
+<div class="card mb-4"><div class="card-body">
+  {% if dish.technology %}<h2 class="h6">Технологія приготування</h2><p style="white-space: pre-line">{{ dish.technology }}</p>{% endif %}
+  {% if dish.source %}<div class="small text-secondary">Джерело: {{ dish.source }}</div>{% endif %}
+</div></div>
+{% endif %}
+
+<div class="card">
+  <div class="card-header bg-white fw-semibold">Історія змін</div>
+  <ul class="list-group list-group-flush small">
+    {% for h in history %}
+      <li class="list-group-item d-flex gap-2">
+        <span class="text-secondary text-nowrap">{{ h.history_date|date:"d.m.Y H:i" }}</span>
+        <span class="text-nowrap">{{ h.history_user|default:"система" }}</span>
+        <span>{% if h.history_type == '+' %}створено{% elif h.history_type == '-' %}видалено{% else %}змінено{% endif %}
+          {% if h.product %}інгредієнт «{{ h.product }}» ({{ h.brutto_g|num }}/{{ h.netto_g|num }} г){% else %}картку{% endif %}</span>
+      </li>
+    {% empty %}<li class="list-group-item text-secondary">Змін ще не було</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

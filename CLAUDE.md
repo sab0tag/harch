@@ -37,6 +37,7 @@ harch/
     consumption/     # расчёт розходу, снапшоты, фактичний розхід
     workflow/        # Task, TaskEvent, Notification, реестр типов задач
     reports/         # экспорт PDF/XLSX, накопичувальна відомість
+    assist/          # ИИ: клиент Anthropic, журнал вызовов, импорт карток по фото
   templates/         # base.html с левым сайдбаром, partials для HTMX
   seed/              # JSON из Excel-прототипа + management command load_seed
   docs/
@@ -68,6 +69,15 @@ querysets по відділенню для `dept_nurse`. Подробно — `d
 Типы задач и их цепочки — в реестре `apps/workflow/registry.py`, не хардкодить в views.
 Переходы только через сервис `apps/workflow/services.py` (`start`, `submit`, `approve`, `reject`),
 каждый переход пишет `TaskEvent` и создаёт `Notification`. Подробно — `docs/03_task_engine.md`.
+
+## ИИ (Anthropic API)
+
+ИИ готовит черновики, человек решает. Результат модели — только черновик у maker'а с пометкой
+«Запропоновано ШІ»; никаких автоматических сохранений, submit или approve. Расчёты розходу/БЖУ
+и переходы workflow — никогда не через модель. Система полностью работает без ИИ.
+Вызовы модели — только через `apps/assist/client.py`, каждый пишется в `AIRequestLog`.
+`ANTHROPIC_API_KEY` — только в `.env`; не коммитить, не логировать, не выводить в UI.
+В тестах реальный API не вызывается. Подробно — `docs/07_ai.md`.
 
 ## Команды
 

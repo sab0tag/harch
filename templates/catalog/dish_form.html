@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{% if dish %}Редагування №{{ dish.card_no }}{% else %}Нова картка{% endif %}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:dish_list' %}">Картки-розкладки</a></li>
+  {% if dish %}<li class="breadcrumb-item"><a href="{% url 'catalog:dish_detail' dish.pk %}">№{{ dish.card_no }}</a></li>{% endif %}
+  <li class="breadcrumb-item active">{% if dish %}Редагування{% else %}Нова{% endif %}</li></ol></nav>
+<h1 class="h3 mb-3">{% if dish %}Редагування картки №{{ dish.card_no }}{% else %}Нова картка-розкладка{% endif %}</h1>
+<form method="post" class="card card-body" style="max-width: 760px">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-4 col-md-3">{% include "partials/field.html" with field=form.card_no %}</div>
+    <div class="col-8 col-md-9">{% include "partials/field.html" with field=form.name %}</div>
+    <div class="col-8">{% include "partials/field.html" with field=form.category %}
+      <datalist id="dish-categories">{% for c in categories %}{% if c %}<option value="{{ c }}">{% endif %}{% endfor %}</datalist></div>
+    <div class="col-4">{% include "partials/field.html" with field=form.output_g %}</div>
+    <div class="col-12"><label class="form-label">{{ form.diets.label }}</label>
+      <div class="d-flex flex-wrap gap-3">{% for cb in form.diets %}<div class="form-check">{{ cb.tag }}<label class="form-check-label" for="{{ cb.id_for_label }}">{{ cb.choice_label }}</label></div>{% endfor %}</div>
+      {% for e in form.diets.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-12">{% include "partials/field.html" with field=form.technology %}</div>
+    <div class="col-12">{% include "partials/field.html" with field=form.source %}</div>
+    <div class="col-12 form-check ms-2">{{ form.is_active }} <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label></div>
+  </div>
+  <div class="mt-4 d-flex gap-2">
+    <button class="btn btn-success">Зберегти</button>
+    <a href="{% if dish %}{% url 'catalog:dish_detail' dish.pk %}{% else %}{% url 'catalog:dish_list' %}{% endif %}" class="btn btn-outline-secondary">Скасувати</a>
+  </div>
+  {% if not dish %}<p class="small text-secondary mt-3 mb-0">Інгредієнти додаються після збереження, на сторінці картки.</p>{% endif %}
+</form>
+{% endblock %}

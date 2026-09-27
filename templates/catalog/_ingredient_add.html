@@ -1,0 +1,12 @@
+<div id="ingredient-add" class="card-footer bg-white">
+  <form hx-post="{% url 'catalog:ingredient_add' dish.pk %}" hx-target="#ingredients-card" hx-swap="outerHTML"
+        class="row g-2 align-items-start">
+    <div class="col-12 col-md-5"><label class="form-label small mb-1">Додати продукт</label>{{ add_form.product }}
+      {% for e in add_form.product.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">Брутто, г</label>{{ add_form.brutto_g }}
+      {% for e in add_form.brutto_g.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-6 col-md-2"><label class="form-label small mb-1">Нетто, г</label>{{ add_form.netto_g }}
+      {% for e in add_form.netto_g.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    <div class="col-12 col-md-3 d-grid align-self-end"><button class="btn btn-outline-success"><i class="bi bi-plus-lg me-1"></i>Додати</button></div>
+  </form>
+</div>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name|default:"Новий продукт" }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:product_list' %}">Продукти</a></li>
+  <li class="breadcrumb-item active">{{ product.name|default:"Новий" }}</li></ol></nav>
+<h1 class="h3 mb-3">{% if price_only %}Ціна: {{ product.name }}{% elif product %}{{ product.name }}{% else %}Новий продукт{% endif %}</h1>
+<form method="post" class="card card-body" style="max-width: 640px">{% csrf_token %}
+  <div class="row g-3">
+    {% for field in form %}
+      {% if field.name == 'is_active' or field.name == 'verified' %}
+        <div class="col-6 form-check ms-2">{{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+      {% else %}
+        <div class="{% if field.name in 'protein fat carbs kcal' %}col-6 col-md-3{% else %}col-12 col-md-6{% endif %}">{% include "partials/field.html" %}</div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% if not price_only %}<p class="small text-secondary mt-3 mb-0">Б/Ж/В/ккал — на 100 г нетто. Зміни впливають на розрахунки всіх карток з цим продуктом у майбутніх планах.</p>{% endif %}
+  <div class="mt-4 d-flex gap-2"><button class="btn btn-success">Зберегти</button>
+    <a href="{% url 'catalog:product_list' %}" class="btn btn-outline-secondary">Скасувати</a></div>
+</form>
+{% endblock %}

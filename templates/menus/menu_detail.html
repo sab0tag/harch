@@ -1,0 +1,51 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Меню №{{ menu.number }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'menus:list' %}">Меню</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'menus:list' %}?diet={{ menu.diet.code|urlencode }}">{{ menu.diet.code }}</a></li>
+  <li class="breadcrumb-item active">№{{ menu.number }}</li></ol></nav>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0 me-auto">Меню №{{ menu.number }} <span class="badge rounded-pill text-bg-light border align-middle fs-6">{{ menu.diet.code }}</span></h1>
+  {% include "catalog/_verified_badge.html" with obj=menu %}
+  <div class="btn-group">
+    {% if prev_menu %}<a class="btn btn-outline-secondary" href="{% url 'menus:detail' prev_menu.number %}" title="Попереднє меню цієї дієти">‹ №{{ prev_menu.number }}</a>{% endif %}
+    {% if next_menu %}<a class="btn btn-outline-secondary" href="{% url 'menus:detail' next_menu.number %}" title="Наступне меню цієї дієти">№{{ next_menu.number }} ›</a>{% endif %}
+  </div>
+</div>
+<p class="text-secondary">{{ menu.diet.name }} · на 1 пацієнта на добу</p>
+
+<div class="row g-2 mb-4">
+  {% for r in norms %}
+  <div class="col-6 col-md-3">
+    <div class="card card-body py-2 border-{{ r.status|status_color }}">
+      <div class="small text-secondary">{{ r.label }}</div>
+      <div class="h4 mb-0 text-{{ r.status|status_color }}">{{ r.value|num:0 }}</div>
+      <div class="small text-secondary">{% if r.low is not None %}норма {{ r.low|num:0 }}–{{ r.high|num:0 }}{% else %}норма не задана{% endif %}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% for slot in slots %}
+<div class="card mb-3">
+  <div class="card-header bg-white d-flex"><span class="fw-semibold me-auto">{{ slot.label }}</span>
+    <span class="small text-secondary">{{ slot.total.kcal|num:0 }} ккал</span></div>
+  <div class="table-responsive"><table class="table table-sm align-middle mb-0" style="table-layout: fixed; min-width: 560px">
+    <colgroup><col><col style="width: 6.5rem"><col style="width: 4.5rem"><col style="width: 4.5rem"><col style="width: 4.5rem"><col style="width: 5.5rem"></colgroup>
+    <thead class="small text-secondary"><tr><th class="ps-3">Страва</th><th class="text-end">Вихід, г</th><th class="text-end">Б</th><th class="text-end">Ж</th><th class="text-end">В</th><th class="text-end pe-3">Ккал</th></tr></thead>
+    <tbody>
+    {% for row in slot.rows %}
+      <tr>
+        <td class="ps-3"><a href="{% url 'catalog:dish_detail' row.item.dish.pk %}" class="text-decoration-none">{{ row.item.dish.name }}</a> <span class="small text-secondary">№{{ row.item.dish.card_no }}</span></td>
+        <td class="text-end">{{ row.item.dish.output_g|num:0 }}</td>
+        <td class="text-end">{{ row.n.protein|num }}</td><td class="text-end">{{ row.n.fat|num }}</td><td class="text-end">{{ row.n.carbs|num }}</td>
+        <td class="text-end pe-3 fw-medium">{{ row.n.kcal|num:0 }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% empty %}<div class="alert alert-warning">У меню ще немає страв.</div>{% endfor %}
+{% endblock %}

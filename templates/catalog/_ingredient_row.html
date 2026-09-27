@@ -1,0 +1,29 @@
+{% load harch %}
+<tr id="ing-{{ row.ing.pk }}">
+  {% if can_edit and row.form %}
+    {% with f=row.form %}
+    <td>{{ f.product }}{% for e in f.product.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+    <td>{{ f.brutto_g }}{% for e in f.brutto_g.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+    <td>{{ f.netto_g }}{% for e in f.netto_g.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</td>
+    {% endwith %}
+  {% else %}
+    <td>{{ row.ing.product }}</td>
+    <td class="text-end">{{ row.ing.brutto_g|num }}</td>
+    <td class="text-end">{{ row.ing.netto_g|num }}</td>
+  {% endif %}
+  <td class="text-end text-secondary">{{ row.ing.waste_pct|pct }}</td>
+  <td class="text-end">{{ row.n.protein|num }}</td>
+  <td class="text-end">{{ row.n.fat|num }}</td>
+  <td class="text-end">{{ row.n.carbs|num }}</td>
+  <td class="text-end fw-medium">{{ row.n.kcal|num }}</td>
+  {% if can_edit %}
+  <td class="text-end text-nowrap">
+    <button type="button" class="btn btn-sm btn-outline-primary"
+            hx-post="{% url 'catalog:ingredient_update' dish.pk row.ing.pk %}" hx-include="closest tr"
+            hx-target="#ingredients-card" hx-swap="outerHTML" title="Зберегти"><i class="bi bi-check2"></i></button>
+    <button type="button" class="btn btn-sm btn-outline-danger"
+            hx-post="{% url 'catalog:ingredient_delete' dish.pk row.ing.pk %}" hx-target="#ingredients-card" hx-swap="outerHTML"
+            hx-confirm="Видалити «{{ row.ing.product }}» з картки?" title="Видалити"><i class="bi bi-trash"></i></button>
+  </td>
+  {% endif %}
+</tr>

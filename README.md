@@ -9,6 +9,7 @@
 cp .env.example .env            # задай DJANGO_SECRET_KEY
 docker compose up -d
 docker compose exec web python manage.py migrate
+docker compose exec web python manage.py load_seed          # довідники: 8 дієт, 72 продукти, 130 карток, 250 меню
 docker compose exec web python manage.py create_demo_users   # dev: по користувачу на роль, пароль demo12345
 ```
 

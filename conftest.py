@@ -1,4 +1,8 @@
+from pathlib import Path
+
 import pytest
+from django.conf import settings
+from django.core.management import call_command
 
 from apps.accounts.models import Role
 from apps.accounts.tests.factories import UserFactory
@@ -23,3 +27,9 @@ def login(client, make_user):
         return client
 
     return _login
+
+
+@pytest.fixture
+def seeded(db):
+    """Full starter data from seed/ (8 diets, 72 products, 130 cards, 250 menus)."""
+    call_command("load_seed", str(Path(settings.BASE_DIR) / "seed"), verbosity=0, stdout=open("/dev/null", "w"))

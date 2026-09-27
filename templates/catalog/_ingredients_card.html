@@ -1,0 +1,18 @@
+<div class="card mb-4" id="ingredients-card">
+  <div class="card-header bg-white fw-semibold">Склад на 1 порцію</div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead class="table-light"><tr>
+        <th>Продукт</th><th class="text-end" style="width:8rem">Брутто, г</th><th class="text-end" style="width:8rem">Нетто, г</th>
+        <th class="text-end">Втрати</th><th class="text-end">Б</th><th class="text-end">Ж</th><th class="text-end">В</th><th class="text-end">Ккал</th>
+        {% if can_edit %}<th></th>{% endif %}
+      </tr></thead>
+      <tbody id="ingredient-rows">
+        {% for row in rows %}{% include "catalog/_ingredient_row.html" %}{% empty %}
+        <tr><td colspan="9" class="text-center text-secondary py-3">Інгредієнтів ще немає</td></tr>{% endfor %}
+      </tbody>
+      {% include "catalog/_dish_totals.html" %}
+    </table>
+  </div>
+  {% if can_edit %}{% include "catalog/_ingredient_add.html" %}{% endif %}
+</div>

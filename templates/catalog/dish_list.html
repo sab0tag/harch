@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Картки-розкладки{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0 me-auto">Картки-розкладки</h1>
+  {% if can_edit %}<a href="{% url 'catalog:dish_create' %}" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>Нова картка</a>{% endif %}
+</div>
+
+{% if unverified_total %}
+<div class="alert alert-warning d-flex align-items-center gap-2">
+  <i class="bi bi-exclamation-triangle"></i>
+  <div>Не перевірено карток: <strong>{{ unverified_total }}</strong>. Стартові дані з Excel-прототипу — перевірте норми перед використанням.
+    <a href="?state=unverified" class="alert-link">Показати</a></div>
+</div>
+{% endif %}
+
+<form method="get" class="card card-body mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-md-4"><label class="form-label small">Пошук</label>
+      <input type="search" name="q" value="{{ filters.q }}" class="form-control" placeholder="Назва або № картки"></div>
+    <div class="col-6 col-md-3"><label class="form-label small">Категорія</label>
+      <select name="category" class="form-select"><option value="">Усі</option>
+        {% for c in categories %}{% if c %}<option value="{{ c }}"{% if c == filters.category %} selected{% endif %}>{{ c }}</option>{% endif %}{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label class="form-label small">Дієта</label>
+      <select name="diet" class="form-select"><option value="">Усі</option>
+        {% for d in diets %}<option value="{{ d.code }}"{% if d.code == filters.diet %} selected{% endif %}>{{ d.code }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><label class="form-label small">Стан</label>
+      <select name="state" class="form-select">
+        <option value="">Активні</option>
+        <option value="unverified"{% if filters.state == 'unverified' %} selected{% endif %}>Не перевірені</option>
+        <option value="inactive"{% if filters.state == 'inactive' %} selected{% endif %}>Неактивні</option></select></div>
+    <div class="col-6 col-md-1 d-grid"><button class="btn btn-outline-secondary">Знайти</button></div>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light"><tr>
+        <th class="text-end">№</th><th>Страва</th><th class="d-none d-lg-table-cell">Категорія</th><th>Дієти</th>
+        <th class="text-end">Вихід, г</th><th class="text-end d-none d-md-table-cell">Б/Ж/В, г</th><th class="text-end">Ккал</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for dish in page %}
+        <tr>
+          <td class="text-end text-secondary">{{ dish.card_no }}</td>
+          <td><a href="{% url 'catalog:dish_detail' dish.pk %}" class="fw-medium text-decoration-none">{{ dish.name }}</a></td>
+          <td class="d-none d-lg-table-cell small text-secondary">{{ dish.category }}</td>
+          <td>{% for d in dish.diets.all %}<span class="badge rounded-pill text-bg-light border me-1">{{ d.code }}</span>{% endfor %}</td>
+          <td class="text-end">{{ dish.output_g|num:0 }}</td>
+          <td class="text-end d-none d-md-table-cell small">{{ dish.n_protein|num }} / {{ dish.n_fat|num }} / {{ dish.n_carbs|num }}</td>
+          <td class="text-end fw-medium">{{ dish.n_kcal|num:0 }}</td>
+          <td>{% include "catalog/_verified_badge.html" with obj=dish %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="text-center text-secondary py-4">Нічого не знайдено</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

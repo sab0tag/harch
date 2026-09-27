@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Дієти{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Дієти</h1>
+<p class="text-secondary mb-3">Варіанти дієт за Наказом МОЗ України №931 та спеціальні дієти. Норми — на 1 пацієнта на добу.</p>
+<div class="card"><div class="table-responsive">
+  <table class="table align-middle mb-0">
+    <thead class="table-light"><tr>
+      <th>Код</th><th>Назва</th><th class="text-end">Ккал</th><th class="text-end">Білки, г</th><th class="text-end">Жири, г</th><th class="text-end">Вуглеводи, г</th>
+      <th class="text-end">Страв</th><th class="text-end">Меню</th>
+    </tr></thead>
+    <tbody>
+    {% for d in diets %}
+      <tr>
+        <td><span class="badge rounded-pill {% if d.kind == 'special' %}text-bg-warning{% else %}text-bg-primary{% endif %} fs-6">{{ d.code }}</span></td>
+        <td><div class="fw-medium">{{ d.name }}</div><div class="small text-secondary">{{ d.indications }}</div></td>
+        <td class="text-end text-nowrap">{% if d.kcal_min %}{{ d.kcal_min }}–{{ d.kcal_max }}{% else %}—{% endif %}</td>
+        <td class="text-end text-nowrap">{% if d.protein_min is not None %}{{ d.protein_min|num:0 }}–{{ d.protein_max|num:0 }}{% else %}—{% endif %}</td>
+        <td class="text-end text-nowrap">{% if d.fat_min is not None %}{{ d.fat_min|num:0 }}–{{ d.fat_max|num:0 }}{% else %}—{% endif %}</td>
+        <td class="text-end text-nowrap">{% if d.carbs_min is not None %}{{ d.carbs_min|num:0 }}–{{ d.carbs_max|num:0 }}{% else %}—{% endif %}</td>
+        <td class="text-end"><a href="{% url 'catalog:dish_list' %}?diet={{ d.code|urlencode }}">{{ d.dish_count }}</a></td>
+        <td class="text-end">{% if d.has_own_menus %}<a href="{% url 'menus:list' %}?diet={{ d.code|urlencode }}">{{ d.menu_count }}</a>{% else %}<span class="small text-secondary">тег страв</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}
