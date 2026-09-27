@@ -20,4 +20,5 @@ COPY --chmod=755 backup.sh restore.sh /usr/local/bin/
 COPY crontab /etc/backup.crontab
 
 ENTRYPOINT []
-CMD ["supercronic", "/etc/backup.crontab"]
+# Absolute path: as PID 1 supercronic re-execs itself via argv[0] to reap children (see #10).
+CMD ["/usr/local/bin/supercronic", "/etc/backup.crontab"]

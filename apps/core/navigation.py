@@ -48,7 +48,6 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
         NavItem("consumption", "Розхід продуктів", "box-seam", (A, D, C, B), url_name="consumption:report"),
         NavItem("write-off", "Списання", "receipt", (A, D, B), url_name="consumption:write_off"),
         NavItem("reports", "Звіти", "bar-chart", (A, D, B), url_name="reports:index"),
-        NavItem("checks", "Перевірки довідників", "clipboard-check", (A, D), url_name="checks:list"),
     )),
     NavGroup("Довідники", (
         NavItem("dishes", "Картки-розкладки", "journal-text", (A, D, C, B), url_name="catalog:dish_list"),
@@ -56,6 +55,7 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
         NavItem("products", "Продукти", "basket", (A, D, C, B), url_name="catalog:product_list"),
         NavItem("diets", "Дієти", "heart-pulse", (A, D, C), url_name="catalog:diet_list"),
         NavItem("departments", "Відділення", "hospital", (A, D), url_name="orgstructure:department_list"),
+        NavItem("audit_ref", "Перевірка довідника", "clipboard-check", (A, D), url_name="catalog:audit"),
     )),
     NavGroup("Адміністрування", (
         NavItem("users", "Користувачі та ролі", "people", (A,), url="/admin/accounts/user/"),

@@ -4,5 +4,5 @@
 # Catch-up in case the server was down at midnight (idempotent).
 5 7 * * *     python manage.py generate_daily_tasks --days-ahead 1
 */15 * * * *  python manage.py check_deadlines
-# Reference-data checks, weekly on Monday morning (apps/checks). AI suggestions only if AI_ENABLED.
-40 6 * * 1    python manage.py run_checks
+# Reference audit (AI-09): rules always; AI groups duplicate products only if AI_ENABLED and a key is set.
+40 2 * * *    python manage.py audit_reference --ai

@@ -9,6 +9,7 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
   <h1 class="h3 mb-0 me-auto">Меню №{{ menu.number }} <span class="badge rounded-pill text-bg-light border align-middle fs-6">{{ menu.diet.code }}</span></h1>
   {% include "catalog/_verified_badge.html" with obj=menu %}
+  {% if can_compose %}<a href="{% url 'menus:fit' menu.number %}" class="btn btn-outline-primary"><i class="bi bi-sliders me-1"></i>Підігнати під норму</a>{% endif %}
   <div class="btn-group">
     {% if prev_menu %}<a class="btn btn-outline-secondary" href="{% url 'menus:detail' prev_menu.number %}" title="Попереднє меню цієї дієти">‹ №{{ prev_menu.number }}</a>{% endif %}
     {% if next_menu %}<a class="btn btn-outline-secondary" href="{% url 'menus:detail' next_menu.number %}" title="Наступне меню цієї дієти">№{{ next_menu.number }} ›</a>{% endif %}
