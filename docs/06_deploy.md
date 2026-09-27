@@ -17,7 +17,8 @@ services:
   web:       образ приложения, gunicorn -w 3 --timeout 60, settings=config.settings.prod,
              healthcheck на /healthz/ (проверяет БД)
   scheduler: тот же образ, supercronic с deploy/crontab (generate_daily_tasks, check_deadlines)
-  backup:    S5-02 — pg_dump по крону, ротация 14 дней, rclone в Storage Box / B2
+  backup:    deploy/backup (postgres:16 + rclone + supercronic): 02:30 pg_dump → проверка →
+             ./backups, ротация 14 дней, копия в Storage Box / B2
   caddy:     caddy:2, единственный сервис с портами 80/443; сертификат Let's Encrypt для $DOMAIN,
              стартует после того, как web стал healthy
 ```
@@ -65,13 +66,48 @@ docker compose -f compose.prod.yml up -d
 ```
 Позже — GitHub Actions: build → push в GHCR → ssh deploy.
 
-## Восстановление из бэкапа (проверить до пилота!)
+## Бэкапы
+
+Контейнер `backup`, каждую ночь в 02:30 (Київ) — `deploy/backup/backup.sh`:
+1. `pg_dump --clean --if-exists` → `./backups/harch-YYYY-MM-DD_HHMM.sql.gz` (на хосте, рядом с compose);
+2. проверка: архив читается и дамп дописан до конца — иначе файл не сохраняется, скрипт падает;
+3. удаление локальных копий старше `BACKUP_KEEP_DAYS` (14);
+4. если задан `BACKUP_REMOTE` — копия туда через rclone и такая же ротация там;
+5. время последнего успеха — `./backups/.last_success` (для мониторинга, S5-05).
+
+Удалённое хранилище настраивается только переменными `.env` (`RCLONE_CONFIG_OFFSITE_*`, пример —
+`.env.prod.example`): Hetzner Storage Box (SFTP, порт 23, ~€4/мес) или Backblaze B2.
+Серверные бэкапы Hetzner (+20%) — вторая линия, они не заменяют дампы.
 
 ```bash
-docker compose -f compose.prod.yml stop web scheduler
-gunzip -c harch-YYYY-MM-DD.sql.gz | docker compose -f compose.prod.yml exec -T db psql -U harch harch
-docker compose -f compose.prod.yml start web scheduler
+docker compose -f compose.prod.yml exec backup backup.sh      # бэкап вручную (сделать сразу после запуска)
+ls -lh backups/ && cat backups/.last_success
+docker compose -f compose.prod.yml exec backup rclone ls offsite:harch-backups   # что лежит снаружи
 ```
+
+## Восстановление из бэкапа (проверить до пилота!)
+
+`restore.sh` накатывает дамп поверх текущей БД одной транзакцией: при любой ошибке ничего не меняется.
+Без `--yes` не запускается.
+
+```bash
+# 1. остановить всё, что пишет в БД
+docker compose -f compose.prod.yml stop web scheduler
+# 2. (если локальной копии нет) забрать из удалённого хранилища
+docker compose -f compose.prod.yml exec backup rclone copy offsite:harch-backups/harch-2026-10-01_0230.sql.gz /backups/
+# 3. восстановить
+docker compose -f compose.prod.yml exec backup restore.sh /backups/harch-2026-10-01_0230.sql.gz --yes
+# 4. запустить и проверить
+docker compose -f compose.prod.yml start web scheduler
+curl -s https://harch.example.com/healthz/
+```
+
+Проверено (S5-02): бэкап → удаление строк и порча данных → restore → данные совпадают с моментом бэкапа,
+миграции на месте; битый архив и неудачный дамп отбрасываются. **До пилота повторить на сервере**:
+сделать бэкап, завести тестовую запись, восстановить, убедиться, что запись исчезла.
+
+Замечание: `--clean` удаляет и пересоздаёт только объекты из дампа; таблицы, созданные вручную
+после бэкапа, останутся.
 
 ## Данные и приватность
 

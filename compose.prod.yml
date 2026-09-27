@@ -44,6 +44,18 @@ services:
     <<: *app
     command: supercronic /app/deploy/crontab
 
+  backup:
+    build: deploy/backup
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: Europe/Kyiv
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
   caddy:
     image: caddy:2
     restart: unless-stopped
