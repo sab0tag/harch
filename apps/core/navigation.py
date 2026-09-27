@@ -62,6 +62,9 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
         NavItem("audit", "Журнал подій", "clock-history", (A,), url_name="workflow:audit"),
         NavItem("ai", "ШІ-помічник", "stars", (A,), url_name="assist:status"),
     )),
+    NavGroup("Допомога", (
+        NavItem("help", "Інструкція", "question-circle", ALL, url_name="help"),
+    )),
 )
 
 ITEMS = {i.key: i for g in NAV_GROUPS for i in g.items}

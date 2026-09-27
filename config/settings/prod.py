@@ -1,3 +1,5 @@
+from config.sentry import init_sentry
+
 from .base import *  # noqa: F401,F403
 
 DEBUG = False
@@ -20,3 +22,6 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# Errors → Sentry when SENTRY_DSN is set (S5-05). Applies to web and scheduler (same settings).
+init_sentry(env("SENTRY_DSN"), env("SENTRY_ENVIRONMENT"), env("SENTRY_RELEASE", default=""))  # noqa: F405

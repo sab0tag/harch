@@ -15,6 +15,11 @@ env = environ.Env(
     ANTHROPIC_MODEL=(str, "claude-sonnet-5"),
     AI_DAILY_REQUEST_LIMIT=(int, 200),
     AI_TIMEOUT_SECONDS=(int, 90),
+    HEALTH_SCHEDULER_MAX_AGE_MINUTES=(int, 45),
+    HEALTH_BACKUP_FILE=(str, ""),
+    HEALTH_BACKUP_MAX_AGE_HOURS=(int, 26),
+    SENTRY_DSN=(str, ""),
+    SENTRY_ENVIRONMENT=(str, "production"),
 )
 environ.Env.read_env(BASE_DIR / ".env", overwrite=False)
 
@@ -121,3 +126,9 @@ AI_TIMEOUT_SECONDS = env("AI_TIMEOUT_SECONDS")
 EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
 vars().update(EMAIL_CONFIG)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="harch@localhost")
+
+# Monitoring (S5-05, docs/06_deploy.md «Мониторинг»). /healthz/full/ fails when the scheduler has not
+# beaten for this long (check_deadlines runs every 15 min) or the last backup is older than this.
+HEALTH_SCHEDULER_MAX_AGE_MINUTES = env("HEALTH_SCHEDULER_MAX_AGE_MINUTES")
+HEALTH_BACKUP_FILE = env("HEALTH_BACKUP_FILE")  # empty = backups not monitored (dev)
+HEALTH_BACKUP_MAX_AGE_HOURS = env("HEALTH_BACKUP_MAX_AGE_HOURS")

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Інструкція — {{ role_label }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0 me-auto"><i class="bi bi-question-circle me-2"></i>Що я роблю щодня в системі</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'help_pdf' role %}" target="_blank" rel="noopener"><i class="bi bi-printer me-1"></i>PDF для друку</a>
+</div>
+<ul class="nav nav-pills flex-wrap mb-3">
+  {% for value, label in roles %}
+  <li class="nav-item"><a class="nav-link{% if value == role %} active{% endif %}" href="{% url 'help_role' value %}">{{ label }}{% if value == request.user.role %} <span class="small">(ви)</span>{% endif %}</a></li>
+  {% endfor %}
+</ul>
+<div class="card help"><div class="card-body">
+  <h2 class="h5 mb-3">{{ role_label }}</h2>
+  {% include content %}
+</div></div>
+{% endblock %}
