@@ -1,0 +1,9 @@
+{% if error %}<div class="alert alert-warning small mb-0">{{ error }}</div>
+{% else %}
+<div class="border rounded p-2 small {% if review.verdict == 'ok' %}border-success{% elif review.verdict == 'problems' %}border-danger{% else %}border-warning{% endif %}">
+  <div class="fw-semibold mb-1"><i class="bi bi-stars me-1"></i>Запропоновано ШІ · {% if review.verdict == 'ok' %}поєднання в порядку{% elif review.verdict == 'problems' %}є проблеми{% else %}дрібні зауваження{% endif %}</div>
+  {% if review.issues %}<ul class="ps-3 mb-1">{% for i in review.issues %}<li><span class="text-secondary">{{ i.meal }}:</span> {{ i.text }}</li>{% endfor %}</ul>{% endif %}
+  <div>{{ review.summary }}</div>
+  <div class="text-secondary mt-1">Це порада, а не рішення: цифри норм перевірила система.</div>
+</div>
+{% endif %}

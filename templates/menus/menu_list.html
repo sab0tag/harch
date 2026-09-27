@@ -1,7 +1,8 @@
 {% extends "base.html" %}{% load harch %}
 {% block title %}Меню{% endblock %}
 {% block content %}
-<h1 class="h3 mb-1">Меню</h1>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-1"><h1 class="h3 mb-0 me-auto">Меню</h1>
+  {% if can_compose %}<a href="{% url 'menus:generate' %}{% if filters.diet %}?diet={{ filters.diet|urlencode }}{% endif %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Нове меню під норму</a>{% endif %}</div>
 <p class="text-secondary mb-3">Кожне меню — раціон на 1 пацієнта на добу для однієї дієти. Колір показує відповідність нормі дієти:
   <span class="text-success">у нормі</span> · <span class="text-warning">до 10% поза нормою</span> · <span class="text-danger">більше 10%</span>.</p>
 

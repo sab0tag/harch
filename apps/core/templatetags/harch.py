@@ -79,3 +79,16 @@ def money(value):
     if value in (None, ""):
         return "—"
     return floatformat(value, "2g")
+
+
+@register.filter
+def jsonify(value):
+    """JSON for hidden inputs (autoescape turns quotes into entities, the browser turns them back)."""
+    import json
+
+    return json.dumps(value, ensure_ascii=False)
+
+
+@register.filter
+def split(value, sep=" "):
+    return str(value).split(sep)

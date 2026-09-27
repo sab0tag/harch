@@ -9,7 +9,7 @@ from apps.core.navigation import PLACEHOLDERS
 pytestmark = pytest.mark.django_db
 
 MAIN = ["Головна", "Мої задачі"]
-REF_ALL = ["Картки-розкладки", "Меню", "Продукти", "Дієти", "Відділення"]
+REF_ALL = ["Картки-розкладки", "Меню", "Продукти", "Дієти", "Відділення", "Перевірка довідника"]
 
 # Written out by hand from docs/04_ui.md on purpose — not derived from NAV_GROUPS.
 EXPECTED = {

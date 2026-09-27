@@ -1,0 +1,71 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Чернетка: {{ values.name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:dish_list' %}">Картки-розкладки</a></li><li class="breadcrumb-item active">Чернетка з ШІ</li></ol></nav>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <h1 class="h3 mb-0 me-auto">{{ values.name|default:"Чернетка картки" }}</h1>
+  <span class="badge text-bg-info"><i class="bi bi-stars"></i> Запропоновано ШІ</span>
+  {% if draft.status != 'ready' %}<span class="badge text-bg-secondary">{{ draft.get_status_display }}</span>{% endif %}
+</div>
+{% for e in errors %}<div class="alert alert-danger py-2 mb-2">{{ e }}</div>{% endfor %}
+{% if warnings %}<div class="alert alert-warning small"><div class="fw-semibold">Зауваження ШІ</div><ul class="mb-0 ps-3">{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul></div>{% endif %}
+{% if duplicate %}<div class="alert alert-warning small">Картка з такою назвою вже є: <a href="{% url 'catalog:dish_detail' duplicate.pk %}">№{{ duplicate.card_no }} {{ duplicate.name }}</a>.</div>{% endif %}
+{% if missing %}
+<div class="alert alert-info small">
+  <div class="fw-semibold">Бракує в довіднику продуктів:</div>
+  <ul class="mb-2 ps-3">{% for m in missing %}<li><strong>{{ m.name }}</strong> — {{ m.reason }}</li>{% endfor %}</ul>
+  <a href="{% url 'catalog:product_suggest_start' %}?names={{ missing_names|urlencode }}&draft={{ draft.pk }}" class="btn btn-sm btn-outline-info"><i class="bi bi-stars me-1"></i>Запропонувати ці продукти</a>
+  <span class="text-secondary ms-2">після додавання повернетесь сюди й зможете обрати їх у складі.</span>
+</div>
+{% endif %}
+
+<form method="post">{% csrf_token %}
+<input type="hidden" name="rows" value="{{ rows|length }}">
+<div class="row g-3">
+  <div class="col-xl-8">
+    <div class="card mb-3"><div class="card-body"><div class="row g-2">
+      <div class="col-4 col-md-2"><label class="form-label small" for="card_no">№ картки</label><input id="card_no" name="card_no" value="{{ values.card_no }}" inputmode="numeric" class="form-control"></div>
+      <div class="col-8 col-md-5"><label class="form-label small" for="name">Назва</label><input id="name" name="name" value="{{ values.name }}" class="form-control"></div>
+      <div class="col-8 col-md-3"><label class="form-label small" for="category">Категорія</label><input id="category" name="category" value="{{ values.category }}" class="form-control" list="dish-categories">
+        <datalist id="dish-categories">{% for c in categories %}<option value="{{ c }}">{% endfor %}</datalist></div>
+      <div class="col-4 col-md-2"><label class="form-label small" for="output_g">Вихід, г</label><input id="output_g" name="output_g" value="{{ values.output_g }}" inputmode="decimal" class="form-control"></div>
+      <div class="col-12"><div class="d-flex flex-wrap gap-3 small">{% for d in diets %}<div class="form-check"><input class="form-check-input" type="checkbox" name="diets" value="{{ d.pk }}" id="d{{ d.pk }}"{% if d.pk in values.diets %} checked{% endif %}><label class="form-check-label" for="d{{ d.pk }}">{{ d.code }}</label></div>{% endfor %}</div></div>
+    </div></div></div>
+
+    <div class="card mb-3">
+      <div class="card-header bg-white fw-semibold">Склад на 1 порцію</div>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Продукт</th><th class="text-end" style="width: 7rem">Брутто, г</th><th class="text-end" style="width: 7rem">Нетто, г</th></tr></thead>
+        <tbody>{% for r in rows %}
+          <tr><td><select name="product_{{ forloop.counter0 }}" class="form-select form-select-sm" aria-label="Продукт {{ forloop.counter }}"><option value="">—</option>
+              {% for p in products %}<option value="{{ p.pk }}"{% if r.product and r.product.pk == p.pk %} selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></td>
+            <td><input name="brutto_{{ forloop.counter0 }}" value="{{ r.brutto_g|default_if_none:'' }}" inputmode="decimal" class="form-control form-control-sm text-end" aria-label="Брутто"></td>
+            <td><input name="netto_{{ forloop.counter0 }}" value="{{ r.netto_g|default_if_none:'' }}" inputmode="decimal" class="form-control form-control-sm text-end" aria-label="Нетто"></td></tr>
+        {% endfor %}</tbody>
+      </table></div>
+      <div class="card-body border-top small text-secondary">Порожні рядки не враховуються. Щоб додати більше рядків — натисніть «Перерахувати».</div>
+    </div>
+    <div class="card"><div class="card-body"><label class="form-label" for="technology">Технологія приготування</label>
+      <textarea id="technology" name="technology" rows="5" class="form-control">{{ values.technology }}</textarea></div></div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card mb-3"><div class="card-body">
+      <h2 class="h6">На 1 порцію (розрахунок системи)</h2>
+      <div class="row g-1 small">
+        <div class="col-6">Ккал <strong>{{ nutrition.kcal|num:0 }}</strong></div><div class="col-6">Білки <strong>{{ nutrition.protein|num }}</strong> г</div>
+        <div class="col-6">Жири <strong>{{ nutrition.fat|num }}</strong> г</div><div class="col-6">Вуглеводи <strong>{{ nutrition.carbs|num }}</strong> г</div>
+      </div>
+    </div></div>
+    {% if draft.status == 'ready' %}
+    <div class="d-grid gap-2">
+      <button name="action" value="recalc" class="btn btn-outline-secondary"><i class="bi bi-calculator me-1"></i>Перерахувати</button>
+      <button name="action" value="create" class="btn btn-success"><i class="bi bi-check2 me-1"></i>Створити картку</button>
+      <button name="action" value="discard" class="btn btn-link text-danger" formnovalidate>Відхилити чернетку</button>
+    </div>
+    <p class="small text-secondary mt-2">Картка буде «Не перевірено» з джерелом «Чернетка ШІ». Нічна перевірка довідника теж її перевірить.</p>
+    {% endif %}
+  </div>
+</div>
+</form>
+{% endblock %}

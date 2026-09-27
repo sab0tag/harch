@@ -1,0 +1,41 @@
+{% load harch %}
+<div class="card h-100{% if p.in_norm %} border-success{% endif %}">
+  <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+    <span class="fw-semibold me-auto">{{ heading }}{% if number %} {{ number }}{% endif %}</span>
+    {% if p.in_norm %}<span class="badge text-bg-success">у нормі</span>{% elif p.changes %}<span class="badge text-bg-warning">ближче до норми</span>{% else %}<span class="badge text-bg-danger">поза нормою</span>{% endif %}
+  </div>
+  <div class="card-body">
+    <div class="row g-1 mb-3 small">
+      {% for r in p.rows %}
+      <div class="col-6"><span class="text-secondary">{{ r.label }}</span>
+        <span class="fw-semibold {% if r.ok %}text-success{% else %}text-danger{% endif %}">{{ r.value|num:0 }}</span>
+        <span class="text-secondary">({{ r.low|num:0 }}–{{ r.high|num:0 }})</span></div>
+      {% endfor %}
+    </div>
+    {% if p.changes %}
+    <div class="small fw-semibold mb-1">Зміни ({{ p.changes|length }}):</div>
+    <ul class="small ps-3 mb-3">
+      {% for c in p.changes %}<li>{{ c.slot }}: {% if c.kind == 'swap' %}<s class="text-secondary">{{ c.old.name }}</s> → <strong>{{ c.new.name }}</strong>{% else %}додати <strong>{{ c.new.name }}</strong>{% endif %}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    <details{% if not p.changes %} open{% endif %}><summary class="small text-secondary">Повний склад</summary>
+      {% for label, slot, dishes in p.slots %}
+      <div class="small mt-2"><span class="fw-semibold">{{ label }}:</span> {% for d in dishes %}{{ d.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+      {% endfor %}
+    </details>
+    <div id="review-{{ key }}" class="mt-3"></div>
+  </div>
+  <div class="card-footer bg-white d-flex flex-wrap gap-2">
+    <form method="post" class="d-flex flex-wrap gap-2" action="{{ action_url }}">{% csrf_token %}
+      <input type="hidden" name="items" value="{{ p.items|jsonify }}">
+      <input type="hidden" name="diet" value="{{ diet_code }}">
+      {% for value, label, cls in buttons %}<button name="action" value="{{ value }}" class="btn btn-sm {{ cls }}">{{ label }}</button>{% endfor %}
+    </form>
+    {% if ai_available %}
+    <form hx-post="{% url 'menus:review' %}" hx-target="#review-{{ key }}" hx-indicator="#spin-{{ key }}">{% csrf_token %}
+      <input type="hidden" name="items" value="{{ p.items|jsonify }}"><input type="hidden" name="diet" value="{{ diet_code }}">
+      <button class="btn btn-sm btn-outline-info"><i class="bi bi-stars me-1"></i>Оцінка ШІ <span id="spin-{{ key }}" class="htmx-indicator spinner-border spinner-border-sm"></span></button>
+    </form>
+    {% endif %}
+  </div>
+</div>
