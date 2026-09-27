@@ -1,0 +1,67 @@
+# Production: docker compose -f compose.prod.yml up -d   (see docs/06_deploy.md)
+# Only Caddy is published; db and web stay on the internal network.
+x-app: &app
+  build: .
+  image: harch-web
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+    TZ: Europe/Kyiv
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: harch
+      POSTGRES_USER: harch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harch"]
+      interval: 5s
+      retries: 10
+
+  web:
+    <<: *app
+    command: >-
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
+      --access-logfile - --error-logfile -
+    healthcheck:
+      # /healthz/ checks the DB; sent as Caddy would, so ALLOWED_HOSTS and SSL redirect pass.
+      test: ["CMD", "python", "-c", "import os, urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/healthz/', headers={'Host': os.environ['DJANGO_ALLOWED_HOSTS'].split(',')[0], 'X-Forwarded-Proto': 'https'}), timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+
+  scheduler:
+    <<: *app
+    command: supercronic /app/deploy/crontab
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

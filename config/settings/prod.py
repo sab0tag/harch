@@ -11,6 +11,9 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS]  # noqa: F405
 
+# HSTS preload is a months-long commitment to the browser lists; not for a pilot domain.
+SILENCED_SYSTEM_CHECKS = ["security.W021"]
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

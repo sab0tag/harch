@@ -9,29 +9,51 @@
 
 ## Compose (prod)
 
+Файлы: `compose.prod.yml`, `deploy/Caddyfile`, `.env.prod.example`.
+
 ```yaml
 services:
-  db:        postgres:16, volume pgdata, без публикации порта наружу
-  web:       образ приложения, gunicorn -w 3, env_file .env, depends_on db
-  scheduler: тот же образ, supercronic с crontab:
-               */15 * * * *  python manage.py check_deadlines
-               5 0 * * *     python manage.py generate_daily_tasks --days-ahead 1
-  backup:    postgres:16 + cron: 30 2 * * * pg_dump | gzip > /backups/harch-$(date).sql.gz
-               ротация 14 дней, затем rclone в Storage Box / B2
-  caddy:     caddy:2, Caddyfile:  harch.example.com { reverse_proxy web:8000 }
-             volumes caddy_data, caddy_config
+  db:        postgres:16, volume pgdata, порт наружу не публикуется, пароль из POSTGRES_PASSWORD
+  web:       образ приложения, gunicorn -w 3 --timeout 60, settings=config.settings.prod,
+             healthcheck на /healthz/ (проверяет БД)
+  scheduler: тот же образ, supercronic с deploy/crontab (generate_daily_tasks, check_deadlines)
+  backup:    S5-02 — pg_dump по крону, ротация 14 дней, rclone в Storage Box / B2
+  caddy:     caddy:2, единственный сервис с портами 80/443; сертификат Let's Encrypt для $DOMAIN,
+             стартует после того, как web стал healthy
 ```
 
-## `.env` (пример ключей)
+`.dockerignore` не пускает `.env` и прочее локальное в образ — ключи живут только в `.env` на сервере.
+Prod-настройки проходят `check --deploy` без предупреждений (тест `apps/core/tests/test_deploy.py`);
+`security.W021` (HSTS preload) заглушён сознательно — preload не для пилотного домена.
+
+## `.env`
+
+Шаблон — `.env.prod.example`. Скопировать в `.env`, `chmod 600 .env`, заполнить:
 
 ```
-DJANGO_SECRET_KEY=
+DOMAIN=harch.example.com
+DJANGO_SECRET_KEY=          # python -c "import secrets; print(secrets.token_urlsafe(50))"
 DJANGO_ALLOWED_HOSTS=harch.example.com
-DATABASE_URL=postgres://harch:***@db:5432/harch
+POSTGRES_PASSWORD=          # тот же пароль — в DATABASE_URL
+DATABASE_URL=postgres://harch:<POSTGRES_PASSWORD>@db:5432/harch
 EMAIL_URL=smtp+tls://user:pass@smtp.example.com:587   # опционально
-SENTRY_DSN=                                           # опционально
+SENTRY_DSN=                                           # опционально (S5-05)
 HOSPITAL_NAME=КНП "..."
 ORDER_DEADLINE=16:00
+```
+
+## Первый запуск
+
+```bash
+git clone https://github.com/sab0tag/harch.git && cd harch
+cp .env.prod.example .env && chmod 600 .env && nano .env
+docker compose -f compose.prod.yml build web
+docker compose -f compose.prod.yml run --rm web python manage.py migrate
+docker compose -f compose.prod.yml run --rm web python manage.py load_seed
+docker compose -f compose.prod.yml run --rm web python manage.py createsuperuser
+docker compose -f compose.prod.yml up -d
+docker compose -f compose.prod.yml ps          # web — healthy, caddy — up
+curl -I https://harch.example.com/healthz/     # 200, заголовок Strict-Transport-Security
 ```
 
 ## Деплой

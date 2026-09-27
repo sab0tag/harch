@@ -27,3 +27,7 @@ docker compose exec web pytest
 
 Python 3.12, PostgreSQL 16. У `.env` вкажи `DATABASE_URL` на свій Postgres, потім
 `pip install -r requirements-dev.txt && python manage.py migrate && python manage.py runserver`.
+
+## Продакшн
+
+`compose.prod.yml` (gunicorn + Caddy з автоматичним HTTPS). Інструкція — `docs/06_deploy.md`.
