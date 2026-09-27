@@ -1,0 +1,4407 @@
+[
+  {
+    "card_no": 1,
+    "name": "Каша вівсяна на молоці",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Пластівці вівсяні",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 150,
+        "netto_g": 150
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 2,
+    "name": "Каша вівсяна на воді",
+    "category": "Сніданок — основні",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Пластівці вівсяні",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 180,
+        "netto_g": 180
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 3,
+    "name": "Каша гречана розсипчаста",
+    "category": "Сніданок — основні",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Гречка",
+        "brutto_g": 70,
+        "netto_g": 70
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 150,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 4,
+    "name": "Каша рисова молочна",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Рис",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 150,
+        "netto_g": 150
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 5,
+    "name": "Каша пшоняна на молоці",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Пшоно",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 150,
+        "netto_g": 150
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 6,
+    "name": "Каша манна на молоці",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Крупа манна",
+        "brutto_g": 40,
+        "netto_g": 40
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 180,
+        "netto_g": 180
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 7,
+    "name": "Каша манна рідка (стіл №1а)",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Крупа манна",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 200,
+        "netto_g": 200
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 220
+  },
+  {
+    "card_no": 8,
+    "name": "Каша перлова",
+    "category": "Сніданок — основні",
+    "diets": [
+      "НБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Перлова крупа",
+        "brutto_g": 70,
+        "netto_g": 70
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 180,
+        "netto_g": 180
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 9,
+    "name": "Каша ячна",
+    "category": "Сніданок — основні",
+    "diets": [
+      "НБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Крупа ячна",
+        "brutto_g": 60,
+        "netto_g": 60
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 160,
+        "netto_g": 160
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 10,
+    "name": "Омлет натуральний паровий",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 120,
+        "netto_g": 110
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 130
+  },
+  {
+    "card_no": 11,
+    "name": "Омлет білковий паровий",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "НКД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Білок яєчний",
+        "brutto_g": 90,
+        "netto_g": 90
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 120
+  },
+  {
+    "card_no": 12,
+    "name": "Омлет з сиром",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 120,
+        "netto_g": 110
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Сир твердий",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 140
+  },
+  {
+    "card_no": 13,
+    "name": "Яйце варене",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 60,
+        "netto_g": 55
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 55
+  },
+  {
+    "card_no": 14,
+    "name": "Сирники зі сметаною",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний 9%",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Борошно пшеничне",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 10,
+        "netto_g": 10
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 15,
+    "name": "Запіканка сиркова парова",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний 9%",
+        "brutto_g": 120,
+        "netto_g": 120
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Крупа манна",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 16,
+    "name": "Пудинг сирковий паровий",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний нежирний",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Крупа манна",
+        "brutto_g": 8,
+        "netto_g": 8
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Цукрозамінник",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 120
+  },
+  {
+    "card_no": 17,
+    "name": "Суфле сиркове",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний 9%",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Крупа манна",
+        "brutto_g": 8,
+        "netto_g": 8
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      }
+    ],
+    "output_g": 120
+  },
+  {
+    "card_no": 18,
+    "name": "Каша гречана з молоком",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Гречка",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 150,
+        "netto_g": 150
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 19,
+    "name": "Каша рисова на воді",
+    "category": "Сніданок — основні",
+    "diets": [
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Рис",
+        "brutto_g": 60,
+        "netto_g": 60
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 160,
+        "netto_g": 160
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 20,
+    "name": "Каша гречана нежирна (НКД)",
+    "category": "Сніданок — основні",
+    "diets": [
+      "НБД",
+      "НКД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Гречка",
+        "brutto_g": 40,
+        "netto_g": 40
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 120,
+        "netto_g": 120
+      }
+    ],
+    "output_g": 130
+  },
+  {
+    "card_no": 21,
+    "name": "Чай з цукром",
+    "category": "Сніданок — напої",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Чай чорний",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 22,
+    "name": "Чай без цукру",
+    "category": "Сніданок — напої",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Чай чорний",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 23,
+    "name": "Чай з лимоном",
+    "category": "Сніданок — напої",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Чай чорний",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Лимон",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 24,
+    "name": "Какао з молоком",
+    "category": "Сніданок — напої",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Какао-порошок",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 150,
+        "netto_g": 150
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 25,
+    "name": "Молоко кип'ячене",
+    "category": "Сніданок — напої",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 26,
+    "name": "Відвар шипшини",
+    "category": "Сніданок — напої",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Шипшина суха",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 27,
+    "name": "Відвар шипшини без цукру",
+    "category": "Сніданок — напої",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Шипшина суха",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 28,
+    "name": "Хліб білий",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Хліб білий",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 50
+  },
+  {
+    "card_no": 29,
+    "name": "Хліб житній",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "НБД",
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Хліб житній",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 50
+  },
+  {
+    "card_no": 30,
+    "name": "Хліб білий підсушений",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Хліб білий підсушений",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 50
+  },
+  {
+    "card_no": 31,
+    "name": "Хліб з отрубями",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Хліб з отрубями",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 50
+  },
+  {
+    "card_no": 32,
+    "name": "Сухарі білі",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Сухарі білі",
+        "brutto_g": 30,
+        "netto_g": 30
+      }
+    ],
+    "output_g": 30
+  },
+  {
+    "card_no": 33,
+    "name": "Масло порційне",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 10,
+        "netto_g": 10
+      }
+    ],
+    "output_g": 10
+  },
+  {
+    "card_no": 34,
+    "name": "Сир твердий порційний",
+    "category": "Сніданок — хліб/додатки",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир твердий",
+        "brutto_g": 30,
+        "netto_g": 30
+      }
+    ],
+    "output_g": 30
+  },
+  {
+    "card_no": 35,
+    "name": "Яблуко свіже",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 150,
+        "netto_g": 130
+      }
+    ],
+    "output_g": 130
+  },
+  {
+    "card_no": 36,
+    "name": "Банан",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Банани",
+        "brutto_g": 150,
+        "netto_g": 100
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 37,
+    "name": "Апельсин",
+    "category": "2-й сніданок",
+    "diets": [
+      "НБД",
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Апельсини",
+        "brutto_g": 200,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 38,
+    "name": "Груша",
+    "category": "2-й сніданок",
+    "diets": [
+      "НБД",
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Груші",
+        "brutto_g": 150,
+        "netto_g": 130
+      }
+    ],
+    "output_g": 130
+  },
+  {
+    "card_no": 39,
+    "name": "Кефір 2.5%",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Кефір 2.5%",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 40,
+    "name": "Кефір 1% нежирний",
+    "category": "2-й сніданок",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Кефір 1%",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 41,
+    "name": "Йогурт натуральний",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Йогурт натуральний",
+        "brutto_g": 150,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 42,
+    "name": "Ряжанка",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Ряжанка 2.5%",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 43,
+    "name": "Сік яблучний",
+    "category": "2-й сніданок",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Сік яблучний",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 44,
+    "name": "Сік томатний",
+    "category": "2-й сніданок",
+    "diets": [
+      "НБД",
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Сік томатний",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 45,
+    "name": "Компот із яблук",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 40,
+        "netto_g": 35
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 46,
+    "name": "Компот без цукру",
+    "category": "2-й сніданок",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 40,
+        "netto_g": 35
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 47,
+    "name": "Кисіль із ягід",
+    "category": "2-й сніданок",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Ягоди заморожені",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Крохмаль картопляний",
+        "brutto_g": 8,
+        "netto_g": 8
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 48,
+    "name": "Печиво галетне",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Печиво галетне",
+        "brutto_g": 30,
+        "netto_g": 30
+      }
+    ],
+    "output_g": 30
+  },
+  {
+    "card_no": 49,
+    "name": "Печиво дієтичне без цукру",
+    "category": "2-й сніданок",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Печиво дієтичне",
+        "brutto_g": 25,
+        "netto_g": 25
+      }
+    ],
+    "output_g": 25
+  },
+  {
+    "card_no": 50,
+    "name": "Сир кисломолочний зі сметаною",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний 9%",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      }
+    ],
+    "output_g": 130
+  },
+  {
+    "card_no": 51,
+    "name": "Сир кисломолочний нежирний",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний нежирний",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Цукрозамінник",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 52,
+    "name": "Яблуко печене",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 180,
+        "netto_g": 150
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 53,
+    "name": "Яблуко печене без цукру",
+    "category": "2-й сніданок",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 180,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 54,
+    "name": "Мус яблучний",
+    "category": "2-й сніданок",
+    "diets": [
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 80,
+        "netto_g": 65
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Желатин",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 100,
+        "netto_g": 100
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 55,
+    "name": "Пудинг манний",
+    "category": "2-й сніданок",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Крупа манна",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 56,
+    "name": "Борщ український",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Буряк",
+        "brutto_g": 80,
+        "netto_g": 65
+      },
+      {
+        "product": "Капуста білокачанна",
+        "brutto_g": 60,
+        "netto_g": 50
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 100,
+        "netto_g": 75
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 30,
+        "netto_g": 25
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 25,
+        "netto_g": 20
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Яловичина",
+        "brutto_g": 100,
+        "netto_g": 68
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 57,
+    "name": "Щі зі свіжої капусти",
+    "category": "Обід — супи",
+    "diets": [
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Капуста білокачанна",
+        "brutto_g": 100,
+        "netto_g": 80
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 80,
+        "netto_g": 60
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 25,
+        "netto_g": 20
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Яловичина",
+        "brutto_g": 80,
+        "netto_g": 55
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 58,
+    "name": "Суп гречаний з куркою",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Гречка",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 100,
+        "netto_g": 75
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Курятина",
+        "brutto_g": 100,
+        "netto_g": 68
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 59,
+    "name": "Суп рисовий з куркою",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Рис",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 100,
+        "netto_g": 75
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Курятина",
+        "brutto_g": 100,
+        "netto_g": 68
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 60,
+    "name": "Суп вермішелевий",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Вермішель",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 80,
+        "netto_g": 60
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Курятина",
+        "brutto_g": 70,
+        "netto_g": 48
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 61,
+    "name": "Суп картопляний",
+    "category": "Обід — супи",
+    "diets": [
+      "НБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Картопля",
+        "brutto_g": 150,
+        "netto_g": 112
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 25,
+        "netto_g": 20
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 62,
+    "name": "Суп-пюре з гарбуза",
+    "category": "Обід — супи",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Гарбуз",
+        "brutto_g": 150,
+        "netto_g": 120
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 60,
+        "netto_g": 45
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Вершки 10%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 63,
+    "name": "Суп-пюре з броколі",
+    "category": "Обід — супи",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Броколі",
+        "brutto_g": 120,
+        "netto_g": 100
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 60,
+        "netto_g": 45
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Вершки 10%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 64,
+    "name": "Суп-пюре з кабачків",
+    "category": "Обід — супи",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Кабачки",
+        "brutto_g": 150,
+        "netto_g": 120
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 50,
+        "netto_g": 38
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Вершки 10%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 65,
+    "name": "Суп молочний з вермішеллю",
+    "category": "Обід — супи",
+    "diets": [
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 250,
+        "netto_g": 250
+      },
+      {
+        "product": "Вермішель",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 66,
+    "name": "Бульйон курячий з вермішеллю",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Курятина",
+        "brutto_g": 80,
+        "netto_g": 55
+      },
+      {
+        "product": "Вермішель",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Зелень",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 67,
+    "name": "Суп-пюре з курятини",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Курятина",
+        "brutto_g": 100,
+        "netto_g": 68
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 60,
+        "netto_g": 45
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Рис",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 250,
+        "netto_g": 250
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 68,
+    "name": "Суп овочевий",
+    "category": "Обід — супи",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Картопля",
+        "brutto_g": 80,
+        "netto_g": 60
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 30,
+        "netto_g": 25
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Кабачки",
+        "brutto_g": 50,
+        "netto_g": 40
+      },
+      {
+        "product": "Помідори",
+        "brutto_g": 30,
+        "netto_g": 25
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Зелень",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 69,
+    "name": "Суп перловий з м'ясом",
+    "category": "Обід — супи",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Перлова крупа",
+        "brutto_g": 25,
+        "netto_g": 25
+      },
+      {
+        "product": "Картопля",
+        "brutto_g": 80,
+        "netto_g": 60
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Яловичина",
+        "brutto_g": 80,
+        "netto_g": 55
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 300,
+        "netto_g": 300
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 70,
+    "name": "Суп слизистий вівсяний",
+    "category": "Обід — супи",
+    "diets": [
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Пластівці вівсяні",
+        "brutto_g": 40,
+        "netto_g": 40
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 100,
+        "netto_g": 100
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 10,
+        "netto_g": 9
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 300
+  },
+  {
+    "card_no": 71,
+    "name": "Котлета куряча парова",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Філе куряче",
+        "brutto_g": 100,
+        "netto_g": 85
+      },
+      {
+        "product": "Хліб білий",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 75
+  },
+  {
+    "card_no": 72,
+    "name": "Котлета м'ясна парова",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина",
+        "brutto_g": 110,
+        "netto_g": 75
+      },
+      {
+        "product": "Хліб білий",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 75
+  },
+  {
+    "card_no": 73,
+    "name": "Тефтелі м'ясні в соусі",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина",
+        "brutto_g": 90,
+        "netto_g": 62
+      },
+      {
+        "product": "Рис",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 74,
+    "name": "Курятина відварна",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Курятина",
+        "brutto_g": 150,
+        "netto_g": 100
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 75,
+    "name": "Курятина тушкована",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Курятина",
+        "brutto_g": 150,
+        "netto_g": 100
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 76,
+    "name": "Біфштекс рубаний паровий",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина",
+        "brutto_g": 120,
+        "netto_g": 82
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 77,
+    "name": "Риба відварна (хек)",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Хек",
+        "brutto_g": 130,
+        "netto_g": 90
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 150,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 90
+  },
+  {
+    "card_no": 78,
+    "name": "Риба парова (мінтай)",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Мінтай",
+        "brutto_g": 140,
+        "netto_g": 95
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 100,
+        "netto_g": 100
+      }
+    ],
+    "output_g": 95
+  },
+  {
+    "card_no": 79,
+    "name": "Риба запечена (мінтай)",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Мінтай",
+        "brutto_g": 140,
+        "netto_g": 95
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 80,
+    "name": "Печінка тушкована",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Печінка яловича",
+        "brutto_g": 120,
+        "netto_g": 100
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 81,
+    "name": "Суфле з курятини парове",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Філе куряче",
+        "brutto_g": 120,
+        "netto_g": 102
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 82,
+    "name": "Суфле з риби парове",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Судак",
+        "brutto_g": 120,
+        "netto_g": 80
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 15,
+        "netto_g": 13
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 90
+  },
+  {
+    "card_no": 83,
+    "name": "Кнелі курячі парові",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Філе куряче",
+        "brutto_g": 110,
+        "netto_g": 93
+      },
+      {
+        "product": "Хліб білий",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 10,
+        "netto_g": 9
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 84,
+    "name": "Фрикадельки парові",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина",
+        "brutto_g": 80,
+        "netto_g": 55
+      },
+      {
+        "product": "Рис",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 8,
+        "netto_g": 6
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 85,
+    "name": "Індичка відварна",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Індичка",
+        "brutto_g": 140,
+        "netto_g": 95
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 95
+  },
+  {
+    "card_no": 86,
+    "name": "Гуляш з яловичини",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина",
+        "brutto_g": 110,
+        "netto_g": 75
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Борошно пшеничне",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 87,
+    "name": "Бефстроганов",
+    "category": "Обід — основні",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина",
+        "brutto_g": 120,
+        "netto_g": 82
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Борошно пшеничне",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 88,
+    "name": "Пюре картопляне",
+    "category": "Обід — гарніри",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Картопля",
+        "brutto_g": 200,
+        "netto_g": 150
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 89,
+    "name": "Каша гречана",
+    "category": "Обід — гарніри",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Гречка",
+        "brutto_g": 70,
+        "netto_g": 70
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 90,
+    "name": "Рис відварний",
+    "category": "Обід — гарніри",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Рис",
+        "brutto_g": 60,
+        "netto_g": 60
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 91,
+    "name": "Макарони відварні",
+    "category": "Обід — гарніри",
+    "diets": [
+      "НБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Макаронні вироби",
+        "brutto_g": 70,
+        "netto_g": 70
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 92,
+    "name": "Овочі тушковані",
+    "category": "Обід — гарніри",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Картопля",
+        "brutto_g": 60,
+        "netto_g": 45
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 30,
+        "netto_g": 25
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Капуста білокачанна",
+        "brutto_g": 50,
+        "netto_g": 40
+      },
+      {
+        "product": "Кабачки",
+        "brutto_g": 40,
+        "netto_g": 32
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 93,
+    "name": "Пюре з цвітної капусти",
+    "category": "Обід — гарніри",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Цвітна капуста",
+        "brutto_g": 180,
+        "netto_g": 150
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 94,
+    "name": "Пюре з кабачків",
+    "category": "Обід — гарніри",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Кабачки",
+        "brutto_g": 200,
+        "netto_g": 160
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 95,
+    "name": "Морква тушкована",
+    "category": "Обід — гарніри",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Морква",
+        "brutto_g": 180,
+        "netto_g": 145
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 96,
+    "name": "Броколі парова",
+    "category": "Обід — гарніри",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Броколі",
+        "brutto_g": 180,
+        "netto_g": 150
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 97,
+    "name": "Салат зі свіжих огірків і помідорів",
+    "category": "Обід — салати",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Огірки свіжі",
+        "brutto_g": 60,
+        "netto_g": 55
+      },
+      {
+        "product": "Помідори",
+        "brutto_g": 60,
+        "netto_g": 55
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 100
+  },
+  {
+    "card_no": 98,
+    "name": "Салат з капусти",
+    "category": "Обід — салати",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Капуста білокачанна",
+        "brutto_g": 100,
+        "netto_g": 80
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 90
+  },
+  {
+    "card_no": 99,
+    "name": "Салат з буряка",
+    "category": "Обід — салати",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Буряк",
+        "brutto_g": 100,
+        "netto_g": 80
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 100,
+    "name": "Салат з моркви",
+    "category": "Обід — салати",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Морква",
+        "brutto_g": 100,
+        "netto_g": 80
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 101,
+    "name": "Морква відварна терта",
+    "category": "Обід — салати",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Морква",
+        "brutto_g": 100,
+        "netto_g": 80
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 102,
+    "name": "Ікра кабачкова",
+    "category": "Обід — салати",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Кабачки",
+        "brutto_g": 100,
+        "netto_g": 80
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 103,
+    "name": "Компот із сухофруктів",
+    "category": "Обід — напої",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Сухофрукти",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 104,
+    "name": "Кисіль із варення",
+    "category": "Обід — напої",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Ягоди заморожені",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Крохмаль картопляний",
+        "brutto_g": 8,
+        "netto_g": 8
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 105,
+    "name": "Морс без цукру",
+    "category": "Обід — напої",
+    "diets": [
+      "НКД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Ягоди заморожені",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 106,
+    "name": "Хліб підсушений",
+    "category": "Обід — хліб",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Хліб білий підсушений",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 50
+  },
+  {
+    "card_no": 107,
+    "name": "Кефір з печивом",
+    "category": "Полуденок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Кефір 2.5%",
+        "brutto_g": 200,
+        "netto_g": 200
+      },
+      {
+        "product": "Печиво галетне",
+        "brutto_g": 20,
+        "netto_g": 20
+      }
+    ],
+    "output_g": 220
+  },
+  {
+    "card_no": 108,
+    "name": "Йогурт",
+    "category": "Полуденок",
+    "diets": [
+      "ВБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Йогурт натуральний",
+        "brutto_g": 150,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 109,
+    "name": "Фрукт свіжий",
+    "category": "Полуденок",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "НКД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яблука",
+        "brutto_g": 150,
+        "netto_g": 130
+      }
+    ],
+    "output_g": 130
+  },
+  {
+    "card_no": 110,
+    "name": "Відвар шипшини з сухариком",
+    "category": "Полуденок",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Шипшина суха",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      },
+      {
+        "product": "Сухарі білі",
+        "brutto_g": 20,
+        "netto_g": 20
+      }
+    ],
+    "output_g": 220
+  },
+  {
+    "card_no": 111,
+    "name": "Сирок кисломолочний",
+    "category": "Полуденок",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний 9%",
+        "brutto_g": 80,
+        "netto_g": 80
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 5,
+        "netto_g": 5
+      }
+    ],
+    "output_g": 85
+  },
+  {
+    "card_no": 112,
+    "name": "Кефір нежирний",
+    "category": "Полуденок",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Кефір 1%",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 113,
+    "name": "Компот з сухофруктів",
+    "category": "Полуденок",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Сухофрукти",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 114,
+    "name": "Свіжовичавлений сік моркви",
+    "category": "Полуденок",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Морква",
+        "brutto_g": 200,
+        "netto_g": 160
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 50,
+        "netto_g": 50
+      }
+    ],
+    "output_g": 180
+  },
+  {
+    "card_no": 115,
+    "name": "Рагу овочеве",
+    "category": "Вечеря — основні",
+    "diets": [
+      "НКД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Картопля",
+        "brutto_g": 120,
+        "netto_g": 90
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 30,
+        "netto_g": 25
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Капуста білокачанна",
+        "brutto_g": 50,
+        "netto_g": 40
+      },
+      {
+        "product": "Кабачки",
+        "brutto_g": 40,
+        "netto_g": 32
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 116,
+    "name": "Каша гречана з маслом",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Гречка",
+        "brutto_g": 60,
+        "netto_g": 60
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 117,
+    "name": "Картопля відварна",
+    "category": "Вечеря — основні",
+    "diets": [
+      "НБД",
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Картопля",
+        "brutto_g": 220,
+        "netto_g": 165
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      },
+      {
+        "product": "Зелень",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 118,
+    "name": "Риба тушкована з овочами",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Мінтай",
+        "brutto_g": 130,
+        "netto_g": 88
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 30,
+        "netto_g": 25
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Томатна паста",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 119,
+    "name": "Плов з куркою",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ОВД"
+    ],
+    "ingredients": [
+      {
+        "product": "Рис",
+        "brutto_g": 70,
+        "netto_g": 70
+      },
+      {
+        "product": "Курятина",
+        "brutto_g": 100,
+        "netto_g": 68
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 20,
+        "netto_g": 16
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 120,
+    "name": "Запіканка сиркова",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Сир кисломолочний 9%",
+        "brutto_g": 120,
+        "netto_g": 120
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 20,
+        "netto_g": 18
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Крупа манна",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Сметана 15%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 121,
+    "name": "Котлета рибна парова",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Судак",
+        "brutto_g": 110,
+        "netto_g": 73
+      },
+      {
+        "product": "Хліб білий",
+        "brutto_g": 12,
+        "netto_g": 12
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 12,
+        "netto_g": 12
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 75
+  },
+  {
+    "card_no": 122,
+    "name": "Каша рисова з родзинками",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ОВД",
+      "ЩД"
+    ],
+    "ingredients": [
+      {
+        "product": "Рис",
+        "brutto_g": 60,
+        "netto_g": 60
+      },
+      {
+        "product": "Родзинки",
+        "brutto_g": 15,
+        "netto_g": 15
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Цукор",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 80,
+        "netto_g": 80
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 123,
+    "name": "Омлет з овочами",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 120,
+        "netto_g": 110
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 30,
+        "netto_g": 30
+      },
+      {
+        "product": "Помідори",
+        "brutto_g": 25,
+        "netto_g": 20
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 124,
+    "name": "Курятина тушкована з рисом",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ОВД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Курятина",
+        "brutto_g": 100,
+        "netto_g": 68
+      },
+      {
+        "product": "Рис",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 15,
+        "netto_g": 12
+      },
+      {
+        "product": "Цибуля ріпчаста",
+        "brutto_g": 10,
+        "netto_g": 8
+      },
+      {
+        "product": "Олія соняшникова",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 125,
+    "name": "Овочі парові",
+    "category": "Вечеря — основні",
+    "diets": [
+      "НКД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Броколі",
+        "brutto_g": 100,
+        "netto_g": 85
+      },
+      {
+        "product": "Морква",
+        "brutto_g": 80,
+        "netto_g": 65
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 150
+  },
+  {
+    "card_no": 126,
+    "name": "Біточки курячі парові",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Філе куряче",
+        "brutto_g": 110,
+        "netto_g": 93
+      },
+      {
+        "product": "Хліб білий",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 10,
+        "netto_g": 10
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 5,
+        "netto_g": 4
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 80
+  },
+  {
+    "card_no": 127,
+    "name": "Каша вівсяна з маслом",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ОВД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Пластівці вівсяні",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      },
+      {
+        "product": "Вода",
+        "brutto_g": 150,
+        "netto_g": 150
+      }
+    ],
+    "output_g": 180
+  },
+  {
+    "card_no": 128,
+    "name": "Курятина відварна з гречкою",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№9"
+    ],
+    "ingredients": [
+      {
+        "product": "Курятина",
+        "brutto_g": 120,
+        "netto_g": 82
+      },
+      {
+        "product": "Гречка",
+        "brutto_g": 50,
+        "netto_g": 50
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 5,
+        "netto_g": 5
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 2,
+        "netto_g": 2
+      }
+    ],
+    "output_g": 200
+  },
+  {
+    "card_no": 129,
+    "name": "Суфле м'ясне парове",
+    "category": "Вечеря — основні",
+    "diets": [
+      "ВБД",
+      "ЩД",
+      "№1а",
+      "№4"
+    ],
+    "ingredients": [
+      {
+        "product": "Яловичина нежирна",
+        "brutto_g": 110,
+        "netto_g": 75
+      },
+      {
+        "product": "Яйце куряче",
+        "brutto_g": 15,
+        "netto_g": 13
+      },
+      {
+        "product": "Молоко 2.5%",
+        "brutto_g": 20,
+        "netto_g": 20
+      },
+      {
+        "product": "Масло вершкове",
+        "brutto_g": 3,
+        "netto_g": 3
+      },
+      {
+        "product": "Сіль",
+        "brutto_g": 1,
+        "netto_g": 1
+      }
+    ],
+    "output_g": 90
+  },
+  {
+    "card_no": 130,
+    "name": "Кефір",
+    "category": "Вечеря — додатки",
+    "diets": [
+      "ВБД",
+      "НБД",
+      "ОВД",
+      "ЩД",
+      "№1а"
+    ],
+    "ingredients": [
+      {
+        "product": "Кефір 2.5%",
+        "brutto_g": 200,
+        "netto_g": 200
+      }
+    ],
+    "output_g": 200
+  }
+]

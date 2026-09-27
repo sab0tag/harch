@@ -1,0 +1,184 @@
+[
+  {
+    "basis": "protein",
+    "product": "М'ясо яловичина",
+    "qty_g": 100,
+    "substitute": "Риба філе",
+    "substitute_qty_g": 150
+  },
+  {
+    "basis": "protein",
+    "product": "М'ясо яловичина",
+    "qty_g": 100,
+    "substitute": "Сир кисломолочний",
+    "substitute_qty_g": 120
+  },
+  {
+    "basis": "protein",
+    "product": "М'ясо яловичина",
+    "qty_g": 100,
+    "substitute": "Яйце куряче",
+    "substitute_qty_g": 2.5
+  },
+  {
+    "basis": "protein",
+    "product": "М'ясо яловичина",
+    "qty_g": 100,
+    "substitute": "Курятина",
+    "substitute_qty_g": 100
+  },
+  {
+    "basis": "protein",
+    "product": "Риба філе",
+    "qty_g": 100,
+    "substitute": "М'ясо яловичина",
+    "substitute_qty_g": 65
+  },
+  {
+    "basis": "protein",
+    "product": "Риба філе",
+    "qty_g": 100,
+    "substitute": "Сир кисломолочний",
+    "substitute_qty_g": 85
+  },
+  {
+    "basis": "protein",
+    "product": "Молоко цільне",
+    "qty_g": 100,
+    "substitute": "Молоко сухе",
+    "substitute_qty_g": 12
+  },
+  {
+    "basis": "protein",
+    "product": "Молоко цільне",
+    "qty_g": 100,
+    "substitute": "Кефір/ряжанка",
+    "substitute_qty_g": 100
+  },
+  {
+    "basis": "protein",
+    "product": "Молоко цільне",
+    "qty_g": 100,
+    "substitute": "Сир твердий",
+    "substitute_qty_g": 12
+  },
+  {
+    "basis": "protein",
+    "product": "Сир кисломолочний",
+    "qty_g": 100,
+    "substitute": "М'ясо яловичина",
+    "substitute_qty_g": 85
+  },
+  {
+    "basis": "protein",
+    "product": "Сир кисломолочний",
+    "qty_g": 100,
+    "substitute": "Риба",
+    "substitute_qty_g": 120
+  },
+  {
+    "basis": "protein",
+    "product": "Сир кисломолочний",
+    "qty_g": 100,
+    "substitute": "Яйце куряче",
+    "substitute_qty_g": 2
+  },
+  {
+    "basis": "protein",
+    "product": "Яйце куряче (1 шт)",
+    "qty_g": 40,
+    "substitute": "М'ясо яловичина",
+    "substitute_qty_g": 40
+  },
+  {
+    "basis": "protein",
+    "product": "Яйце куряче (1 шт)",
+    "qty_g": 40,
+    "substitute": "Сир кисломолочний",
+    "substitute_qty_g": 50
+  },
+  {
+    "basis": "carbs",
+    "product": "Хліб пшеничний",
+    "qty_g": 100,
+    "substitute": "Хліб житній",
+    "substitute_qty_g": 130
+  },
+  {
+    "basis": "carbs",
+    "product": "Хліб пшеничний",
+    "qty_g": 100,
+    "substitute": "Крупи (гречка/рис)",
+    "substitute_qty_g": 65
+  },
+  {
+    "basis": "carbs",
+    "product": "Хліб пшеничний",
+    "qty_g": 100,
+    "substitute": "Макаронні вироби",
+    "substitute_qty_g": 60
+  },
+  {
+    "basis": "carbs",
+    "product": "Хліб пшеничний",
+    "qty_g": 100,
+    "substitute": "Картопля",
+    "substitute_qty_g": 300
+  },
+  {
+    "basis": "carbs",
+    "product": "Крупи",
+    "qty_g": 100,
+    "substitute": "Хліб пшеничний",
+    "substitute_qty_g": 155
+  },
+  {
+    "basis": "carbs",
+    "product": "Крупи",
+    "qty_g": 100,
+    "substitute": "Картопля",
+    "substitute_qty_g": 430
+  },
+  {
+    "basis": "carbs",
+    "product": "Крупи",
+    "qty_g": 100,
+    "substitute": "Макарони",
+    "substitute_qty_g": 90
+  },
+  {
+    "basis": "carbs",
+    "product": "Картопля",
+    "qty_g": 100,
+    "substitute": "Хліб пшеничний",
+    "substitute_qty_g": 35
+  },
+  {
+    "basis": "carbs",
+    "product": "Картопля",
+    "qty_g": 100,
+    "substitute": "Крупи",
+    "substitute_qty_g": 23
+  },
+  {
+    "basis": "carbs",
+    "product": "Картопля",
+    "qty_g": 100,
+    "substitute": "Овочі (капуста)",
+    "substitute_qty_g": 200
+  },
+  {
+    "basis": "carbs",
+    "product": "Цукор",
+    "qty_g": 100,
+    "substitute": "Мед",
+    "substitute_qty_g": 130
+  },
+  {
+    "basis": "carbs",
+    "product": "Свіжі фрукти",
+    "qty_g": 100,
+    "substitute": "Сухофрукти",
+    "substitute_qty_g": 20
+  }
+]

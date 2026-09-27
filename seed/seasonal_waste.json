@@ -1,0 +1,106 @@
+[
+  {
+    "product": "Картопля",
+    "until_jan1": "25%",
+    "jan_feb": "30%",
+    "mar_apr": "40%",
+    "may_aug": "молода: 20%",
+    "sep_dec": "25%"
+  },
+  {
+    "product": "Морква",
+    "until_jan1": "20%",
+    "jan_feb": "25%",
+    "mar_apr": "25%",
+    "may_aug": "молода: 15%",
+    "sep_dec": "20%"
+  },
+  {
+    "product": "Буряк",
+    "until_jan1": "20%",
+    "jan_feb": "25%",
+    "mar_apr": "25%",
+    "may_aug": "молодий: 15%",
+    "sep_dec": "20%"
+  },
+  {
+    "product": "Цибуля ріпчаста",
+    "until_jan1": "16%",
+    "jan_feb": "16%",
+    "mar_apr": "16%",
+    "may_aug": "16%",
+    "sep_dec": "16%"
+  },
+  {
+    "product": "Капуста білокачанна",
+    "until_jan1": "20%",
+    "jan_feb": "20%",
+    "mar_apr": "20%",
+    "may_aug": "молода: 20%",
+    "sep_dec": "20%"
+  },
+  {
+    "product": "Огірки свіжі",
+    "until_jan1": "10%",
+    "jan_feb": "10%",
+    "mar_apr": "10%",
+    "may_aug": "5%",
+    "sep_dec": "5%"
+  },
+  {
+    "product": "Помідори",
+    "until_jan1": "10%",
+    "jan_feb": "10%",
+    "mar_apr": "10%",
+    "may_aug": "5%",
+    "sep_dec": "5%"
+  },
+  {
+    "product": "Кабачки",
+    "until_jan1": "20%",
+    "jan_feb": "-",
+    "mar_apr": "-",
+    "may_aug": "20%",
+    "sep_dec": "20%"
+  },
+  {
+    "product": "Гарбуз",
+    "until_jan1": "30%",
+    "jan_feb": "30%",
+    "mar_apr": "30%",
+    "may_aug": "30%",
+    "sep_dec": "30%"
+  },
+  {
+    "product": "Яблука",
+    "until_jan1": "12%",
+    "jan_feb": "12%",
+    "mar_apr": "12%",
+    "may_aug": "10%",
+    "sep_dec": "10%"
+  },
+  {
+    "product": "М'ясо яловичина (кістки)",
+    "until_jan1": "25-32%",
+    "jan_feb": "25-32%",
+    "mar_apr": "25-32%",
+    "may_aug": "25-32%",
+    "sep_dec": "25-32%"
+  },
+  {
+    "product": "Курятина (потрухи)",
+    "until_jan1": "30%",
+    "jan_feb": "30%",
+    "mar_apr": "30%",
+    "may_aug": "30%",
+    "sep_dec": "30%"
+  },
+  {
+    "product": "Риба (з кістками)",
+    "until_jan1": "35-45%",
+    "jan_feb": "35-45%",
+    "mar_apr": "35-45%",
+    "may_aug": "35-45%",
+    "sep_dec": "35-45%"
+  }
+]

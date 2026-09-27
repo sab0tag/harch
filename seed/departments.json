@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Терапевтичне",
+    "patient_category": "Дорослі",
+    "default_diet": "ОВД"
+  },
+  {
+    "name": "Хірургічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ЩД"
+  },
+  {
+    "name": "Кардіологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ОВД"
+  },
+  {
+    "name": "Неврологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ОВД"
+  },
+  {
+    "name": "Педіатричне",
+    "patient_category": "Діти",
+    "default_diet": "ОВД"
+  },
+  {
+    "name": "Гінекологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ОВД"
+  },
+  {
+    "name": "Травматологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ВБД"
+  },
+  {
+    "name": "Урологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ЩД"
+  },
+  {
+    "name": "Гастроентерологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ЩД"
+  },
+  {
+    "name": "Пульмонологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "ОВД"
+  },
+  {
+    "name": "Ендокринологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "№9"
+  },
+  {
+    "name": "Нефрологічне",
+    "patient_category": "Дорослі",
+    "default_diet": "НБД"
+  },
+  {
+    "name": "Опікове",
+    "patient_category": "Дорослі",
+    "default_diet": "ВБД"
+  },
+  {
+    "name": "Реанімація",
+    "patient_category": "Дорослі",
+    "default_diet": "ЩД"
+  },
+  {
+    "name": "Пологове",
+    "patient_category": "Породіллі",
+    "default_diet": "ВБД"
+  }
+]
