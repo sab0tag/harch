@@ -6,7 +6,7 @@ from django.views import View
 from apps.accounts.access import RoleRequiredMixin
 from apps.catalog.models import Diet, DishIngredient, MealSlot
 from apps.catalog.nutrition import Nutrition, dish_nutrition, norm_status, with_menu_nutrition
-from apps.core.navigation import roles_for
+from apps.core.navigation import CATALOG_EDITORS, roles_for
 
 from .models import Menu, MenuItem
 
@@ -52,6 +52,7 @@ class MenuListView(RoleRequiredMixin, View):
             "diets": Diet.objects.filter(has_own_menus=True),
             "filters": {"diet": diet_code, "status": status, "q": q, "state": request.GET.get("state", "")},
             "summary": summary,
+            "can_compose": request.user.has_role(*CATALOG_EDITORS),
         })
 
 
@@ -84,4 +85,5 @@ class MenuDetailView(RoleRequiredMixin, View):
         return render(request, "menus/menu_detail.html", {
             "menu": menu, "slots": slots, "norms": norm_rows(total.rounded(), menu.diet),
             "prev_menu": prev_menu, "next_menu": next_menu,
+            "can_compose": request.user.has_role(*CATALOG_EDITORS),
         })
