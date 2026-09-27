@@ -88,7 +88,7 @@
 
   <div class="col-xl-5">
     <div class="card">
-      <div class="card-header bg-white d-flex"><span class="fw-semibold me-auto">Розхід продуктів на день</span>
+      <div class="card-header bg-white d-flex flex-wrap align-items-baseline column-gap-2"><span class="fw-semibold me-auto">Розхід продуктів на день</span>
         <span class="small text-secondary">{% if plan.is_frozen %}зафіксовано {{ plan.approved_at|date:"d.m H:i" }}{% else %}попередній розрахунок{% endif %}</span></div>
       {% include "planning/_consumption.html" %}
     </div>
