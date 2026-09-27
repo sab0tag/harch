@@ -20,7 +20,8 @@ services:
       context: .
       args:
         REQUIREMENTS: requirements-dev.txt
-    command: python manage.py runserver 0.0.0.0:8000
+    # Apply pending migrations on every start, so a `git pull` with new models never 500s.
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
