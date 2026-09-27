@@ -5,7 +5,7 @@ from django.views import View
 
 from apps.accounts.access import RoleRequiredMixin
 from apps.catalog.models import Diet, DishIngredient, MealSlot
-from apps.catalog.nutrition import Nutrition, annotate_menu_nutrition, dish_nutrition, norm_status
+from apps.catalog.nutrition import Nutrition, dish_nutrition, norm_status, with_menu_nutrition
 from apps.core.navigation import roles_for
 
 from .models import Menu, MenuItem
@@ -38,7 +38,7 @@ class MenuListView(RoleRequiredMixin, View):
             qs = qs.filter(number=int(q))
         if request.GET.get("state") == "unverified":
             qs = qs.filter(verified=False)
-        menus = list(annotate_menu_nutrition(qs).order_by("number"))
+        menus = with_menu_nutrition(qs.order_by("number"))
         for m in menus:
             n = Nutrition(m.n_protein, m.n_fat, m.n_carbs, m.n_kcal)
             m.norms = {r["field"]: r for r in norm_rows(n, m.diet)}

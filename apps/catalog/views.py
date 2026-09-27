@@ -15,7 +15,7 @@ from apps.core.navigation import CATALOG_EDITORS, PRICE_EDITORS, roles_for
 
 from .forms import DishForm, IngredientForm, ProductForm, ProductPriceForm
 from .models import Diet, Dish, DishIngredient, Product
-from .nutrition import annotate_dish_nutrition, dish_nutrition, ingredient_nutrition
+from .nutrition import dish_nutrition, ingredient_nutrition, with_dish_nutrition
 
 
 def can_edit_catalog(user):
@@ -44,8 +44,8 @@ class DishListView(RoleRequiredMixin, View):
             qs = qs.filter(is_active=False)
         else:
             qs = qs.filter(is_active=True)
-        qs = annotate_dish_nutrition(qs.distinct()).order_by("card_no")
-        page = Paginator(qs, 50).get_page(request.GET.get("page"))
+        page = Paginator(qs.distinct().order_by("card_no"), 50).get_page(request.GET.get("page"))
+        page.object_list = with_dish_nutrition(page.object_list)
         return render(request, "catalog/dish_list.html", {
             "page": page,
             "categories": Dish.objects.order_by("category").values_list("category", flat=True).distinct(),
