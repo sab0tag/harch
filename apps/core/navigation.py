@@ -59,6 +59,7 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
     NavGroup("Адміністрування", (
         NavItem("users", "Користувачі та ролі", "people", (A,), url="/admin/accounts/user/"),
         NavItem("audit", "Журнал подій", "clock-history", (A,), url_name="workflow:audit"),
+        NavItem("ai", "ШІ-помічник", "stars", (A,), url_name="assist:status"),
     )),
 )
 

@@ -27,6 +27,24 @@ ACTIONS = {
 }
 
 
+def correction_hint(task, user, allowed):
+    """Where a correction goes at this point of the task's life (invariant 8)."""
+    from apps.accounts.models import Role
+
+    checker = dict(Role.choices).get(task.checker_role, task.checker_role).lower()
+    if task.status in ("pending", "in_progress", "rejected"):
+        if allowed["submit"]:
+            return "Поки задача у вас, усі зміни вносяться в документі. Після подачі редагування закривається."
+        return "Документ зараз заповнює виконавець — зміни вносить він до подачі."
+    if task.status == "submitted":
+        if allowed["approve"]:
+            return "Якщо потрібні виправлення — натисніть «Повернути» і напишіть, що змінити: документ знову стане редагованим у виконавця."
+        return f"Подано — редагування закрите. Потрібно виправити? Попросіть, щоб {checker} повернув(ла) задачу з коментарем — вона знову стане редагованою у вас."
+    if task.status == "approved":
+        return "Затверджено — документ заблоковано назавжди, щоб цифри в розході й списанні не змінювались заднім числом."
+    return ""
+
+
 class MyTasksView(RoleRequiredMixin, View):
     allowed_roles = roles_for("tasks")
 
@@ -37,6 +55,11 @@ class MyTasksView(RoleRequiredMixin, View):
         if tab not in querysets:
             tab = "review" if not querysets["todo"].exists() and querysets["review"].exists() else "todo"
         page = Paginator(querysets[tab], 50).get_page(request.GET.get("page"))
+        for task in page:
+            # Makers go straight to the document they fill in; the task card is one click further.
+            definition = task.definition
+            task.doc_url = definition.subject_url(task) if definition.subject_url else None
+            task.doc_label = definition.action_label if tab == "todo" else "Переглянути"
         return render(request, "workflow/my_tasks.html", {
             "tabs": [(k, label, querysets[k].count() if k != "history" else None) for k, label in TABS],
             "tab": tab,
@@ -53,13 +76,15 @@ class TaskDetailView(RoleRequiredMixin, View):
         if not wf.can(request.user, task, "view"):
             raise Http404  # don't reveal that another department's task exists
         definition = task.definition
+        allowed = {a: wf.can(request.user, task, a) for a in ACTIONS}
         return render(request, "workflow/task_detail.html", {
             "task": task,
             "definition": definition,
             "subject_url": definition.subject_url(task) if definition.subject_url else None,
+            "correction_hint": correction_hint(task, request.user, allowed),
             "events": task.events.select_related("actor"),
             "rejection": task.last_rejection if task.status == "rejected" else None,
-            "allowed": {a: wf.can(request.user, task, a) for a in ACTIONS},
+            "allowed": allowed,
             "overdue": task.is_overdue(),
         })
 

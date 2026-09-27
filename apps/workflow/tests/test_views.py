@@ -59,7 +59,7 @@ def test_reject_without_comment_shows_error(client, hospital, order):
 def test_rejection_comment_shown_to_maker(client, hospital, order):
     wf.reject(submit(order, hospital.nurses[0]), hospital.dietician, "Додайте порції №9")
     html = as_user(client, hospital.nurses[0]).get(f"/tasks/{order.pk}/").content.decode()
-    assert "Повернуто на доопрацювання" in html and "Додайте порції №9" in html and "Подати повторно" in html
+    assert "Повернуто на доопрацювання" in html and "Додайте порції №9" in html and "Внести порції" in html  # resubmit happens on the document
 
 
 def test_checker_buttons_hidden_for_own_submission(client, hospital, order):

@@ -11,6 +11,10 @@ env = environ.Env(
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
     ORDER_DEADLINE=(str, "16:00"),
     NOTIFY_EMAIL=(bool, False),
+    AI_ENABLED=(bool, False),
+    ANTHROPIC_MODEL=(str, "claude-sonnet-5"),
+    AI_DAILY_REQUEST_LIMIT=(int, 200),
+    AI_TIMEOUT_SECONDS=(int, 90),
 )
 environ.Env.read_env(BASE_DIR / ".env", overwrite=False)
 
@@ -37,6 +41,7 @@ INSTALLED_APPS = [
     "apps.workflow",
     "apps.orders",
     "apps.planning",
+    "apps.assist",
 ]
 
 MIDDLEWARE = [
@@ -67,6 +72,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.site",
                 "apps.core.context_processors.navigation",
+                "apps.assist.context_processors.ai",
             ],
         },
     },
@@ -104,6 +110,13 @@ LOGOUT_REDIRECT_URL = "login"
 HOSPITAL_NAME = env("HOSPITAL_NAME")
 ORDER_DEADLINE = env("ORDER_DEADLINE")
 NOTIFY_EMAIL = env("NOTIFY_EMAIL")
+
+# AI (docs/07_ai.md). Only non-secret knobs live in settings; ANTHROPIC_API_KEY is read from the
+# environment inside apps/assist/client.py and nowhere else.
+AI_ENABLED = env("AI_ENABLED")
+ANTHROPIC_MODEL = env("ANTHROPIC_MODEL")
+AI_DAILY_REQUEST_LIMIT = env("AI_DAILY_REQUEST_LIMIT")
+AI_TIMEOUT_SECONDS = env("AI_TIMEOUT_SECONDS")
 EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
 vars().update(EMAIL_CONFIG)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="harch@localhost")

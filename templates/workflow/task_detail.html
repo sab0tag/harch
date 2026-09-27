@@ -32,13 +32,23 @@
         {% if task.resolved_by %}<dt class="col-5 col-md-4 fw-normal text-secondary">Рішення</dt><dd class="col-7 col-md-8">{{ task.resolved_by }} · {{ task.resolved_at|date:"d.m H:i" }}</dd>{% endif %}
         {% if task.parent %}<dt class="col-5 col-md-4 fw-normal text-secondary">Попередній етап</dt><dd class="col-7 col-md-8"><a href="{% url 'workflow:task_detail' task.parent_id %}">{{ task.parent }}</a></dd>{% endif %}
       </dl>
-      {% if subject_url %}<a href="{{ subject_url }}" class="btn btn-primary mt-3"><i class="bi bi-box-arrow-up-right me-1"></i>Відкрити документ</a>{% endif %}
+      {% if subject_url and not allowed.submit %}<a href="{{ subject_url }}" class="btn btn-outline-primary mt-3"><i class="bi bi-file-earmark-text me-1"></i>Переглянути документ</a>{% endif %}
     </div></div>
 
-    {% if allowed.submit or allowed.approve or allowed.reject or allowed.cancel %}
+    {% if subject_url and allowed.submit %}
+    <div class="card border-primary mb-3"><div class="card-body">
+      <h2 class="h6">Що потрібно зробити</h2>
+      <p class="mb-3">{{ definition.description }}</p>
+      <a href="{{ subject_url }}" class="btn btn-primary btn-lg"><i class="bi bi-pencil-square me-1"></i>{{ definition.action_label }}</a>
+      <p class="small text-secondary mt-2 mb-0">Заповнення і подача — на сторінці документа.</p>
+    </div></div>
+    {% endif %}
+    {% if correction_hint %}<p class="small text-secondary"><i class="bi bi-info-circle me-1"></i>{{ correction_hint }}</p>{% endif %}
+
+    {% if allowed.submit and not subject_url or allowed.approve or allowed.reject or allowed.cancel %}
     <div class="card mb-3"><div class="card-body">
       <h2 class="h6 mb-3">Дії</h2>
-      {% if allowed.submit %}
+      {% if allowed.submit and not subject_url %}
       <form method="post" action="{% url 'workflow:task_action' task.pk 'submit' %}" class="mb-3">{% csrf_token %}
         <label class="form-label small" for="submit-comment">Коментар для перевірки (необов'язково)</label>
         <textarea id="submit-comment" name="comment" rows="2" class="form-control mb-2"></textarea>
