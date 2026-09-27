@@ -104,6 +104,7 @@ register(TaskDefinition(
     description="Вкажіть кількість порцій по дієтах на дату обслуговування.",
     validate_submit=_validate_order,
     subject_url=_order_url,
+    action_label="Внести порції",
     on_approved=_after_order_approved,
     on_cancelled=_after_order_approved,  # cancelling the last open order also completes the day
     lock_group=day_orders,
@@ -118,6 +119,7 @@ register(TaskDefinition(
     description="Оберіть меню для кожної дієти з порціями.",
     validate_submit=_validate_plan,
     subject_url=_plan_url,
+    action_label="Скласти план меню",
     on_approved=_after_plan_approved,
 ))
 

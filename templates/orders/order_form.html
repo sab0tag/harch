@@ -54,7 +54,8 @@
   </ul>
   <div class="card-body small text-secondary">
     {% if task.status == 'submitted' %}Подано{% if task.submitted_by %}: {{ task.submitted_by }}, {{ task.submitted_at|date:"d.m H:i" }}{% endif %}. Очікує перевірки дієтсестри.
-    {% elif task.status == 'approved' %}Затверджено: {{ task.resolved_by }}, {{ task.resolved_at|date:"d.m H:i" }}.
+      {% if user.role == 'dept_nurse' %}<div class="mt-1">Потрібно виправити? Попросіть дієтсестру повернути замовлення — воно знову стане редагованим.</div>{% endif %}
+    {% elif task.status == 'approved' %}Затверджено: {{ task.resolved_by }}, {{ task.resolved_at|date:"d.m H:i" }}. Зміни після затвердження неможливі.
     {% elif task.status == 'cancelled' %}Скасовано.{% else %}Заповнює старша медсестра відділення.{% endif %}
   </div>
   {% if can_review %}

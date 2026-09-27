@@ -68,6 +68,9 @@
       </div>
     {% endif %}
     </form>
+    {% if not editable and task.status == 'submitted' and not can_review %}
+      <p class="small text-secondary"><i class="bi bi-info-circle me-1"></i>План подано — редагування закрите. Потрібно змінити? Попросіть шеф-кухаря повернути план з коментарем.</p>
+    {% endif %}
 
     {% if can_review %}
       <div class="card card-body">

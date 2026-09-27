@@ -27,6 +27,7 @@ class TaskDefinition:
     on_approved: Callable = field(default=_nothing)          # (task) -> None, runs inside the approve transaction
     on_cancelled: Callable = field(default=_nothing)         # (task) -> None, runs inside the cancel transaction
     subject_url: Callable | None = None                      # (task) -> url of the object to work on
+    action_label: str = "Відкрити документ"                  # call to action for the maker on that object
     # (task) -> queryset of tasks that on_approved reads under lock. Locked together, in pk
     # order, before the task itself — otherwise two parallel approvals deadlock.
     lock_group: Callable | None = None
