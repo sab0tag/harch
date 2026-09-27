@@ -42,7 +42,7 @@ services:
 
   scheduler:
     <<: *app
-    command: supercronic /app/deploy/crontab
+    command: /usr/local/bin/supercronic /app/deploy/crontab
 
   backup:
     build: deploy/backup

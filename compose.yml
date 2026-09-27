@@ -38,7 +38,7 @@ services:
       context: .
       args:
         REQUIREMENTS: requirements-dev.txt
-    command: supercronic /app/deploy/crontab
+    command: /usr/local/bin/supercronic /app/deploy/crontab
     env_file: .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
