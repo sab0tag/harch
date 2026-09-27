@@ -26,3 +26,10 @@ def pct(value):
     if value in (None, ""):
         return "—"
     return floatformat(Decimal(value), "-1") + "%"
+
+
+@register.filter
+def role_label(role):
+    from apps.accounts.models import Role
+
+    return dict(Role.choices).get(role, role)

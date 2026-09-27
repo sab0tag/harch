@@ -6,5 +6,6 @@ urlpatterns = [
     path("catalog/", include("apps.catalog.urls")),
     path("menus/", include("apps.menus.urls")),
     path("org/", include("apps.orgstructure.urls")),
+    path("tasks/", include("apps.workflow.urls")),
     path("", include("apps.core.urls")),
 ]

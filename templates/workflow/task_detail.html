@@ -1,0 +1,89 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'workflow:my_tasks' %}">Мої задачі</a></li>
+  <li class="breadcrumb-item active">№{{ task.pk }}</li></ol></nav>
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-2">
+  <div class="me-auto">
+    <h1 class="h3 mb-1">{{ task.title }}</h1>
+    <div class="text-secondary">на {{ task.service_date|date:"d.m.Y, l" }}{% if task.department %} · {{ task.department }}{% endif %}</div>
+  </div>
+  <div class="fs-5"><span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% if overdue %} <span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> Прострочено</span>{% endif %}</div>
+</div>
+{% if definition.description %}<p class="text-secondary">{{ definition.description }}</p>{% endif %}
+
+{% if rejection %}
+<div class="alert alert-danger">
+  <div class="fw-semibold mb-1"><i class="bi bi-arrow-return-left me-1"></i>Повернуто на доопрацювання · {{ rejection.actor }} · {{ rejection.created_at|date:"d.m H:i" }}</div>
+  <div style="white-space: pre-line">{{ rejection.comment }}</div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card mb-3"><div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-5 col-md-4 fw-normal text-secondary">Виконує</dt><dd class="col-7 col-md-8">{{ task.maker_role|role_label }}{% if task.department %} · {{ task.department }}{% endif %}</dd>
+        <dt class="col-5 col-md-4 fw-normal text-secondary">Перевіряє</dt><dd class="col-7 col-md-8">{{ task.checker_role|role_label }}</dd>
+        <dt class="col-5 col-md-4 fw-normal text-secondary">Дедлайн</dt><dd class="col-7 col-md-8{% if overdue %} text-danger fw-semibold{% endif %}">{{ task.deadline|date:"d.m.Y H:i"|default:"—" }}</dd>
+        {% if task.submitted_by %}<dt class="col-5 col-md-4 fw-normal text-secondary">Подав(ла)</dt><dd class="col-7 col-md-8">{{ task.submitted_by }} · {{ task.submitted_at|date:"d.m H:i" }}</dd>{% endif %}
+        {% if task.resolved_by %}<dt class="col-5 col-md-4 fw-normal text-secondary">Рішення</dt><dd class="col-7 col-md-8">{{ task.resolved_by }} · {{ task.resolved_at|date:"d.m H:i" }}</dd>{% endif %}
+        {% if task.parent %}<dt class="col-5 col-md-4 fw-normal text-secondary">Попередній етап</dt><dd class="col-7 col-md-8"><a href="{% url 'workflow:task_detail' task.parent_id %}">{{ task.parent }}</a></dd>{% endif %}
+      </dl>
+      {% if subject_url %}<a href="{{ subject_url }}" class="btn btn-primary mt-3"><i class="bi bi-box-arrow-up-right me-1"></i>Відкрити документ</a>{% endif %}
+    </div></div>
+
+    {% if allowed.submit or allowed.approve or allowed.reject or allowed.cancel %}
+    <div class="card mb-3"><div class="card-body">
+      <h2 class="h6 mb-3">Дії</h2>
+      {% if allowed.submit %}
+      <form method="post" action="{% url 'workflow:task_action' task.pk 'submit' %}" class="mb-3">{% csrf_token %}
+        <label class="form-label small" for="submit-comment">Коментар для перевірки (необов'язково)</label>
+        <textarea id="submit-comment" name="comment" rows="2" class="form-control mb-2"></textarea>
+        <button class="btn btn-success"><i class="bi bi-send me-1"></i>{% if task.status == 'rejected' %}Подати повторно{% else %}Подати на перевірку{% endif %}</button>
+      </form>
+      {% endif %}
+      {% if allowed.approve %}
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{% url 'workflow:task_action' task.pk 'approve' %}">{% csrf_token %}
+          <button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Затвердити</button></form>
+        <button class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#reject-form"><i class="bi bi-arrow-return-left me-1"></i>Повернути</button>
+      </div>
+      <form method="post" action="{% url 'workflow:task_action' task.pk 'reject' %}" class="collapse mt-3" id="reject-form">{% csrf_token %}
+        <label class="form-label small" for="reject-comment">Що потрібно виправити? <span class="text-danger">*</span></label>
+        <textarea id="reject-comment" name="comment" rows="3" class="form-control mb-2" required></textarea>
+        <button class="btn btn-danger">Повернути на доопрацювання</button>
+      </form>
+      {% endif %}
+      {% if allowed.cancel %}
+      <details class="mt-3"><summary class="small text-secondary">Скасувати задачу (адміністратор)</summary>
+        <form method="post" action="{% url 'workflow:task_action' task.pk 'cancel' %}" class="mt-2">{% csrf_token %}
+          <input name="comment" class="form-control form-control-sm mb-2" placeholder="Причина" required>
+          <button class="btn btn-sm btn-outline-secondary">Скасувати</button>
+        </form>
+      </details>
+      {% endif %}
+    </div></div>
+    {% elif task.status == 'submitted' and task.submitted_by == user %}
+    <div class="alert alert-info">Подано вами — затвердити може лише інший користувач з роллю перевіряючого.</div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card"><div class="card-header bg-white fw-semibold">Хронологія</div>
+      <ul class="list-group list-group-flush">
+      {% for e in events %}
+        <li class="list-group-item">
+          <div class="d-flex gap-2 small"><span class="fw-semibold">{{ e.get_kind_display }}</span>
+            <span class="text-secondary ms-auto text-nowrap">{{ e.created_at|date:"d.m H:i" }}</span></div>
+          <div class="small text-secondary">{{ e.actor|default:"система" }}</div>
+          {% if e.comment %}<div class="small mt-1" style="white-space: pre-line">{{ e.comment }}</div>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

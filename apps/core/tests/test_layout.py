@@ -55,8 +55,8 @@ def test_active_item_is_highlighted(login):
         (Role.CHEF, "orders", 403),
         (Role.ACCOUNTANT, "write-off", 200),
         (Role.ACCOUNTANT, "kitchen", 403),
-        (Role.ADMIN, "audit", 200),
-        (Role.DIETICIAN, "audit", 403),
+        (Role.ADMIN, "reports", 200),
+        (Role.CHEF, "reports", 403),
     ],
 )
 def test_placeholder_urls_enforce_roles(login, role, slug, status):

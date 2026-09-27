@@ -41,7 +41,7 @@ class NavGroup:
 NAV_GROUPS: tuple[NavGroup, ...] = (
     NavGroup("", (
         NavItem("home", "Головна", "house", ALL, url_name="home"),
-        NavItem("tasks", "Мої задачі", "check2-square", ALL, sprint="Sprint 2"),
+        NavItem("tasks", "Мої задачі", "check2-square", ALL, url_name="workflow:my_tasks"),
         NavItem("orders", "Замовлення", "clipboard-plus", (A, D, N), sprint="Sprint 3"),
         NavItem("plan", "План меню на день", "calendar-week", (A, D, C, B), sprint="Sprint 3"),
         NavItem("kitchen", "Сьогодні на кухні", "fire", (A, D, C), sprint="Sprint 4"),
@@ -58,7 +58,7 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
     )),
     NavGroup("Адміністрування", (
         NavItem("users", "Користувачі та ролі", "people", (A,), url="/admin/accounts/user/"),
-        NavItem("audit", "Журнал подій", "clock-history", (A,), sprint="Sprint 2"),
+        NavItem("audit", "Журнал подій", "clock-history", (A,), url_name="workflow:audit"),
     )),
 )
 

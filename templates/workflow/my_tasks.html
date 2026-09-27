@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Мої задачі{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Мої задачі</h1>
+<ul class="nav nav-tabs mb-3">
+  {% for key, label, count in tabs %}
+  <li class="nav-item"><a class="nav-link{% if key == tab %} active{% endif %}" href="?tab={{ key }}">{{ label }}{% if count %} <span class="badge rounded-pill {% if key == 'review' %}text-bg-warning{% else %}text-bg-primary{% endif %}">{{ count }}</span>{% endif %}</a></li>
+  {% endfor %}
+</ul>
+<div class="card"><div class="table-responsive">
+  <table class="table table-hover align-middle mb-0">
+    <thead class="table-light"><tr><th>Задача</th><th>Дата обслуговування</th><th class="d-none d-md-table-cell">Відділення</th><th>Статус</th><th class="d-none d-md-table-cell">Дедлайн</th><th></th></tr></thead>
+    <tbody>
+    {% for task in page %}
+      <tr>
+        <td class="fw-medium">{{ task.title }}</td>
+        <td>{{ task.service_date|date:"d.m.Y, l" }}</td>
+        <td class="d-none d-md-table-cell">{{ task.department|default:"—" }}</td>
+        <td>{% include "workflow/_status.html" %}</td>
+        <td class="d-none d-md-table-cell small {% if task.deadline and task.deadline < now and task.status != 'approved' and task.status != 'submitted' and task.status != 'cancelled' %}text-danger fw-semibold{% else %}text-secondary{% endif %}">{{ task.deadline|date:"d.m H:i"|default:"—" }}</td>
+        <td class="text-end"><a href="{% url 'workflow:task_detail' task.pk %}" class="btn btn-sm btn-outline-primary">Відкрити</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center text-secondary py-5">
+        {% if tab == 'todo' %}<i class="bi bi-check2-all fs-3 d-block mb-2 text-success"></i>Немає задач до виконання.
+        {% elif tab == 'review' %}<i class="bi bi-inbox fs-3 d-block mb-2"></i>Нічого не чекає вашої перевірки.
+        {% else %}Ви ще не працювали з задачами.{% endif %}
+      </td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% include "partials/pagination.html" %}
+{% endblock %}

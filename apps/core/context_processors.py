@@ -17,13 +17,16 @@ def _href(item):
 
 
 def navigation(request):
+    """Sidebar links; the single active one is the longest href that prefixes the path."""
     path = request.path
     groups = []
     for group in visible_groups(request.user):
-        links = []
-        for item in group.items:
-            href = _href(item)
-            active = path == href if href == "/" else path.startswith(href)
-            links.append({"item": item, "href": href, "active": active})
+        links = [{"item": item, "href": _href(item), "active": False} for item in group.items]
         groups.append({"label": group.label, "links": links})
+    matches = [
+        link for g in groups for link in g["links"]
+        if (path == link["href"] if link["href"] == "/" else path.startswith(link["href"]))
+    ]
+    if matches:
+        max(matches, key=lambda link: len(link["href"]))["active"] = True
     return {"nav_groups": groups}

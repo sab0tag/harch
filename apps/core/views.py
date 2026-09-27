@@ -20,7 +20,13 @@ def healthz(request):
 
 @login_required
 def home(request):
-    return render(request, "core/home.html")
+    from apps.workflow import services as wf
+
+    return render(request, "core/home.html", {
+        "todo_count": wf.todo_for(request.user).count(),
+        "review_count": wf.review_for(request.user).count(),
+        "overdue_count": wf.todo_for(request.user).overdue().count(),
+    })
 
 
 @login_required
