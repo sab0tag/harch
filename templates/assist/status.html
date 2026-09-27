@@ -1,0 +1,66 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}ШІ-помічник{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">ШІ-помічник</h1>
+<p class="text-secondary" style="max-width: 760px">ШІ лише готує чернетки (картки з фото тощо) з позначкою «Запропоновано ШІ». Зберігає, подає і затверджує завжди людина.
+  Розрахунки розходу, БЖУ і списання виконує тільки система, без ШІ. Якщо ШІ вимкнено, усе інше працює як звичайно.</p>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 mb-3">Стан</h2>
+      <dl class="row mb-3">
+        <dt class="col-6 fw-normal text-secondary">Увімкнено (AI_ENABLED)</dt>
+        <dd class="col-6">{% if st.enabled %}<span class="badge text-bg-success">так</span>{% else %}<span class="badge text-bg-secondary">ні</span>{% endif %}</dd>
+        <dt class="col-6 fw-normal text-secondary">Ключ Anthropic</dt>
+        <dd class="col-6">{% if st.key_configured %}<span class="badge text-bg-success">налаштовано</span>{% else %}<span class="badge text-bg-warning">не вказано</span>{% endif %}</dd>
+        <dt class="col-6 fw-normal text-secondary">Модель</dt><dd class="col-6"><code>{{ st.model }}</code></dd>
+        <dt class="col-6 fw-normal text-secondary">Запитів сьогодні</dt><dd class="col-6">{{ st.used_today }} / {{ st.daily_limit }}</dd>
+        <dt class="col-6 fw-normal text-secondary">За місяць</dt><dd class="col-6">{{ st.month_calls }} викл. · {{ st.month_input_tokens|num }} вх. / {{ st.month_output_tokens|num }} вих. токенів</dd>
+      </dl>
+      <form method="post">{% csrf_token %}
+        <button class="btn btn-outline-primary"{% if not st.available %} disabled{% endif %}><i class="bi bi-plug me-1"></i>Перевірити з'єднання</button>
+        {% if not st.available %}<span class="small text-secondary ms-2">спершу вкажіть ключ і увімкніть ШІ</span>{% endif %}
+      </form>
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100"><div class="card-body">
+      <h2 class="h6 mb-3">Куди вставити ключ</h2>
+      <ol class="small mb-2">
+        <li>На сервері відкрийте файл <code>.env</code> у папці проєкту (поруч із <code>compose.yml</code>).</li>
+        <li>Вкажіть рядки:<pre class="bg-light border rounded p-2 mt-1 mb-1">AI_ENABLED=true
+ANTHROPIC_API_KEY=sk-ant-...</pre></li>
+        <li>Перезапустіть: <code>docker compose up -d</code></li>
+        <li>Поверніться сюди й натисніть «Перевірити з'єднання».</li>
+      </ol>
+      <p class="small text-secondary mb-0">Ключ ніколи не показується в системі, не пишеться в журнал і не потрапляє в git.
+        Не надсилайте його в чати й листи. У консолі Anthropic встановіть місячний ліміт витрат.</p>
+    </div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white fw-semibold">Журнал викликів (останні 50)</div>
+  <div class="table-responsive">
+  <table class="table table-sm mb-0 align-middle">
+    <thead><tr><th>Час</th><th>Функція</th><th>Статус</th><th class="d-none d-md-table-cell">Користувач</th><th class="text-end">Токени</th><th class="text-end d-none d-md-table-cell">мс</th></tr></thead>
+    <tbody>
+    {% for l in logs %}
+      <tr>
+        <td class="text-nowrap small">{{ l.created_at|date:"d.m H:i" }}</td>
+        <td><code>{{ l.feature }}</code></td>
+        <td><span class="badge {% if l.status == 'ok' %}text-bg-success{% elif l.status == 'error' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ l.get_status_display }}</span>
+          {% if l.error %}<div class="small text-secondary">{{ l.error|truncatechars:120 }}</div>{% endif %}</td>
+        <td class="d-none d-md-table-cell small">{{ l.user|default:"система" }}</td>
+        <td class="text-end small">{{ l.input_tokens|default:"—" }} / {{ l.output_tokens|default:"—" }}</td>
+        <td class="text-end small d-none d-md-table-cell">{{ l.duration_ms|default:"—" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="text-center text-secondary py-4">Викликів ще не було.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

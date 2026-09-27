@@ -33,3 +33,15 @@ def login(client, make_user):
 def seeded(db):
     """Full starter data from seed/ (8 diets, 72 products, 130 cards, 250 menus)."""
     call_command("load_seed", str(Path(settings.BASE_DIR) / "seed"), verbosity=0, stdout=open("/dev/null", "w"))
+
+
+@pytest.fixture(autouse=True)
+def _no_real_ai(monkeypatch):
+    """Tests never reach the Anthropic API (CLAUDE.md). Tests that need a reply install a fake."""
+    from apps.assist import client
+
+    def _refuse(**kwargs):
+        raise RuntimeError("Real Anthropic API must not be called from tests")
+
+    monkeypatch.setattr(client, "_transport", _refuse)
+    monkeypatch.delenv(client.KEY_ENV, raising=False)
