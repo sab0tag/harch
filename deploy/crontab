@@ -1,0 +1,6 @@
+# Scheduler container (supercronic). Times are Europe/Kyiv (TZ set in compose).
+# Order tasks for tomorrow appear shortly after midnight; orders are due D-1 16:00.
+5 0 * * *     python manage.py generate_daily_tasks --days-ahead 1
+# Catch-up in case the server was down at midnight (idempotent).
+5 7 * * *     python manage.py generate_daily_tasks --days-ahead 1
+*/15 * * * *  python manage.py check_deadlines

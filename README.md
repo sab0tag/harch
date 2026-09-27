@@ -13,6 +13,8 @@ docker compose exec web python manage.py load_seed          # довідники
 docker compose exec web python manage.py create_demo_users   # dev: по користувачу на роль, пароль demo12345
 ```
 
+Контейнер `scheduler` (supercronic, `deploy/crontab`) щоночі створює задачі «Замовлення відділення» на завтра і кожні 15 хв перевіряє дедлайни. Вручну: `docker compose exec web python manage.py generate_daily_tasks --date 2026-10-01`.
+
 Відкрий http://localhost:8000 → увійди як `dietician`, `chef`, `nurse`, `accountant` або `admin`.
 
 ## Тести

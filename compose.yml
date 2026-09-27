@@ -32,5 +32,21 @@ services:
       db:
         condition: service_healthy
 
+  scheduler:
+    build:
+      context: .
+      args:
+        REQUIREMENTS: requirements-dev.txt
+    command: supercronic /app/deploy/crontab
+    env_file: .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      TZ: Europe/Kyiv
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
