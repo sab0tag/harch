@@ -10,6 +10,7 @@ env = environ.Env(
     DJANGO_ALLOWED_HOSTS=(list, []),
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
     ORDER_DEADLINE=(str, "16:00"),
+    NOTIFY_EMAIL=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env", overwrite=False)
 
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     "apps.catalog",
     "apps.menus",
     "apps.consumption",
+    "apps.workflow",
 ]
 
 MIDDLEWARE = [
@@ -99,3 +101,7 @@ LOGOUT_REDIRECT_URL = "login"
 
 HOSPITAL_NAME = env("HOSPITAL_NAME")
 ORDER_DEADLINE = env("ORDER_DEADLINE")
+NOTIFY_EMAIL = env("NOTIFY_EMAIL")
+EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
+vars().update(EMAIL_CONFIG)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="harch@localhost")
