@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}План меню{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' prev_day.isoformat %}">‹</a>
+  <h1 class="h3 mb-0">План меню на {{ day|date:"d.m.Y, l" }}</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' next_day.isoformat %}">›</a>
+</div>
+<div class="card card-body">
+  <p class="mb-2">План ще не сформовано. Він з'явиться автоматично, щойно всі замовлення відділень на цю дату буде затверджено.</p>
+  <p class="mb-0 text-secondary">Замовлень опрацьовано: <strong>{{ orders_done }}</strong> з {{ orders_total }}.
+    {% if user.role == 'dietician' or user.role == 'admin' %}<a href="{% url 'orders:summary' %}?date={{ day.isoformat }}">Перейти до замовлень</a>{% endif %}</p>
+</div>
+{% endblock %}

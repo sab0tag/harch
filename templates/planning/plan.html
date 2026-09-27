@@ -1,0 +1,98 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}План меню {{ plan.service_date|date:"d.m.Y" }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' prev_day.isoformat %}">‹</a>
+  <h1 class="h3 mb-0">План меню на {{ plan.service_date|date:"d.m.Y, l" }}</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' next_day.isoformat %}">›</a>
+  {% if task %}<span class="badge badge-status-{{ task.status }} fs-6 ms-md-2">{{ task.get_status_display }}</span>{% endif %}
+  {% if plan.is_frozen %}<span class="badge text-bg-dark fs-6"><i class="bi bi-lock"></i> Розхід зафіксовано</span>{% endif %}
+</div>
+<p class="text-secondary">Порцій за затвердженими замовленнями: <strong>{{ portions_total }}</strong>
+  {% if user.role == 'dietician' or user.role == 'admin' %} · <a href="{% url 'orders:summary' %}?date={{ plan.service_date.isoformat }}">замовлення</a>{% endif %}</p>
+
+{% if drift %}
+<div class="alert alert-warning">
+  <div class="fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>Порції в плані відрізняються від затверджених замовлень</div>
+  <ul class="mb-1">{% for code, pair in drift.items %}<li>{{ code }}: у плані {{ pair.0 }}, затверджено {{ pair.1 }}</li>{% endfor %}</ul>
+  <div class="small">{% if plan.is_frozen %}Розхід уже зафіксовано — різницю кухня враховує окремо.{% else %}План уже подано — поверніть його дієтсестрі, щоб оновити порції.{% endif %}</div>
+</div>
+{% endif %}
+
+{% if rejection %}
+<div class="alert alert-danger"><div class="fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Повернуто: {{ rejection.actor }}</div>
+  <div style="white-space: pre-line">{{ rejection.comment }}</div></div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    <form method="post" id="plan-form">{% csrf_token %}
+    {% for b in blocks %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="badge rounded-pill text-bg-primary fs-6">{{ b.entry.diet.code }}</span>
+            <span class="text-secondary small me-auto">{{ b.entry.diet.name }}</span>
+            <span class="fw-semibold">{{ b.entry.portions }} порц.</span>
+          </div>
+          {% if editable %}
+            <select name="menu_{{ b.entry.diet_id }}" class="form-select"
+                    hx-get="{% url 'planning:preview' plan.service_date.isoformat %}" hx-include="#plan-form"
+                    hx-target="#plan-consumption" hx-swap="outerHTML" hx-trigger="change">
+              <option value="">— оберіть меню —</option>
+              {% for m in b.options %}<option value="{{ m.pk }}"{% if m.pk == b.entry.menu_id %} selected{% endif %}>Меню №{{ m.number }} · {{ m.n_kcal|num:0 }} ккал{% if not m.verified %} · не перевірено{% endif %}</option>{% endfor %}
+            </select>
+          {% else %}
+            <div>{% if b.entry.menu %}<a href="{% url 'menus:detail' b.entry.menu.number %}">Меню №{{ b.entry.menu.number }}</a>{% else %}<span class="text-danger">меню не обрано</span>{% endif %}</div>
+          {% endif %}
+          {% if b.norms %}
+          <div class="d-flex flex-wrap gap-3 small mt-2">
+            {% for r in b.norms %}<span>{{ r.label }}: {% include "menus/_norm_cell.html" %}</span>{% endfor %}
+            <span class="text-secondary">на 1 пацієнта · <a href="{% url 'menus:detail' b.chosen.number %}">склад меню</a></span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="alert alert-warning">Немає затверджених замовлень з порціями на цю дату.</div>
+    {% endfor %}
+
+    {% if editable and blocks %}
+      <div class="card card-body">
+        <label class="form-label small" for="comment">Коментар для шеф-кухаря (необов'язково)</label>
+        <textarea id="comment" name="comment" rows="2" class="form-control mb-3"></textarea>
+        <div class="d-flex flex-wrap gap-2">
+          <button name="action" value="submit" class="btn btn-success"><i class="bi bi-send me-1"></i>{% if task.status == 'rejected' %}Подати повторно{% else %}Подати шеф-кухарю{% endif %}</button>
+          <button name="action" value="save" class="btn btn-outline-secondary">Зберегти</button>
+        </div>
+      </div>
+    {% endif %}
+    </form>
+
+    {% if can_review %}
+      <div class="card card-body">
+        <p class="mb-2">Перевірте, чи є продукти і чи реально приготувати це меню. Після затвердження розхід фіксується.</p>
+        <div class="d-flex flex-wrap gap-2">
+          <form method="post" action="{% url 'workflow:task_action' task.pk 'approve' %}">{% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Затвердити план</button></form>
+          <button class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#plan-reject">Повернути</button>
+        </div>
+        <form method="post" action="{% url 'workflow:task_action' task.pk 'reject' %}" class="collapse mt-3" id="plan-reject">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <textarea name="comment" rows="2" class="form-control mb-2" placeholder="Наприклад: немає судака — замініть меню для ЩД" required></textarea>
+          <button class="btn btn-danger">Повернути дієтсестрі</button></form>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="col-xl-5">
+    <div class="card">
+      <div class="card-header bg-white d-flex"><span class="fw-semibold me-auto">Розхід продуктів на день</span>
+        <span class="small text-secondary">{% if plan.is_frozen %}зафіксовано {{ plan.approved_at|date:"d.m H:i" }}{% else %}попередній розрахунок{% endif %}</span></div>
+      {% include "planning/_consumption.html" %}
+    </div>
+    {% if task %}<p class="mt-2 small"><a href="{% url 'workflow:task_detail' task.pk %}">Хронологія задачі</a></p>{% endif %}
+  </div>
+</div>
+{% endblock %}

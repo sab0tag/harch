@@ -50,9 +50,8 @@ def test_active_item_is_highlighted(login):
 @pytest.mark.parametrize(
     "role,slug,status",
     [
-        (Role.DEPT_NURSE, "orders", 200),
         (Role.DEPT_NURSE, "consumption", 403),   # hidden link must also be a denied URL
-        (Role.CHEF, "orders", 403),
+        (Role.CHEF, "kitchen", 200),
         (Role.ACCOUNTANT, "write-off", 200),
         (Role.ACCOUNTANT, "kitchen", 403),
         (Role.ADMIN, "reports", 200),

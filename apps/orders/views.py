@@ -1,0 +1,182 @@
+from datetime import date, timedelta
+
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views import View
+
+from apps.accounts.access import RoleRequiredMixin
+from apps.accounts.models import Role
+from apps.core.navigation import roles_for
+from apps.orgstructure.models import Department
+from apps.workflow import services as wf
+from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
+from apps.workflow.models import Task, TaskStatus
+
+from . import services
+from .models import DailyOrder
+
+
+def parse_date(value, default=None):
+    if not value:
+        return default or services.default_service_date()
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise Http404 from exc
+
+
+def read_portions(post, diets):
+    portions = {}
+    for diet in diets:
+        raw = (post.get(f"diet_{diet.pk}") or "").strip()
+        if raw == "":
+            portions[diet.pk] = 0
+            continue
+        if not raw.isdigit():
+            raise ValidationError(f"{diet.code}: вкажіть ціле число порцій.")
+        portions[diet.pk] = int(raw)
+    return portions
+
+
+class OrdersEntryView(RoleRequiredMixin, View):
+    """Nurse → own department's order; dietician/admin → summary."""
+
+    allowed_roles = roles_for("orders")
+
+    def get(self, request):
+        day = parse_date(request.GET.get("date"))
+        if request.user.role == Role.DEPT_NURSE:
+            return redirect("orders:edit", request.user.department_id, day.isoformat())
+        return redirect(reverse("orders:summary") + f"?date={day.isoformat()}")
+
+
+class OrderEditView(RoleRequiredMixin, View):
+    allowed_roles = roles_for("orders")
+
+    def get_order(self, request, dept_id, day):
+        user = request.user
+        if user.role == Role.DEPT_NURSE and user.department_id != dept_id:
+            raise Http404  # other departments' orders are not revealed
+        department = get_object_or_404(Department, pk=dept_id, is_active=True)
+        if user.role in (Role.DEPT_NURSE, Role.ADMIN):
+            return services.open_order(department, day)
+        order = DailyOrder.objects.filter(department=department, service_date=day).select_related("task").first()
+        if order is None:
+            raise Http404
+        return order
+
+    def get(self, request, dept_id, day):
+        day = parse_date(day)
+        return self.render(request, self.get_order(request, dept_id, day))
+
+    def post(self, request, dept_id, day):
+        day = parse_date(day)
+        order = self.get_order(request, dept_id, day)
+        diets = list(services.orderable_diets())
+        action = request.POST.get("action", "save")
+        no_patients = request.POST.get("no_patients") == "on"
+        note = request.POST.get("note", "").strip()
+        try:
+            portions = read_portions(request.POST, diets)
+            if action == "submit":
+                services.submit_order(order, request.user, portions, no_patients=no_patients, note=note)
+                messages.success(request, "Замовлення подано на перевірку дієтсестрі.")
+            else:
+                services.save_order(order, request.user, portions, no_patients=no_patients, note=note)
+                messages.success(request, "Чернетку збережено.")
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+            return self.render(request, order, posted=request.POST)
+        except (PermissionDenied, wf.InvalidTransition):
+            messages.error(request, "Замовлення вже подано — редагування недоступне.")
+        return redirect("orders:edit", dept_id, day.isoformat())
+
+    def render(self, request, order, posted=None):
+        order.refresh_from_db()
+        diets = list(services.orderable_diets())
+        default = order.department.default_diet_id
+        diets.sort(key=lambda d: (d.pk != default,))
+        values = services.portions_by_diet(order)
+        rows = []
+        for d in diets:
+            value = posted.get(f"diet_{d.pk}", "") if posted else values.get(d.pk, "")
+            rows.append({"diet": d, "value": value, "is_default": d.pk == default})
+        task = order.task
+        return render(request, "orders/order_form.html", {
+            "order": order,
+            "task": task,
+            "rows": rows,
+            "editable": services.is_editable_by(order, request.user),
+            "total": sum(values.values()),
+            "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,
+            "overdue": task.is_overdue() if task else False,
+            "prev_day": order.service_date - timedelta(days=1),
+            "next_day": order.service_date + timedelta(days=1),
+            "can_review": task is not None and wf.can(request.user, task, "approve"),
+        })
+
+
+class OrderSummaryView(RoleRequiredMixin, View):
+    allowed_roles = (Role.DIETICIAN,)
+
+    def get(self, request):
+        day = parse_date(request.GET.get("date"))
+        departments = list(Department.objects.filter(is_active=True).select_related("default_diet"))
+        rows = services.summary(day, departments)
+        diets = list(services.orderable_diets())
+        totals = {d.pk: sum(r["portions"].get(d.pk, 0) for r in rows) for d in diets}
+        approved = services.approved_portions(day)
+        counts = {s: 0 for s in ("missing", "open", "submitted", "approved", "cancelled")}
+        for r in rows:
+            t = r["task"]
+            key = "missing" if t is None else {
+                TaskStatus.SUBMITTED: "submitted", TaskStatus.APPROVED: "approved", TaskStatus.CANCELLED: "cancelled",
+            }.get(t.status, "open")
+            r["state"] = key
+            counts[key] += 1
+        plan_task = Task.objects.filter(type=MENU_PLANNING, service_date=day).first()
+        return render(request, "orders/summary.html", {
+            "day": day,
+            "rows": rows,
+            "diets": diets,
+            "totals": totals,
+            "approved": approved,
+            "approved_total": sum(approved.values()),
+            "counts": counts,
+            "plan_task": plan_task,
+            "prev_day": day - timedelta(days=1),
+            "next_day": day + timedelta(days=1),
+        })
+
+    def post(self, request):
+        day = parse_date(request.POST.get("date"))
+        action = request.POST.get("action")
+        back = redirect(reverse("orders:summary") + f"?date={day.isoformat()}")
+        if action == "create_tasks":
+            created = sum(
+                wf.ensure_task(ORDER_SUBMISSION, day, department=d)[1]
+                for d in Department.objects.filter(is_active=True)
+            )
+            messages.success(request, f"Створено задач: {created}.")
+        elif action == "approve_all":
+            done, failed = 0, 0
+            for task in Task.objects.filter(type=ORDER_SUBMISSION, service_date=day, status=TaskStatus.SUBMITTED):
+                try:
+                    wf.approve(task, request.user)
+                    done += 1
+                except (PermissionDenied, wf.InvalidTransition, ValidationError):
+                    failed += 1
+            messages.success(request, f"Затверджено замовлень: {done}.")
+            if failed:
+                messages.warning(request, f"Не вдалося затвердити: {failed} (наприклад, ви самі їх подали).")
+        elif action == "force_plan":
+            from apps.planning.services import force_planning
+
+            force_planning(day, request.user)
+            messages.success(request, "План меню сформовано з уже затверджених замовлень.")
+            return redirect("planning:plan", day.isoformat())
+        return back

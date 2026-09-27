@@ -10,7 +10,7 @@ from django.db import connection
 from apps.workflow import services as wf
 from apps.workflow.definitions import COOKING, MENU_PLANNING, ORDER_SUBMISSION, WRITE_OFF
 from apps.workflow.models import Notification, Task, TaskEvent, TaskStatus
-from apps.workflow.tests.conftest import DAY
+from apps.workflow.tests.conftest import DAY, submit
 
 pytestmark = pytest.mark.django_db
 S = TaskStatus
@@ -52,16 +52,16 @@ def test_order_deadline_is_previous_day_16_kyiv(hospital):
 def test_nurse_cannot_submit_other_departments_order(hospital):
     task = orders(hospital)[1]
     with pytest.raises(PermissionDenied):
-        wf.submit(task, hospital.nurses[0])
+        submit(task, hospital.nurses[0])
 
 
 def test_wrong_role_cannot_submit(hospital):
     with pytest.raises(PermissionDenied):
-        wf.submit(orders(hospital)[0], hospital.chef)
+        submit(orders(hospital)[0], hospital.chef)
 
 
 def test_submit_from_pending_records_start_and_notifies_checkers(hospital):
-    task = wf.submit(orders(hospital)[0], hospital.nurses[0], "30 ОВД")
+    task = submit(orders(hospital)[0], hospital.nurses[0], "30 ОВД")
     assert task.status == S.SUBMITTED and task.submitted_by == hospital.nurses[0]
     assert list(task.events.values_list("kind", flat=True)) == ["created", "started", "submitted"]
     assert any("Подано на перевірку" in t for t in notes(hospital.dietician))
@@ -75,7 +75,7 @@ def test_approve_pending_task_is_invalid(hospital):
 
 def test_maker_cannot_approve_own_submission(hospital):
     """Admin can act as any role, but still never as checker of their own submission."""
-    task = wf.submit(orders(hospital)[0], hospital.admin)
+    task = submit(orders(hospital)[0], hospital.admin)
     assert not wf.can(hospital.admin, task, "approve")
     with pytest.raises(PermissionDenied):
         wf.approve(task, hospital.admin)
@@ -92,7 +92,7 @@ def test_view_permission(hospital):
 
 # ----------------------------------------------------------------- reject / resubmit / cancel
 def test_reject_requires_comment(hospital):
-    task = wf.submit(orders(hospital)[0], hospital.nurses[0])
+    task = submit(orders(hospital)[0], hospital.nurses[0])
     with pytest.raises(ValidationError):
         wf.reject(task, hospital.dietician, "  ")
     task.refresh_from_db()
@@ -101,12 +101,12 @@ def test_reject_requires_comment(hospital):
 
 def test_reject_resubmit_approve(hospital):
     nurse, diet = hospital.nurses[0], hospital.dietician
-    task = wf.submit(orders(hospital)[0], nurse)
+    task = submit(orders(hospital)[0], nurse)
     task = wf.reject(task, diet, "Не вказано порції для №9")
     assert task.status == S.REJECTED and task.reject_count == 1
     assert task.last_rejection.comment == "Не вказано порції для №9"
     assert any("Повернуто" in t for t in notes(nurse))
-    task = wf.submit(task, nurse)
+    task = submit(task, nurse)
     assert any("Подано повторно" in t for t in notes(diet))
     task = wf.approve(task, diet)
     assert task.status == S.APPROVED and task.resolved_by == diet
@@ -127,7 +127,7 @@ def test_cancel_admin_only_with_reason(hospital):
 def test_menu_planning_appears_only_after_last_order(hospital):
     tasks = orders(hospital)
     for i, t in enumerate(tasks):
-        wf.approve(wf.submit(t, hospital.nurses[i]), hospital.dietician)
+        wf.approve(submit(t, hospital.nurses[i]), hospital.dietician)
         exists = Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()
         assert exists == (i == len(tasks) - 1)
 
@@ -135,15 +135,15 @@ def test_menu_planning_appears_only_after_last_order(hospital):
 def test_cancelled_order_counts_as_resolved(hospital):
     t1, t2, t3 = orders(hospital)
     wf.cancel(t3, hospital.admin, "відділення на ремонті")
-    wf.approve(wf.submit(t1, hospital.nurses[0]), hospital.dietician)
-    wf.approve(wf.submit(t2, hospital.nurses[1]), hospital.dietician)
+    wf.approve(submit(t1, hospital.nurses[0]), hospital.dietician)
+    wf.approve(submit(t2, hospital.nurses[1]), hospital.dietician)
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).count() == 1
 
 
 def test_cancelling_last_open_order_starts_planning(hospital):
     t1, t2, t3 = orders(hospital)
-    wf.approve(wf.submit(t1, hospital.nurses[0]), hospital.dietician)
-    wf.approve(wf.submit(t2, hospital.nurses[1]), hospital.dietician)
+    wf.approve(submit(t1, hospital.nurses[0]), hospital.dietician)
+    wf.approve(submit(t2, hospital.nurses[1]), hospital.dietician)
     assert not Task.objects.filter(type=MENU_PLANNING).exists()
     wf.cancel(t3, hospital.admin, "немає пацієнтів")
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).count() == 1
@@ -152,17 +152,17 @@ def test_cancelling_last_open_order_starts_planning(hospital):
 def test_full_day_happy_path(hospital):
     h = hospital
     for i, t in enumerate(orders(h)):
-        wf.approve(wf.submit(t, h.nurses[i]), h.dietician)
+        wf.approve(submit(t, h.nurses[i]), h.dietician)
     plan = Task.objects.get(type=MENU_PLANNING, service_date=DAY)
     assert plan.maker_role == "dietician" and plan.checker_role == "chef"
     assert any("План меню" in t for t in notes(h.dietician2))  # every dietician is told
-    wf.approve(wf.submit(plan, h.dietician), h.chef)
+    wf.approve(submit(plan, h.dietician), h.chef)
     cooking = Task.objects.get(type=COOKING, service_date=DAY)
     assert cooking.parent == plan
-    wf.approve(wf.submit(cooking, h.chef), h.dietician)
+    wf.approve(submit(cooking, h.chef), h.dietician)
     write_off = Task.objects.get(type=WRITE_OFF, service_date=DAY)
     assert any("Списання" in t for t in notes(h.accountant))
-    wf.approve(wf.submit(write_off, h.accountant), h.dietician)
+    wf.approve(submit(write_off, h.accountant), h.dietician)
     assert set(Task.objects.values_list("status", flat=True)) == {S.APPROVED}
     assert Task.objects.count() == 6
 
@@ -180,14 +180,14 @@ def test_overdue_notified_once_to_makers_and_dieticians(hospital):
 
 
 def test_submitted_task_is_not_overdue(hospital):
-    task = wf.submit(orders(hospital)[0], hospital.nurses[0])
+    task = submit(orders(hospital)[0], hospital.nurses[0])
     assert not task.is_overdue(task.deadline + timedelta(hours=1))
 
 
 # ----------------------------------------------------------------- inboxes
 def test_inboxes(hospital):
     t1, t2, _ = orders(hospital)
-    wf.submit(t1, hospital.nurses[0])
+    submit(t1, hospital.nurses[0])
     assert list(wf.todo_for(hospital.nurses[1])) == [t2]
     assert list(wf.review_for(hospital.dietician)) == [Task.objects.get(pk=t1.pk)]
     assert list(wf.review_for(hospital.chef)) == []
@@ -219,8 +219,8 @@ def _in_threads(*calls):
 @pytest.mark.django_db(transaction=True)
 def test_parallel_double_approve_creates_next_task_once(hospital):
     for i, t in enumerate(orders(hospital)):
-        wf.approve(wf.submit(t, hospital.nurses[i]), hospital.dietician)
-    plan = wf.submit(Task.objects.get(type=MENU_PLANNING), hospital.dietician)
+        wf.approve(submit(t, hospital.nurses[i]), hospital.dietician)
+    plan = submit(Task.objects.get(type=MENU_PLANNING), hospital.dietician)
     chef2 = type(hospital.chef).objects.create_user("chef2", password="x", role="chef")
     errors = _in_threads(lambda: wf.approve(plan, hospital.chef), lambda: wf.approve(plan, chef2))
     assert len(errors) == 1 and isinstance(errors[0], wf.InvalidTransition)
@@ -231,9 +231,9 @@ def test_parallel_double_approve_creates_next_task_once(hospital):
 @pytest.mark.django_db(transaction=True)
 def test_parallel_last_two_order_approvals_create_one_plan(hospital):
     t1, t2, t3 = orders(hospital)
-    wf.approve(wf.submit(t1, hospital.nurses[0]), hospital.dietician)
-    wf.submit(t2, hospital.nurses[1])
-    wf.submit(t3, hospital.nurses[2])
+    wf.approve(submit(t1, hospital.nurses[0]), hospital.dietician)
+    submit(t2, hospital.nurses[1])
+    submit(t3, hospital.nurses[2])
     errors = _in_threads(lambda: wf.approve(t2, hospital.dietician), lambda: wf.approve(t3, hospital.dietician2))
     assert errors == []
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).count() == 1

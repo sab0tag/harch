@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     "apps.menus",
     "apps.consumption",
     "apps.workflow",
+    "apps.orders",
+    "apps.planning",
 ]
 
 MIDDLEWARE = [

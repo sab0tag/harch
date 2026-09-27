@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from apps.accounts.access import RoleRequiredMixin
@@ -83,6 +84,9 @@ class TaskActionView(RoleRequiredMixin, View):
             messages.error(request, str(exc) or "Ця дія зараз недоступна.")
         else:
             messages.success(request, ok_message)
+        nxt = request.POST.get("next", "")
+        if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
+            return redirect(nxt)
         return redirect("workflow:task_detail", pk=pk)
 
 
