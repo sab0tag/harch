@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Списання{% endblock %}
+{% block content %}
+{% include "consumption/_day_header.html" with url_name="consumption:write_off_day" heading="Списання за" %}
+<div class="card card-body text-center py-5 mt-3">
+  <i class="bi bi-hourglass-split fs-1 text-secondary mb-2"></i>
+  {% if not plan %}<p class="mb-0">План меню на цю дату не затверджено — списувати нічого.</p>
+  {% else %}<p class="mb-1">Кухня ще не закрила день.</p>
+  <p class="text-secondary small mb-0">Списання відкривається, коли дієтсестра затвердить фактичний розхід кухні{% if cooking %} (зараз: «{{ cooking.get_status_display }}»){% endif %}.</p>{% endif %}
+</div>
+{% endblock %}

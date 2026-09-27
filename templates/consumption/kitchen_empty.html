@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Сьогодні на кухні{% endblock %}
+{% block content %}
+{% include "consumption/_day_header.html" with url_name="consumption:kitchen_day" heading="Кухня" %}
+<div class="card card-body text-center py-5 mt-3">
+  <i class="bi bi-calendar-x fs-1 text-secondary mb-2"></i>
+  <p class="mb-1">План меню на цю дату ще не затверджено.</p>
+  <p class="text-secondary small mb-3">Кухня бачить страви й порції лише після затвердження плану шеф-кухарем.</p>
+  <div><a href="{% url 'planning:plan' day.isoformat %}" class="btn btn-outline-primary">До плану меню</a></div>
+</div>
+{% endblock %}

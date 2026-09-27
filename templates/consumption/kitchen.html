@@ -1,0 +1,110 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Кухня · {{ plan.service_date|date:"d.m" }}{% endblock %}
+{% block content %}
+{% include "consumption/_day_header.html" with url_name="consumption:kitchen_day" heading="Кухня" day=plan.service_date %}
+<p class="text-secondary mb-3">Порцій: <strong>{{ portions_total }}</strong> ·
+  {% for e in entries %}{{ e.diet.code }} — меню №{{ e.menu.number }}, {{ e.portions }}{% if not forloop.last %}; {% endif %}{% endfor %}
+  · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка</a></p>
+
+{% if rejection %}
+<div class="alert alert-danger"><div class="fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Повернуто: {{ rejection.actor }}</div>
+  <div style="white-space: pre-line">{{ rejection.comment }}</div></div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    {% for s in board %}
+    <div class="card mb-3">
+      <div class="card-header bg-white fw-semibold">{{ s.label }}</div>
+      <ul class="list-group list-group-flush">
+        {% for d in s.dishes %}
+        <li class="list-group-item">
+          <div class="d-flex flex-wrap align-items-baseline gap-2">
+            <a class="fw-medium me-auto" href="{% url 'consumption:dish_card' plan.service_date.isoformat s.slot d.card_no %}"
+               hx-get="{% url 'consumption:dish_card' plan.service_date.isoformat s.slot d.card_no %}" hx-target="#dish-modal-body"
+               data-bs-toggle="modal" data-bs-target="#dish-modal">{{ d.name }}</a>
+            <span class="fw-semibold text-nowrap">{{ d.portions }} порц.</span>
+          </div>
+          <div class="small text-secondary">№{{ d.card_no }}{% if d.output_g %} · вихід {{ d.output_g|num:0 }} г · разом {{ d.output_total_g|kg }} кг{% endif %}
+            · {% for code, p in d.by_diet.items %}{{ code }} {{ p }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="col-xl-6">
+    <form method="post" action="{% url 'consumption:kitchen_day' plan.service_date.isoformat %}" class="card">{% csrf_token %}
+      <div class="card-header bg-white d-flex flex-wrap align-items-baseline column-gap-2">
+        <span class="fw-semibold me-auto">Фактичний розхід</span>
+        <span class="small text-secondary">кг; відхилення понад {{ threshold|num:0 }}% — з причиною</span>
+      </div>
+      <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Продукт</th><th class="text-end">План</th><th class="text-end" style="width: 7.5rem">Факт</th><th>Причина</th></tr></thead>
+        <tbody>
+        {% for a in actuals %}
+          <tr{% if a.needs_reason %} class="table-warning"{% endif %}>
+            <td>{{ a.product_name }}</td>
+            <td class="text-end text-nowrap">{{ a.planned_brutto_g|kg }}</td>
+            <td class="text-end">{% if editable %}<input name="fact_{{ a.pk }}" value="{{ a.actual_brutto_g|kg_input }}" inputmode="decimal" class="form-control form-control-sm text-end" aria-label="Факт, кг: {{ a.product_name }}">{% else %}{{ a.actual_brutto_g|kg }}{% endif %}</td>
+            <td>{% if editable %}<input name="reason_{{ a.pk }}" value="{{ a.reason }}" class="form-control form-control-sm" placeholder="{% if a.needs_reason %}обов'язково{% endif %}" aria-label="Причина: {{ a.product_name }}">{% else %}<span class="small">{{ a.reason }}</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% if editable %}
+      <div class="card-body border-top">
+        <div class="small fw-semibold mb-2">Додати продукт (заміна)</div>
+        <div class="row g-2">
+          <div class="col-sm-5"><select name="extra_product" class="form-select form-select-sm" aria-label="Продукт для заміни">
+            <option value="">— продукт —</option>{% for p in extra_products %}<option value="{{ p.pk }}">{{ p.name }}</option>{% endfor %}</select></div>
+          <div class="col-4 col-sm-2"><input name="extra_kg" inputmode="decimal" class="form-control form-control-sm" placeholder="кг" aria-label="Кількість, кг"></div>
+          <div class="col-8 col-sm-5"><input name="extra_reason" class="form-control form-control-sm" placeholder="замість чого / чому" aria-label="Причина заміни"></div>
+        </div>
+        <label class="form-label small mt-3" for="comment">Коментар для дієтсестри (необов'язково)</label>
+        <textarea id="comment" name="comment" rows="2" class="form-control mb-3"></textarea>
+        <div class="d-flex flex-wrap gap-2">
+          <button name="action" value="submit" class="btn btn-success"><i class="bi bi-send me-1"></i>{% if task.status == 'rejected' %}Подати повторно{% else %}Подати дієтсестрі{% endif %}</button>
+          <button name="action" value="save" class="btn btn-outline-secondary">Зберегти</button>
+        </div>
+      </div>
+      {% else %}
+      <div class="card-body border-top small text-secondary">
+        {% if task.status == 'submitted' %}Факт подано{% if task.submitted_by %} ({{ task.submitted_by }}, {{ task.submitted_at|date:"d.m H:i" }}){% endif %}. Потрібно виправити — попросіть дієтсестру повернути.
+        {% elif task.status == 'approved' %}Факт затверджено — день передано бухгалтерії на списання.
+        {% elif not task %}Задача «Приготування» ще не створена.
+        {% else %}Факт вносить шеф-кухар.{% endif %}
+      </div>
+      {% endif %}
+    </form>
+
+    {% if can_review %}
+    <div class="card card-body mt-3">
+      <p class="mb-2">Звірте факт з планом і причини відхилень.</p>
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{% url 'workflow:task_action' task.pk 'approve' %}">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Затвердити факт</button></form>
+        <button class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#fact-reject">Повернути</button>
+      </div>
+      <form method="post" action="{% url 'workflow:task_action' task.pk 'reject' %}" class="collapse mt-3" id="fact-reject">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <textarea name="comment" rows="2" class="form-control mb-2" placeholder="Що уточнити" required aria-label="Коментар"></textarea>
+        <button class="btn btn-danger">Повернути шеф-кухарю</button></form>
+    </div>
+    {% endif %}
+    {% if task %}<p class="mt-3"><a href="{% url 'workflow:task_detail' task.pk %}" class="small">Хронологія задачі</a></p>{% endif %}
+  </div>
+</div>
+
+<div class="modal fade" id="dish-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title h5">Картка-розкладка</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button></div>
+    <div class="modal-body" id="dish-modal-body"><div class="text-secondary">Завантаження…</div></div>
+  </div></div>
+</div>
+{% endblock %}

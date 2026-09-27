@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ card.name }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'consumption:kitchen_day' plan.service_date.isoformat %}">Кухня {{ plan.service_date|date:"d.m" }}</a></li>
+  <li class="breadcrumb-item active">{{ card.name }}</li></ol></nav>
+<div class="card card-body" style="max-width: 820px">{% include "consumption/_dish_card.html" %}</div>
+{% endblock %}

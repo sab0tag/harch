@@ -9,7 +9,9 @@
   {% if plan.is_frozen %}<span class="badge text-bg-dark fs-6"><i class="bi bi-lock"></i> Розхід зафіксовано</span>{% endif %}
 </div>
 <p class="text-secondary">Порцій за затвердженими замовленнями: <strong>{{ portions_total }}</strong>
-  {% if user.role == 'dietician' or user.role == 'admin' %} · <a href="{% url 'orders:summary' %}?date={{ plan.service_date.isoformat }}">замовлення</a>{% endif %}</p>
+  {% if user.role == 'dietician' or user.role == 'admin' %} · <a href="{% url 'orders:summary' %}?date={{ plan.service_date.isoformat }}">замовлення</a>{% endif %}
+  {% if plan.is_frozen %} · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка PDF</a>
+    {% if user.role != 'accountant' %} · <a href="{% url 'consumption:kitchen_day' plan.service_date.isoformat %}">на кухню</a>{% endif %}{% endif %}</p>
 
 {% if drift %}
 <div class="alert alert-warning">

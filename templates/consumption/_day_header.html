@@ -1,0 +1,6 @@
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <a class="btn btn-outline-secondary" href="{% url url_name prev_day.isoformat %}" title="Попередній день">‹</a>
+  <h1 class="h3 mb-0">{{ heading }} {{ day|date:"d.m.Y, l" }}</h1>
+  <a class="btn btn-outline-secondary" href="{% url url_name next_day.isoformat %}" title="Наступний день">›</a>
+  {% if task %}<span class="badge badge-status-{{ task.status }} fs-6 ms-md-2">{{ task.get_status_display }}</span>{% endif %}
+</div>

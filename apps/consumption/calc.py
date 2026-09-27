@@ -37,6 +37,7 @@ class Line:
     brutto_pp: Decimal
     netto_pp: Decimal
     kcal_per_100: Decimal
+    dish_output_g: Decimal | None = None
 
     @property
     def brutto_total(self) -> Decimal:
@@ -106,6 +107,7 @@ def compute_lines(entries: Iterable[PlanInput]) -> list[Line]:
                         brutto_pp=ing.brutto_g,
                         netto_pp=ing.netto_g,
                         kcal_per_100=ing.product.kcal,
+                        dish_output_g=item.dish.output_g,
                     )
                 )
     return lines

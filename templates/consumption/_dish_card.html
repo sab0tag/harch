@@ -1,0 +1,20 @@
+{% load harch %}
+<div id="dish-card">
+  <div class="fw-semibold">{{ card.name }}</div>
+  <div class="small text-secondary mb-2">№{{ card.card_no }} · {{ card.label }}{% if card.output_g %} · вихід {{ card.output_g|num:0 }} г{% endif %} · за планом {{ card.planned }} порц.</div>
+  <form class="d-flex align-items-center gap-2 mb-3" hx-get="{% url 'consumption:dish_card' plan.service_date.isoformat card.slot card.card_no %}" hx-target="#dish-card" hx-swap="outerHTML">
+    <label for="n-portions" class="small">Перерахувати на</label>
+    <input id="n-portions" name="n" type="number" min="1" max="5000" value="{{ card.portions }}" class="form-control form-control-sm" style="width: 6rem">
+    <span class="small">порц.</span><button class="btn btn-sm btn-outline-primary">OK</button>
+  </form>
+  <div class="table-responsive">
+  <table class="table table-sm mb-0">
+    <thead><tr><th>Продукт</th><th class="text-end">Брутто 1 п., г</th><th class="text-end">Нетто 1 п., г</th><th class="text-end">Брутто, кг</th><th class="text-end">Нетто, кг</th></tr></thead>
+    <tbody>{% for r in card.rows %}
+      <tr><td>{{ r.product }}</td><td class="text-end">{{ r.brutto_pp|num }}</td><td class="text-end">{{ r.netto_pp|num }}</td>
+        <td class="text-end fw-semibold">{{ r.brutto|kg }}</td><td class="text-end">{{ r.netto|kg }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+  </div>
+  <p class="small text-secondary mt-2 mb-0">Норми — з картки на момент затвердження плану.</p>
+</div>

@@ -38,7 +38,7 @@ def fill_doc(task, portions=10):
     from apps.orders.models import DailyOrderLine
     from apps.orders.services import open_order
     from apps.planning.services import open_plan, sync_portions
-    from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
+    from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION, WRITE_OFF
 
     if task.type == ORDER_SUBMISSION:
         order = open_order(task.department, task.service_date)
@@ -49,6 +49,12 @@ def fill_doc(task, portions=10):
         for entry in plan.entries.all():
             entry.menu = Menu.objects.filter(diet=entry.diet).order_by("number").first()
             entry.save(update_fields=["menu"])
+    elif task.type == WRITE_OFF:
+        from decimal import Decimal
+
+        from apps.catalog.models import Product
+
+        Product.objects.filter(price_per_kg__isnull=True).update(price_per_kg=Decimal("50.00"))
     task.refresh_from_db()
     return task
 

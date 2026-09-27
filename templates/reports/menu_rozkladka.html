@@ -1,0 +1,58 @@
+{% load harch %}<!doctype html>
+<html lang="uk"><head><meta charset="utf-8">
+<title>Меню-розкладка {{ plan.service_date|date:"d.m.Y" }}</title>
+<style>
+  @page { size: A4; margin: 14mm 12mm 16mm; @bottom-right { content: "с. " counter(page) " / " counter(pages); font-size: 8pt; color: #666; } }
+  body { font-family: "DejaVu Sans", sans-serif; font-size: 9pt; color: #111; }
+  h1 { font-size: 13pt; text-align: center; margin: 4mm 0 1mm; }
+  .sub { text-align: center; margin-bottom: 4mm; }
+  .approve { width: 70mm; margin-left: auto; font-size: 9pt; line-height: 1.6; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+  th, td { border: 0.4pt solid #888; padding: 1.2mm 1.5mm; vertical-align: top; }
+  th { background: #eef2ef; font-weight: bold; }
+  .num { text-align: right; white-space: nowrap; }
+  h2 { font-size: 10.5pt; margin: 5mm 0 2mm; }
+  .diet { page-break-inside: avoid; }
+  .slot { font-weight: bold; background: #f7f7f7; }
+  .signs { margin-top: 8mm; page-break-inside: avoid; }
+  .signs td { border: none; padding: 3mm 0 0; }
+  .muted { color: #555; font-size: 8pt; }
+</style></head>
+<body>
+<div class="approve">ЗАТВЕРДЖУЮ<br>Головний лікар<br>_______________ / _______________<br>«____» ______________ 20___ р.</div>
+<div class="muted">{{ hospital }}</div>
+<h1>МЕНЮ-РОЗКЛАДКА</h1>
+<div class="sub">на {{ plan.service_date|date:"d.m.Y" }} ({{ plan.service_date|date:"l" }}) · всього порцій: {{ portions }}</div>
+
+<table>
+  <thead><tr><th>Дієта</th><th>Меню №</th><th class="num">Порцій</th><th class="num">Ккал на 1 особу</th></tr></thead>
+  <tbody>{% for d in diets %}<tr><td>{{ d.code }} — {{ d.name }}</td><td>{{ d.menu }}</td><td class="num">{{ d.portions }}</td><td class="num">{{ d.kcal_pp|num:0 }}</td></tr>{% endfor %}</tbody>
+</table>
+
+{% for d in diets %}
+<div class="diet">
+<h2>{{ d.code }} · меню №{{ d.menu }} · {{ d.portions }} порц.</h2>
+<table>
+  <thead><tr><th style="width: 16mm">Картка №</th><th>Страва</th><th class="num" style="width: 22mm">Вихід, г</th></tr></thead>
+  <tbody>{% for label, dishes in d.slots %}
+    <tr><td colspan="3" class="slot">{{ label }}</td></tr>
+    {% for dish in dishes %}<tr><td>{{ dish.card_no }}</td><td>{{ dish.name }}</td><td class="num">{{ dish.output_g|num:0 }}</td></tr>{% endfor %}
+  {% endfor %}</tbody>
+</table>
+</div>
+{% endfor %}
+
+<h2>Потреба в продуктах на день</h2>
+<table>
+  <thead><tr><th style="width: 8mm">№</th><th>Продукт</th><th class="num">Брутто, кг</th><th class="num">Нетто, кг</th></tr></thead>
+  <tbody>{% for name, b, n in totals %}<tr><td>{{ forloop.counter }}</td><td>{{ name }}</td><td class="num">{{ b|kg }}</td><td class="num">{{ n|kg }}</td></tr>{% endfor %}
+    <tr><th></th><th>Разом</th><th class="num">{{ total_brutto|kg }}</th><th></th></tr></tbody>
+</table>
+<div class="muted">Розраховано системою «Харчоблок» за картками-розкладками, зафіксованими при затвердженні плану {{ plan.approved_at|date:"d.m.Y H:i" }}.</div>
+
+<table class="signs">
+  <tr><td>Лікар-дієтолог (дієтсестра)</td><td>_______________ / _______________</td></tr>
+  <tr><td>Завідувач виробництва (шеф-кухар)</td><td>_______________ / _______________</td></tr>
+  <tr><td>Бухгалтер</td><td>_______________ / _______________</td></tr>
+</table>
+</body></html>
