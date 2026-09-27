@@ -69,6 +69,7 @@ class Dish(Model):                           # картка-розкладка
     diets = ManyToManyField(Diet)            # для каких дієт допустима
     technology = TextField(blank=True)       # технологія приготування
     source = CharField(blank=True)           # збірник рецептур, сторінка
+    origin = CharField(choices=[seed, manual, ai_import], default=manual)  # откуда картка (см. 07_ai.md)
     # вычисляемые (property, не хранить): protein/fat/carbs/kcal на порцию = Σ ingredient.netto × product.X / 100
 
 class DishIngredient(Model):
