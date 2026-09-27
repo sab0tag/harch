@@ -34,7 +34,7 @@
         </div>
         {% if status == 'open' %}
         <form method="post" action="{% url 'catalog:finding_dismiss' f.pk %}" class="d-flex gap-1">{% csrf_token %}
-          <input name="note" class="form-control form-control-sm" placeholder="чому не проблема" aria-label="Коментар" style="width: 11rem">
+          <input name="note" class="form-control form-control-sm" placeholder="чому не проблема" aria-label="Коментар" style="width: 11rem" required>
           <button class="btn btn-sm btn-outline-secondary text-nowrap">Не проблема</button></form>
         {% elif status == 'dismissed' %}
         <form method="post" action="{% url 'catalog:finding_dismiss' f.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reopen">

@@ -56,13 +56,25 @@ def test_duplicates_rule_respects_numbers():
     assert [(f.details["ids"]) for f in found] == [[1, 3]]
 
 
-def test_nightly_command_notifies_dieticians_once(seeded, make_user):
-    diet = make_user(role=Role.DIETICIAN)
+def test_nightly_command_notifies_dieticians_and_admins_once(seeded, make_user):
+    diet, admin, chef = make_user(role=Role.DIETICIAN), make_user(role=Role.ADMIN), make_user(role=Role.CHEF)
     call_command("audit_reference", stdout=open("/dev/null", "w"))
-    note = Notification.objects.get(user=diet)
-    assert note.url == "/catalog/audit/" and note.task is None
+    for user in (diet, admin):
+        note = Notification.objects.get(user=user)
+        assert note.url == "/catalog/audit/" and note.task is None
+    assert not Notification.objects.filter(user=chef).exists()
     call_command("audit_reference", stdout=open("/dev/null", "w"))
     assert Notification.objects.filter(user=diet).count() == 1   # nothing new → no new notification
+
+
+def test_products_without_price_found_and_resolved(seeded):
+    run_audit()
+    rice = Product.objects.get(name="Рис")
+    assert ReferenceFinding.objects.get(kind="product_no_price", obj_id=rice.pk).status == "open"
+    rice.price_per_kg = Decimal("55.00")
+    rice.save()
+    run_audit()
+    assert ReferenceFinding.objects.get(kind="product_no_price", obj_id=rice.pk).status == "resolved"
 
 
 def test_ai_groups_are_validated(seeded, settings, monkeypatch):
@@ -95,6 +107,25 @@ def test_screen_and_dismiss(client, seeded, login):
     c.post(f"/catalog/audit/{f.pk}/dismiss/", {"note": "за ДСТУ так"})
     f.refresh_from_db()
     assert (f.status, f.note, f.dismissed_by) == ("dismissed", "за ДСТУ так", c.user)
+
+
+def test_dismiss_needs_a_reason(seeded, login):
+    run_audit()
+    c = login(Role.DIETICIAN)
+    f = ReferenceFinding.objects.get(kind="product_kcal", title="Індичка")
+    r = c.post(f"/catalog/audit/{f.pk}/dismiss/", {"note": "  "}, follow=True)
+    f.refresh_from_db()
+    assert f.status == "open" and "чому це не проблема" in r.content.decode()
+
+
+def test_dismiss_does_not_redirect_off_site(seeded, login):
+    run_audit()
+    c = login(Role.DIETICIAN)
+    f = ReferenceFinding.objects.get(kind="product_kcal", title="Індичка")
+    r = c.post(f"/catalog/audit/{f.pk}/dismiss/", {"note": "за ДСТУ", "back": "https://evil.example/"})
+    assert r.status_code == 302 and r.url == "/catalog/audit/"
+    r = c.post(f"/catalog/audit/{f.pk}/dismiss/", {"action": "reopen", "back": "/catalog/audit/?status=dismissed"})
+    assert r.url == "/catalog/audit/?status=dismissed"
 
 
 def test_screen_access(login):

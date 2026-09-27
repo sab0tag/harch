@@ -1,9 +1,6 @@
 from django.core.management.base import BaseCommand
-from django.urls import reverse
 
-from apps.accounts.models import Role
-from apps.catalog.audit import run_audit
-from apps.workflow.notify import notify, users_with_role
+from apps.catalog.audit import notify_fresh, run_audit
 
 
 class Command(BaseCommand):
@@ -18,8 +15,5 @@ class Command(BaseCommand):
         self.stdout.write(f"Нових: {counts['new']}, повернулось: {counts['reopened']}, "
                           f"виправлено: {counts['resolved']}, відкритих: {counts['open']}"
                           + (f", {counts['ai']}" if counts["ai"] and counts["ai"] != "ok" else ""))
-        fresh = counts["new"] + counts["reopened"]
-        if fresh and not quiet:
-            notify(users_with_role(Role.DIETICIAN), None, f"Перевірка довідника: нових зауважень — {fresh}",
-                   f"Усього відкритих: {counts['open']}. Перегляньте і виправте або позначте «Не проблема».",
-                   url=reverse("catalog:audit"))
+        if not quiet:
+            notify_fresh(counts)

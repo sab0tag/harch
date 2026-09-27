@@ -24,6 +24,7 @@ KINDS = {
     "product_duplicate": "Можливі дублі продуктів",
     "product_duplicate_ai": "Можливі дублі продуктів (ШІ)",
     "product_ai_estimate": "Значення БЖУ — оцінка ШІ",
+    "product_no_price": "Немає ціни за кг",
     "dish_no_ingredients": "Картка без складу",
     "dish_netto_gt_brutto": "Нетто більше брутто",
     "dish_output": "Вихід не узгоджується з нетто",
@@ -63,6 +64,9 @@ def check_products(products) -> list[Found]:
             out.append(Found("product_kcal", "warn", "product", p.pk, p.name,
                              f"Ккал {p.kcal:g} на 100 г, а за БЖУ виходить {atwater:.0f} (4·Б + 9·Ж + 4·В).",
                              {"kcal": str(p.kcal), "atwater": f"{atwater:.1f}"}))
+        if p.price_per_kg is None:
+            out.append(Found("product_no_price", "info", "product", p.pk, p.name,
+                             "Немає ціни за кг — списання з цим продуктом не подати. Ціну вносить бухгалтер або дієтсестра."))
         if getattr(p, "origin", "") == "ai_estimate" and not p.verified:
             out.append(Found("product_ai_estimate", "info", "product", p.pk, p.name,
                              "БЖУ і ккал запропонував ШІ — звірте з довідником хімічного складу і позначте як перевірене."))
@@ -193,6 +197,42 @@ def run_audit(*, with_ai=False, user=None) -> dict:
                 counts["open"] = ai_counts["open"]
                 counts["ai"] = "ok"
     return counts
+
+
+# ------------------------------------------------------------------ human decisions
+def dismiss(finding, user, note):
+    """«Не проблема» — only with a reason; the finding then stays closed across runs."""
+    from django.core.exceptions import ValidationError
+
+    note = (note or "").strip()
+    if not note:
+        raise ValidationError("Поясніть, чому це не проблема — коментар обов'язковий.")
+    finding.status, finding.note, finding.dismissed_by = ReferenceFinding.Status.DISMISSED, note[:300], user
+    finding.save(update_fields=["status", "note", "dismissed_by", "updated_at"])
+    return finding
+
+
+def reopen(finding):
+    finding.status, finding.note, finding.dismissed_by = ReferenceFinding.Status.OPEN, "", None
+    finding.save(update_fields=["status", "note", "dismissed_by", "updated_at"])
+    return finding
+
+
+def notify_fresh(counts):
+    """One notification per run, only when something new appeared; to dieticians (who fix) and admins."""
+    from django.urls import reverse
+
+    from apps.accounts.models import Role
+    from apps.workflow.notify import notify, users_with_role
+
+    fresh = counts["new"] + counts["reopened"]
+    if not fresh:
+        return 0
+    users = list(users_with_role(Role.DIETICIAN)) + list(users_with_role(Role.ADMIN))
+    notify(users, None, f"Перевірка довідника: нових зауважень — {fresh}",
+           f"Усього відкритих: {counts['open']}. Виправте запис або позначте «Не проблема» з поясненням.",
+           url=reverse("catalog:audit"))
+    return fresh
 
 
 def object_url(finding):

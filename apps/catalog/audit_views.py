@@ -1,12 +1,15 @@
 from collections import OrderedDict
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from apps.accounts.access import RoleRequiredMixin
 from apps.core.navigation import roles_for
 
+from . import audit
 from .audit import KINDS, object_url, run_audit
 from .models import ReferenceFinding
 
@@ -47,12 +50,16 @@ class FindingDismissView(RoleRequiredMixin, View):
     def post(self, request, pk):
         f = get_object_or_404(ReferenceFinding, pk=pk)
         if request.POST.get("action") == "reopen":
-            f.status, f.note, f.dismissed_by = ReferenceFinding.Status.OPEN, "", None
+            audit.reopen(f)
             messages.success(request, "Зауваження знову відкрите.")
         else:
-            f.status = ReferenceFinding.Status.DISMISSED
-            f.note = request.POST.get("note", "").strip()[:300]
-            f.dismissed_by = request.user
-            messages.success(request, f"«{f.title}»: позначено як «не проблема».")
-        f.save()
-        return redirect(request.POST.get("back") or "catalog:audit")
+            try:
+                audit.dismiss(f, request.user, request.POST.get("note", ""))
+                messages.success(request, f"«{f.title}»: позначено як «не проблема».")
+            except ValidationError as exc:
+                messages.error(request, exc.messages[0])
+        back = request.POST.get("back", "")
+        if back and url_has_allowed_host_and_scheme(back, allowed_hosts={request.get_host()},
+                                                    require_https=request.is_secure()):
+            return redirect(back)
+        return redirect("catalog:audit")
