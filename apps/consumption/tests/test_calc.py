@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from apps.catalog.nutrition import annotate_menu_nutrition
+from apps.catalog.nutrition import with_menu_nutrition
 from apps.catalog.tests.factories import DietFactory, DishFactory, IngredientFactory, MenuFactory, MenuItemFactory, ProductFactory
 from apps.consumption.calc import CalcError, PlanInput, compute_lines, totals_by_product
 
@@ -34,7 +34,7 @@ def test_control_example_product_count_and_grand_total(control_totals):
 def test_control_example_kcal_per_person(seeded):
     from apps.menus.models import Menu as M
 
-    kcal = {m.number: m.n_kcal.quantize(Decimal("0.1")) for m in annotate_menu_nutrition(M.objects.filter(number__in=[1, 81]))}
+    kcal = {m.number: m.n_kcal.quantize(Decimal("0.1")) for m in with_menu_nutrition(M.objects.filter(number__in=[1, 81]))}
     assert kcal == {1: Decimal("1980.8"), 81: Decimal("2034.9")}
 
 

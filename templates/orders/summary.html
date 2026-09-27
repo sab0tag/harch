@@ -1,0 +1,68 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Замовлення на {{ day|date:"d.m.Y" }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <a class="btn btn-outline-secondary" href="?date={{ prev_day.isoformat }}">‹</a>
+  <h1 class="h3 mb-0">Замовлення на {{ day|date:"d.m.Y, l" }}</h1>
+  <a class="btn btn-outline-secondary" href="?date={{ next_day.isoformat }}">›</a>
+  <form method="get" class="ms-auto"><input type="date" name="date" value="{{ day.isoformat }}" class="form-control" onchange="this.form.submit()"></form>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Не подано</div><div class="h4 mb-0">{{ counts.open|add:counts.missing }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">На перевірці</div><div class="h4 mb-0 text-warning">{{ counts.submitted }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Затверджено</div><div class="h4 mb-0 text-success">{{ counts.approved }}</div></div></div>
+  <div class="col-6 col-md"><div class="card card-body py-2"><div class="small text-secondary">Порцій (затв.)</div><div class="h4 mb-0">{{ approved_total }}</div></div></div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  {% if counts.submitted %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day.isoformat }}">
+    <button name="action" value="approve_all" class="btn btn-success"><i class="bi bi-check2-all me-1"></i>Затвердити всі подані ({{ counts.submitted }})</button></form>
+  {% endif %}
+  {% if counts.missing %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day.isoformat }}">
+    <button name="action" value="create_tasks" class="btn btn-outline-secondary">Створити задачі для відділень ({{ counts.missing }})</button></form>
+  {% endif %}
+  {% if plan_task %}
+    <a href="{% url 'planning:plan' day.isoformat %}" class="btn btn-primary"><i class="bi bi-calendar-week me-1"></i>План меню</a>
+  {% elif counts.approved %}
+  <form method="post" onsubmit="return confirm('Сформувати план лише з затверджених замовлень? Незатверджені відділення не ввійдуть у план.')">{% csrf_token %}
+    <input type="hidden" name="date" value="{{ day.isoformat }}">
+    <button name="action" value="force_plan" class="btn btn-outline-primary">Сформувати план зараз</button></form>
+  {% endif %}
+</div>
+
+<div class="card"><div class="table-responsive">
+  <table class="table align-middle mb-0">
+    <thead class="table-light"><tr><th>Відділення</th>{% for d in diets %}<th class="text-end">{{ d.code }}</th>{% endfor %}<th class="text-end">Разом</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td class="fw-medium">{% if r.order %}<a href="{% url 'orders:edit' r.department.pk day.isoformat %}" class="text-decoration-none">{{ r.department }}</a>{% else %}{{ r.department }}{% endif %}</td>
+        {% for d in diets %}<td class="text-end">{{ r.portions|get:d.pk }}</td>{% endfor %}
+        <td class="text-end fw-semibold">{% if r.order %}{{ r.order.total_portions }}{% endif %}</td>
+        <td class="text-nowrap">{% if r.task %}<span class="badge badge-status-{{ r.task.status }}">{{ r.task.get_status_display }}</span>{% if r.order.no_patients %} <span class="small text-secondary">0 пацієнтів</span>{% endif %}{% else %}<span class="small text-secondary">немає задачі</span>{% endif %}</td>
+        <td class="text-end text-nowrap">
+          {% if r.task and r.task.status == 'submitted' %}
+            <form method="post" action="{% url 'workflow:task_action' r.task.pk 'approve' %}" class="d-inline">{% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button class="btn btn-sm btn-success" title="Затвердити"><i class="bi bi-check2"></i></button></form>
+            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#rej-{{ r.task.pk }}" title="Повернути"><i class="bi bi-arrow-return-left"></i></button>
+          {% endif %}
+        </td>
+      </tr>
+      {% if r.task and r.task.status == 'submitted' %}
+      <tr class="collapse" id="rej-{{ r.task.pk }}"><td colspan="{{ diets|length|add:4 }}">
+        <form method="post" action="{% url 'workflow:task_action' r.task.pk 'reject' %}" class="d-flex gap-2">{% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <input name="comment" class="form-control" placeholder="Що виправити у замовленні «{{ r.department }}»?" required>
+          <button class="btn btn-danger text-nowrap">Повернути</button></form>
+      </td></tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+    <tfoot class="table-group-divider"><tr class="fw-semibold"><td>Разом (усі замовлення)</td>{% for d in diets %}<td class="text-end">{{ totals|get:d.pk|default:"" }}</td>{% endfor %}<td></td><td></td><td></td></tr></tfoot>
+  </table>
+</div></div>
+{% endblock %}

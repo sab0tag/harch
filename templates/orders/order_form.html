@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Замовлення · {{ order.department }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-1">
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'orders:edit' order.department_id prev_day.isoformat %}" title="Попередній день">‹</a>
+  <h1 class="h4 mb-0 flex-grow-1 text-center">Замовлення на {{ order.service_date|date:"d.m, l" }}</h1>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'orders:edit' order.department_id next_day.isoformat %}" title="Наступний день">›</a>
+</div>
+<p class="text-center text-secondary mb-3">{{ order.department }}
+  {% if task %} · <span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% endif %}
+  {% if overdue %} <span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> дедлайн минув</span>{% endif %}</p>
+
+{% if rejection %}
+<div class="alert alert-danger">
+  <div class="fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Дієтсестра повернула замовлення</div>
+  <div style="white-space: pre-line">{{ rejection.comment }}</div>
+</div>
+{% endif %}
+
+{% if editable %}
+<form method="post" class="card card-body" style="max-width: 560px; margin: 0 auto">{% csrf_token %}
+  {% if task.deadline %}<p class="small text-secondary">Подати до {{ task.deadline|date:"d.m H:i" }}</p>{% endif %}
+  {% for row in rows %}
+    <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+      <label for="diet_{{ row.diet.pk }}" class="flex-grow-1">
+        <span class="fw-semibold">{{ row.diet.code }}</span>{% if row.is_default %} <span class="badge text-bg-light border small">основна</span>{% endif %}
+        <div class="small text-secondary">{{ row.diet.name }}</div>
+      </label>
+      <input type="number" min="0" step="1" inputmode="numeric" pattern="[0-9]*" name="diet_{{ row.diet.pk }}" id="diet_{{ row.diet.pk }}"
+             value="{{ row.value }}" class="form-control form-control-lg text-end" style="width: 6.5rem" placeholder="0">
+    </div>
+  {% endfor %}
+  <div class="form-check my-3">
+    <input class="form-check-input" type="checkbox" name="no_patients" id="no_patients"{% if order.no_patients %} checked{% endif %}>
+    <label class="form-check-label" for="no_patients">Пацієнтів на цю дату немає</label>
+  </div>
+  <label class="form-label small" for="note">Примітка (необов'язково)</label>
+  <textarea name="note" id="note" rows="2" class="form-control mb-3">{{ order.note }}</textarea>
+  <div class="d-grid gap-2 d-sm-flex">
+    <button name="action" value="submit" class="btn btn-success btn-lg flex-grow-1"><i class="bi bi-send me-1"></i>{% if task.status == 'rejected' %}Подати повторно{% else %}Подати{% endif %}</button>
+    <button name="action" value="save" class="btn btn-outline-secondary btn-lg">Зберегти чернетку</button>
+  </div>
+  <p class="small text-secondary mt-3 mb-0">Лише кількість порцій — без прізвищ і діагнозів.</p>
+</form>
+{% else %}
+<div class="card" style="max-width: 560px; margin: 0 auto">
+  <ul class="list-group list-group-flush">
+    {% for row in rows %}{% if row.value %}
+      <li class="list-group-item d-flex"><span class="me-auto"><span class="fw-semibold">{{ row.diet.code }}</span> <span class="small text-secondary">{{ row.diet.name }}</span></span><span class="fw-semibold">{{ row.value }}</span></li>
+    {% endif %}{% endfor %}
+    {% if order.no_patients %}<li class="list-group-item text-secondary">Пацієнтів немає</li>{% endif %}
+    <li class="list-group-item d-flex fw-semibold"><span class="me-auto">Разом порцій</span><span>{{ total }}</span></li>
+    {% if order.note %}<li class="list-group-item small">{{ order.note }}</li>{% endif %}
+  </ul>
+  <div class="card-body small text-secondary">
+    {% if task.status == 'submitted' %}Подано{% if task.submitted_by %}: {{ task.submitted_by }}, {{ task.submitted_at|date:"d.m H:i" }}{% endif %}. Очікує перевірки дієтсестри.
+    {% elif task.status == 'approved' %}Затверджено: {{ task.resolved_by }}, {{ task.resolved_at|date:"d.m H:i" }}.
+    {% elif task.status == 'cancelled' %}Скасовано.{% else %}Заповнює старша медсестра відділення.{% endif %}
+  </div>
+  {% if can_review %}
+  <div class="card-footer bg-white d-flex flex-wrap gap-2">
+    <form method="post" action="{% url 'workflow:task_action' task.pk 'approve' %}">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-success">Затвердити</button></form>
+    <a href="{% url 'workflow:task_detail' task.pk %}" class="btn btn-outline-danger">Повернути з коментарем…</a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% if task %}<p class="text-center mt-3"><a href="{% url 'workflow:task_detail' task.pk %}" class="small">Хронологія задачі</a></p>{% endif %}
+{% endblock %}

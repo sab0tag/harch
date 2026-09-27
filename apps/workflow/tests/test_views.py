@@ -5,14 +5,14 @@ from apps.accounts.models import Role
 from apps.workflow import services as wf
 from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
 from apps.workflow.models import Notification, Task, TaskStatus
-from apps.workflow.tests.conftest import DAY
+from apps.workflow.tests.conftest import DAY, fill_doc, submit
 
 pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
 def order(hospital):
-    return wf.ensure_task(ORDER_SUBMISSION, DAY, department=hospital.depts[0])[0]
+    return fill_doc(wf.ensure_task(ORDER_SUBMISSION, DAY, department=hospital.depts[0])[0])
 
 
 def as_user(client, user):
@@ -49,7 +49,7 @@ def test_submit_and_approve_over_http(client, hospital, order):
 
 
 def test_reject_without_comment_shows_error(client, hospital, order):
-    wf.submit(order, hospital.nurses[0])
+    submit(order, hospital.nurses[0])
     r = as_user(client, hospital.dietician).post(f"/tasks/{order.pk}/reject/", {"comment": ""}, follow=True)
     assert "коментар обов" in r.content.decode()
     order.refresh_from_db()
@@ -57,19 +57,19 @@ def test_reject_without_comment_shows_error(client, hospital, order):
 
 
 def test_rejection_comment_shown_to_maker(client, hospital, order):
-    wf.reject(wf.submit(order, hospital.nurses[0]), hospital.dietician, "Додайте порції №9")
+    wf.reject(submit(order, hospital.nurses[0]), hospital.dietician, "Додайте порції №9")
     html = as_user(client, hospital.nurses[0]).get(f"/tasks/{order.pk}/").content.decode()
     assert "Повернуто на доопрацювання" in html and "Додайте порції №9" in html and "Подати повторно" in html
 
 
 def test_checker_buttons_hidden_for_own_submission(client, hospital, order):
-    wf.submit(order, hospital.admin)
+    submit(order, hospital.admin)
     html = as_user(client, hospital.admin).get(f"/tasks/{order.pk}/").content.decode()
     assert "Затвердити" not in html and "Подано вами" in html
 
 
 def test_action_by_wrong_role_is_refused(client, hospital, order):
-    wf.submit(order, hospital.nurses[0])
+    submit(order, hospital.nurses[0])
     r = as_user(client, hospital.nurses[0]).post(f"/tasks/{order.pk}/approve/", follow=True)
     assert r.status_code == 200
     order.refresh_from_db()
@@ -120,7 +120,7 @@ class TestNotifications:
     def test_read_all(self, client, hospital, order):
         wf.ensure_task(ORDER_SUBMISSION, DAY, department=hospital.depts[1])
         client = as_user(client, hospital.dietician)
-        wf.submit(order, hospital.nurses[0])
+        submit(order, hospital.nurses[0])
         assert Notification.objects.filter(user=hospital.dietician, read_at__isnull=True).exists()
         client.post("/tasks/notifications/read-all/", HTTP_HX_REQUEST="true")
         assert not Notification.objects.filter(user=hospital.dietician, read_at__isnull=True).exists()
@@ -129,7 +129,7 @@ class TestNotifications:
 def test_chain_visible_in_ui(client, hospital):
     for i, d in enumerate(hospital.depts):
         t = wf.ensure_task(ORDER_SUBMISSION, DAY, department=d)[0]
-        wf.approve(wf.submit(t, hospital.nurses[i]), hospital.dietician)
+        wf.approve(submit(t, hospital.nurses[i]), hospital.dietician)
     plan = Task.objects.get(type=MENU_PLANNING)
     html = as_user(client, hospital.dietician).get("/tasks/?tab=todo").content.decode()
     assert "План меню на день" in html

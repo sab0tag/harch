@@ -44,9 +44,45 @@ def all_orders_resolved(service_date) -> bool:
 
 def _after_order_approved(task):
     if all_orders_resolved(task.service_date):
+        from apps.planning.services import open_plan, sync_portions
+
         from .services import ensure_task
 
         ensure_task(MENU_PLANNING, task.service_date, parent=task)
+        sync_portions(open_plan(task.service_date))
+
+
+# Hooks into the apps that own each task's document. Imported lazily: workflow must not
+# depend on them at import time.
+def _validate_order(task):
+    from apps.orders.services import validate_order_task
+
+    return validate_order_task(task)
+
+
+def _order_url(task):
+    from django.urls import reverse
+
+    return reverse("orders:edit", args=[task.department_id, task.service_date.isoformat()])
+
+
+def _validate_plan(task):
+    from apps.planning.services import validate_plan_task
+
+    return validate_plan_task(task)
+
+
+def _plan_url(task):
+    from django.urls import reverse
+
+    return reverse("planning:plan", args=[task.service_date.isoformat()])
+
+
+def _after_plan_approved(task):
+    from apps.planning.services import approve_plan
+
+    approve_plan(task)          # freezes consumption (invariant 5) before cooking starts
+    _next(COOKING)(task)
 
 
 def _next(type_):
@@ -66,6 +102,8 @@ register(TaskDefinition(
     per_department=True,
     deadline=order_deadline,
     description="Вкажіть кількість порцій по дієтах на дату обслуговування.",
+    validate_submit=_validate_order,
+    subject_url=_order_url,
     on_approved=_after_order_approved,
     on_cancelled=_after_order_approved,  # cancelling the last open order also completes the day
     lock_group=day_orders,
@@ -78,7 +116,9 @@ register(TaskDefinition(
     checker_role=Role.CHEF,
     deadline=lambda d: _at(d - timedelta(days=1), "18:00"),
     description="Оберіть меню для кожної дієти з порціями.",
-    on_approved=_next(COOKING),
+    validate_submit=_validate_plan,
+    subject_url=_plan_url,
+    on_approved=_after_plan_approved,
 ))
 
 register(TaskDefinition(

@@ -46,3 +46,20 @@ def ago(value):
     if (timezone.now() - value).total_seconds() < 60:
         return "щойно"
     return f"{timesince(value).split(',')[0]} тому"
+
+
+@register.filter
+def get(mapping, key):
+    """Dict lookup in templates: {{ d|get:key }}."""
+    try:
+        return mapping.get(key, "")
+    except AttributeError:
+        return ""
+
+
+@register.filter
+def kg(grams):
+    """Grams (Decimal) → kilograms with 3 decimals, localised."""
+    if grams in (None, ""):
+        return "—"
+    return floatformat(Decimal(grams) / 1000, "3g")

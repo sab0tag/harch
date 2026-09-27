@@ -5,8 +5,7 @@ Values per portion are Σ(netto_g × per-100g value / 100) over ingredients.
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.db.models import DecimalField, ExpressionWrapper, F, OuterRef, Subquery, Sum
-from django.db.models.functions import Coalesce
+from django.db.models import DecimalField, F, Sum
 
 from .models import DishIngredient
 
@@ -44,38 +43,43 @@ def dish_nutrition(dish) -> Nutrition:
     return total
 
 
-def _sum_expr(field, prefix=""):
-    return ExpressionWrapper(Sum(F(f"{prefix}netto_g") * F(f"{prefix}product__{field}") / 100), output_field=_DEC)
+def _grouped_sums(queryset, group_field, prefix):
+    """{group_id: Nutrition} in ONE grouped query (joins + GROUP BY, no correlated subqueries).
+
+    Correlated subqueries per row degrade badly when table statistics are stale (fresh seed
+    load): a single menu-list query took minutes. A grouped join stays fast either way.
+    """
+    sums = {
+        f: Sum(F(f"{prefix}netto_g") * F(f"{prefix}product__{f}") / 100, output_field=_DEC)
+        for f in FIELDS
+    }
+    rows = queryset.order_by().values(group_field).annotate(**sums)
+    return {r[group_field]: Nutrition(*(r[f] or ZERO for f in FIELDS)) for r in rows}
 
 
-def annotate_dish_nutrition(queryset):
-    """Adds n_protein, n_fat, n_carbs, n_kcal (per portion) via subqueries — safe with M2M filters."""
-    annotations = {}
-    for field in FIELDS:
-        sub = (
-            DishIngredient.objects.filter(dish=OuterRef("pk"))
-            .order_by()
-            .values("dish")
-            .annotate(v=_sum_expr(field))
-            .values("v")
-        )
-        annotations[f"n_{field}"] = Coalesce(Subquery(sub, output_field=_DEC), ZERO, output_field=_DEC)
-    return queryset.annotate(**annotations)
+def _attach(objects, sums):
+    for obj in objects:
+        n = sums.get(obj.pk, Nutrition())
+        obj.n_protein, obj.n_fat, obj.n_carbs, obj.n_kcal = n.protein, n.fat, n.carbs, n.kcal
+    return objects
 
 
-def annotate_menu_nutrition(queryset):
-    """Adds n_* per person per day. A dish listed twice in a menu counts twice."""
-    annotations = {}
-    for field in FIELDS:
-        sub = (
-            DishIngredient.objects.filter(dish__menu_items__menu=OuterRef("pk"))
-            .order_by()
-            .values("dish__menu_items__menu")
-            .annotate(v=_sum_expr(field))
-            .values("v")
-        )
-        annotations[f"n_{field}"] = Coalesce(Subquery(sub, output_field=_DEC), ZERO, output_field=_DEC)
-    return queryset.annotate(**annotations)
+def with_dish_nutrition(dishes):
+    """Sets n_protein/n_fat/n_carbs/n_kcal (per portion) on each dish; returns the list."""
+    dishes = list(dishes)
+    sums = _grouped_sums(DishIngredient.objects.filter(dish__in=[d.pk for d in dishes]), "dish_id", "")
+    return _attach(dishes, sums)
+
+
+def with_menu_nutrition(menus):
+    """Sets n_* per person per day on each menu. A dish listed twice in a menu counts twice."""
+    from apps.menus.models import MenuItem
+
+    menus = list(menus)
+    sums = _grouped_sums(
+        MenuItem.objects.filter(menu__in=[m.pk for m in menus]), "menu_id", "dish__ingredients__"
+    )
+    return _attach(menus, sums)
 
 
 def norm_status(value, low, high, tolerance=Decimal("0.10")):

@@ -1,0 +1,14 @@
+{% load harch %}
+<div id="plan-consumption">
+{% if consumption %}
+  <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+    <thead class="small text-secondary"><tr><th class="ps-3">Продукт</th><th class="text-end">Брутто, кг</th><th class="text-end pe-3">Нетто, кг</th></tr></thead>
+    <tbody>
+    {% for name, brutto, netto in consumption %}
+      <tr><td class="ps-3">{{ name }}</td><td class="text-end">{{ brutto|kg }}</td><td class="text-end pe-3">{{ netto|kg }}</td></tr>
+    {% endfor %}
+    </tbody>
+    <tfoot class="table-group-divider"><tr class="fw-semibold"><td class="ps-3">Разом брутто</td><td class="text-end">{{ consumption_total|kg }}</td><td></td></tr></tfoot>
+  </table></div>
+{% else %}<div class="p-3 text-secondary small">Оберіть меню, щоб побачити розхід продуктів.</div>{% endif %}
+</div>
