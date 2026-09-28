@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Підігнати меню №{{ menu.number }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'menus:list' %}">Меню</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'menus:detail' menu.number %}">№{{ menu.number }}</a></li>
+  <li class="breadcrumb-item active">Підігнати під норму</li></ol></nav>
+<h1 class="h3">Підігнати меню №{{ menu.number }} ({{ menu.diet.code }}) під норму</h1>
+<p class="text-secondary" style="max-width: 820px">Система шукає мінімальні заміни страв тієї ж категорії (суп на суп, гарнір на гарнір) серед дозволених для дієти,
+  а за потреби додає хліб чи перекус. Розрахунок — код, не ШІ. Після застосування меню стане «Не перевірено».</p>
+{% include "menus/_short.html" %}
+<div class="row g-3">
+  <div class="col-lg-6 col-xxl-3">{% include "menus/_proposal.html" with p=current heading="Зараз" key="cur" buttons=None diet_code=menu.diet.code %}</div>
+  {% for p in options %}
+  <div class="col-lg-6 col-xxl-3">{% include "menus/_proposal.html" with p=p heading="Варіант" number=forloop.counter key=forloop.counter action_url=request.path diet_code=menu.diet.code buttons=fit_buttons %}</div>
+  {% empty %}
+  <div class="col-lg-6"><div class="card card-body text-secondary">Покращити заміною страв не вдалося.</div></div>
+  {% endfor %}
+</div>
+{% endblock %}

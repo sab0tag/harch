@@ -1,0 +1,7 @@
+{% if short %}
+<div class="alert alert-warning">
+  <div class="fw-semibold"><i class="bi bi-exclamation-triangle me-1"></i>З наявних карток цієї дієти норму не досягти</div>
+  <div class="small">Бракує: {% for f in short %}{% if f == 'kcal' %}калорійності{% elif f == 'protein' %}білків{% elif f == 'fat' %}жирів{% else %}вуглеводів{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}.
+    Потрібні нові картки-розкладки для цієї дієти{% if ai_available %} — їх можна почати з «Чернетки картки» (ШІ){% endif %}, або перегляд норм страв.</div>
+</div>
+{% endif %}

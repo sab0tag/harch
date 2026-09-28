@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Нове меню{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'menus:list' %}">Меню</a></li><li class="breadcrumb-item active">Нове меню</li></ol></nav>
+<h1 class="h3">Нове меню під норму дієти</h1>
+<p class="text-secondary" style="max-width: 820px">Система складає день зі страв, дозволених для дієти, за структурою її меню (сніданок, обід із першим і другим…),
+  щоб потрапити в норму ккал і БЖУ та не повторювати наявні меню. Розрахунок — код; ШІ за бажанням оцінить поєднання.</p>
+<form method="get" class="d-flex flex-wrap gap-2 mb-3">
+  <select name="diet" class="form-select" style="max-width: 22rem" aria-label="Дієта" onchange="this.form.submit()">
+    <option value="">— оберіть дієту —</option>
+    {% for d in diets %}<option value="{{ d.code }}"{% if diet and d.pk == diet.pk %} selected{% endif %}>{{ d.code }} — {{ d.name }}</option>{% endfor %}
+  </select>
+  {% if diet %}<input type="hidden" name="seed" value="{{ seed|add:1 }}"><button class="btn btn-outline-secondary"><i class="bi bi-shuffle me-1"></i>Інші варіанти</button>{% endif %}
+</form>
+{% if diet %}
+{% include "menus/_short.html" %}
+<div class="row g-3">
+  {% for p in options %}
+  <div class="col-lg-4">{% include "menus/_proposal.html" with p=p heading="Варіант" number=forloop.counter key=forloop.counter action_url=request.path diet_code=diet.code buttons=generate_buttons %}</div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
