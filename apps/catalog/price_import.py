@@ -126,7 +126,7 @@ def column_letter(i):
 
 # ------------------------------------------------------------------ values
 def parse_price(text):
-    """'45,50' / '1 234.00 грн' / '45.5' → Decimal; None when there is no positive number."""
+    """'45,50' / '1 234.00 грн' / '45.5' → Decimal; None when there is no number (negative is not a number here)."""
     t = (text or "").replace("\xa0", " ").lower()
     t = re.sub(r"(грн|uah|₴)\.?", "", t).strip()
     t = re.sub(r"(?<=\d)[ '](?=\d{3}\b)", "", t)      # thousands separators: 1 234,50
@@ -139,7 +139,7 @@ def parse_price(text):
         value = Decimal(t)
     except InvalidOperation:
         return None
-    return value if value > 0 else None
+    return value if value >= 0 else None         # 0 is a real price (tap water), like on the write-off page
 
 
 def unit_factor(raw_unit, default_unit):

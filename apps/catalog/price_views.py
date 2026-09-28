@@ -2,6 +2,7 @@
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from apps.accounts.access import RoleRequiredMixin
@@ -9,6 +10,13 @@ from apps.core.navigation import PRICE_EDITORS
 
 from . import price_import as pi
 from .models import PriceImport, PriceImportRow, Product
+
+
+def _safe_back(request, value):
+    """Local path to return to after the import (e.g. the write-off page); anything else is dropped."""
+    if value and value.startswith("/") and url_has_allowed_host_and_scheme(value, allowed_hosts={request.get_host()}):
+        return value
+    return ""
 
 
 def _int_or_none(value):
@@ -24,6 +32,7 @@ class PriceImportStartView(RoleRequiredMixin, View):
     def get(self, request):
         return render(request, "catalog/price_import_start.html", {
             "imports": PriceImport.objects.select_related("uploaded_by", "applied_by")[:20],
+            "back": _safe_back(request, request.GET.get("back")),
         })
 
     def post(self, request):
@@ -36,6 +45,9 @@ class PriceImportStartView(RoleRequiredMixin, View):
         except ValidationError as exc:
             messages.error(request, exc.messages[0])
             return redirect("catalog:price_import_start")
+        back = _safe_back(request, request.POST.get("back"))
+        if back:
+            request.session[f"price_import_back_{imp.pk}"] = back
         return redirect("catalog:price_import", imp.pk)
 
 
@@ -84,6 +96,7 @@ class PriceImportView(RoleRequiredMixin, View):
         return {
             "imp": imp,
             "rows": rows,
+            "back": self.request.session.get(f"price_import_back_{imp.pk}", ""),
             "columns": [(i, pi.column_letter(i), sheet_rows[imp.header_row][i] if imp.header_row is not None else "")
                         for i in range(width)],
             "header_choices": [(i, " · ".join(c for c in row if c)[:80]) for i, row in enumerate(sheet_rows[:pi.HEADER_SCAN_ROWS])],
