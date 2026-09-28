@@ -179,4 +179,7 @@ class TestTabOrder:
         c = as_user(client, hospital.nurses[0])
         page = c.get("/tasks/?tab=todo").context["page"]
         assert [t.pk for t in page][:2] == [late.pk, next_day.pk]
-        assert "прострочено" in c.get("/tasks/?tab=todo").content.decode()
+        html = c.get("/tasks/?tab=todo").content.decode()
+        assert "прострочено" in html                                   # in the deadline column
+        # One mark per screen width: the status badge is for phones only, where the deadline column is hidden.
+        assert 'd-md-none"><i class="bi bi-alarm"></i> Прострочено' in html
