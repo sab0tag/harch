@@ -99,7 +99,8 @@ def test_status_page_without_key_explains_where_to_put_it(login):
     assert "не вказано" in html and "ANTHROPIC_API_KEY" in html and ".env" in html
 
 
-def test_connection_check_button(ai_on, login):
+def test_connection_check_button(ai_on, login, settings):
+    settings.ANTHROPIC_MODEL_LIGHT = ""
     c = login(Role.ADMIN)
     with client.use_transport(fake({"ok": True})):
         html = c.post("/ai/", follow=True).content.decode()
@@ -116,3 +117,54 @@ def test_ai_check_command_prints_no_key(ai_on, capsys):
 def test_ai_buttons_flag_in_templates(login, ai_on):
     r = login(Role.DIETICIAN).get("/")
     assert r.context["ai_available"] is True
+
+
+# ------------------------------------------------------------------ AI-10 model per feature
+@pytest.mark.parametrize("feature,model", [
+    ("reference_duplicates", "claude-haiku-4-5"), ("menu_review", "claude-haiku-4-5"), ("dish_draft", "claude-haiku-4-5"),
+    ("product_estimate", "claude-sonnet-5"), ("card_import", "claude-sonnet-5"), ("healthcheck", "claude-sonnet-5"),
+])
+def test_light_features_go_to_the_light_model(ai_on, settings, feature, model):
+    settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5", "claude-haiku-4-5"
+    t = fake({"ok": True})
+    with client.use_transport(t):
+        client.extract(user=None, feature=feature, system_prompt="s", content_blocks=[{"type": "text", "text": "x"}],
+                       tool_schema=client.PING_SCHEMA)
+    assert t.calls[0]["model"] == model
+    assert AIRequestLog.objects.get().model == model          # the log shows which model answered
+
+
+def test_without_light_model_everything_uses_main(ai_on, settings):
+    settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5", ""
+    assert client.model_for("menu_review") == "claude-sonnet-5"
+
+
+def test_connection_check_pings_each_model_once(ai_on, settings):
+    settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5", "claude-haiku-4-5"
+    t = fake({"ok": True})
+    with client.use_transport(t):
+        assert set(client.check_connection()) == {"claude-sonnet-5", "claude-haiku-4-5"}
+    assert [c["model"] for c in t.calls] == ["claude-sonnet-5", "claude-haiku-4-5"]
+    settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5"                # same model twice → one ping
+    t = fake({"ok": True})
+    with client.use_transport(t):
+        client.check_connection()
+    assert len(t.calls) == 1
+
+
+def test_connection_check_names_the_failing_model(ai_on, settings):
+    settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5", "claude-haiku-4-5"
+
+    def transport(**kw):
+        if kw["model"] == "claude-haiku-4-5":
+            raise client.AIError("Сервіс ШІ повернув помилку 404.")
+        return client.Reply({"ok": True}, 5, 5)
+
+    with client.use_transport(transport), pytest.raises(client.AIError, match="claude-haiku-4-5"):
+        client.check_connection()
+
+
+def test_status_page_shows_both_models(login, settings):
+    settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5", "claude-haiku-4-5"
+    html = login(Role.ADMIN).get("/ai/").content.decode()
+    assert "claude-sonnet-5" in html and "claude-haiku-4-5" in html and "Легка модель" in html

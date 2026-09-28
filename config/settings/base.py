@@ -13,6 +13,7 @@ env = environ.Env(
     NOTIFY_EMAIL=(bool, False),
     AI_ENABLED=(bool, False),
     ANTHROPIC_MODEL=(str, "claude-sonnet-5"),
+    ANTHROPIC_MODEL_LIGHT=(str, ""),
     AI_DAILY_REQUEST_LIMIT=(int, 200),
     AI_TIMEOUT_SECONDS=(int, 90),
     HEALTH_SCHEDULER_MAX_AGE_MINUTES=(int, 45),
@@ -121,6 +122,7 @@ NOTIFY_EMAIL = env("NOTIFY_EMAIL")
 # environment inside apps/assist/client.py and nowhere else.
 AI_ENABLED = env("AI_ENABLED")
 ANTHROPIC_MODEL = env("ANTHROPIC_MODEL")
+ANTHROPIC_MODEL_LIGHT = env("ANTHROPIC_MODEL_LIGHT")  # cheaper model for text-only features; empty = main model
 AI_DAILY_REQUEST_LIMIT = env("AI_DAILY_REQUEST_LIMIT")
 AI_TIMEOUT_SECONDS = env("AI_TIMEOUT_SECONDS")
 EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")

@@ -20,6 +20,11 @@ from .models import AIRequestLog
 
 KEY_ENV = "ANTHROPIC_API_KEY"
 
+# Text-only tasks whose output a person always reviews and whose numbers the system recomputes
+# go to the cheaper model (ANTHROPIC_MODEL_LIGHT). Card photos (precision matters) and product
+# nutrition estimates stay on the main model until an eval shows the light one is good enough.
+LIGHT_FEATURES = frozenset({"reference_duplicates", "menu_review", "dish_draft", "healthcheck_light"})
+
 
 class AIUnavailable(Exception):
     """AI is switched off or no key is configured — the UI simply hides AI buttons."""
@@ -52,6 +57,11 @@ def is_available() -> bool:
     return bool(settings.AI_ENABLED) and key_configured()
 
 
+def model_for(feature: str) -> str:
+    light = settings.ANTHROPIC_MODEL_LIGHT
+    return light if light and feature in LIGHT_FEATURES else settings.ANTHROPIC_MODEL
+
+
 def used_today() -> int:
     start = timezone.localtime().replace(hour=0, minute=0, second=0, microsecond=0)
     return AIRequestLog.objects.filter(created_at__gte=start).exclude(
@@ -60,13 +70,13 @@ def used_today() -> int:
 
 
 # ------------------------------------------------------------------ transport
-def _anthropic_transport(*, system, content, tool, max_tokens):
+def _anthropic_transport(*, model, system, content, tool, max_tokens):
     import anthropic
 
     client = anthropic.Anthropic(api_key=_key(), timeout=settings.AI_TIMEOUT_SECONDS, max_retries=1)
     try:
         msg = client.messages.create(
-            model=settings.ANTHROPIC_MODEL,
+            model=model,
             max_tokens=max_tokens,
             system=system,
             messages=[{"role": "user", "content": content}],
@@ -94,7 +104,7 @@ _transport = _anthropic_transport
 
 @contextmanager
 def use_transport(fn):
-    """Swap the network call (tests, evals). fn(system=, content=, tool=, max_tokens=) -> Reply."""
+    """Swap the network call (tests, evals). fn(model=, system=, content=, tool=, max_tokens=) -> Reply."""
     global _transport
     previous, _transport = _transport, fn
     try:
@@ -112,7 +122,8 @@ def extract(*, user, feature: str, system_prompt: str, content_blocks: list, too
     """
     if not is_available():
         raise AIUnavailable("ШІ вимкнено або ключ не налаштовано.")
-    log = AIRequestLog(user=user, feature=feature, model=settings.ANTHROPIC_MODEL, request_meta=request_meta or {})
+    model = model_for(feature)
+    log = AIRequestLog(user=user, feature=feature, model=model, request_meta=request_meta or {})
     if used_today() >= settings.AI_DAILY_REQUEST_LIMIT:
         log.status = AIRequestLog.Status.REJECTED_BY_LIMIT
         log.error = f"Денний ліміт {settings.AI_DAILY_REQUEST_LIMIT} запитів вичерпано."
@@ -121,7 +132,7 @@ def extract(*, user, feature: str, system_prompt: str, content_blocks: list, too
     tool = {"name": tool_name, "description": "Return the extracted data.", "input_schema": tool_schema}
     started = time.monotonic()
     try:
-        reply = _transport(system=system_prompt, content=content_blocks, tool=tool, max_tokens=max_tokens)
+        reply = _transport(model=model, system=system_prompt, content=content_blocks, tool=tool, max_tokens=max_tokens)
     except AIError as exc:
         _finish(log, started, status=AIRequestLog.Status.ERROR, error=str(exc))
         raise
@@ -148,12 +159,23 @@ PING_SCHEMA = {
 
 
 def check_connection(user=None) -> dict:
-    """Smallest possible real call, to confirm the key and model work. Costs a few tokens."""
-    return extract(
-        user=user, feature="healthcheck", tool_name="ping", tool_schema=PING_SCHEMA, max_tokens=50,
-        system_prompt="Health check. Call the tool with ok=true.",
-        content_blocks=[{"type": "text", "text": "ping"}],
-    )
+    """Smallest possible real call per configured model, to confirm the key and models work.
+
+    Costs a few tokens each. Raises AIError naming the model that failed.
+    """
+    results = {}
+    for feature, model in (("healthcheck", settings.ANTHROPIC_MODEL), ("healthcheck_light", settings.ANTHROPIC_MODEL_LIGHT)):
+        if not model or model in results:
+            continue
+        try:
+            results[model] = extract(
+                user=user, feature=feature, tool_name="ping", tool_schema=PING_SCHEMA, max_tokens=50,
+                system_prompt="Health check. Call the tool with ok=true.",
+                content_blocks=[{"type": "text", "text": "ping"}],
+            )
+        except AIError as exc:
+            raise AIError(f"{model}: {exc}") from exc
+    return results
 
 
 def status() -> dict:
@@ -168,6 +190,8 @@ def status() -> dict:
         "key_configured": key_configured(),
         "available": is_available(),
         "model": settings.ANTHROPIC_MODEL,
+        "model_light": settings.ANTHROPIC_MODEL_LIGHT or settings.ANTHROPIC_MODEL,
+        "light_features": sorted(LIGHT_FEATURES - {"healthcheck_light"}),
         "used_today": used_today(),
         "daily_limit": settings.AI_DAILY_REQUEST_LIMIT,
         "month_calls": month.count(),

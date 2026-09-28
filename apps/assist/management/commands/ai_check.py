@@ -18,9 +18,9 @@ class Command(BaseCommand):
         if not ping:
             return
         try:
-            client.check_connection()
+            checked = client.check_connection()
         except client.AIUnavailable as exc:
             raise CommandError(str(exc)) from exc
         except (client.AILimitExceeded, client.AIError) as exc:
             raise CommandError(str(exc)) from exc
-        self.stdout.write(self.style.SUCCESS("З'єднання з Anthropic працює."))
+        self.stdout.write(self.style.SUCCESS("З'єднання з Anthropic працює: " + ", ".join(checked)))
