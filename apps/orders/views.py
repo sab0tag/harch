@@ -13,7 +13,7 @@ from apps.core.navigation import roles_for
 from apps.orgstructure.models import Department
 from apps.workflow import services as wf
 from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
-from apps.workflow.models import Task, TaskStatus
+from apps.workflow.models import CLOSED, Task, TaskStatus
 
 from . import services
 from .models import DailyOrder
@@ -53,6 +53,12 @@ class OrdersEntryView(RoleRequiredMixin, View):
         return redirect(reverse("orders:summary") + f"?date={day.isoformat()}")
 
 
+class OrderNotOpened(Exception):
+    def __init__(self, department):
+        super().__init__(department)
+        self.department = department
+
+
 class OrderEditView(RoleRequiredMixin, View):
     allowed_roles = roles_for("orders")
 
@@ -65,16 +71,29 @@ class OrderEditView(RoleRequiredMixin, View):
             return services.open_order(department, day)
         order = DailyOrder.objects.filter(department=department, service_date=day).select_related("task").first()
         if order is None:
-            raise Http404
+            raise OrderNotOpened(department)
         return order
 
     def get(self, request, dept_id, day):
         day = parse_date(day)
-        return self.render(request, self.get_order(request, dept_id, day))
+        try:
+            order = self.get_order(request, dept_id, day)
+        except OrderNotOpened as missing:
+            # Day arrows lead here too: an order the nurse has not opened yet is a normal state, not a 404.
+            task = Task.objects.filter(type=ORDER_SUBMISSION, service_date=day, department=missing.department).first()
+            return render(request, "orders/order_missing.html", {
+                "department": missing.department, "day": day, "task": task,
+                "task_closed": task is not None and task.status in CLOSED,
+                "prev_day": day - timedelta(days=1), "next_day": day + timedelta(days=1),
+            })
+        return self.render(request, order)
 
     def post(self, request, dept_id, day):
         day = parse_date(day)
-        order = self.get_order(request, dept_id, day)
+        try:
+            order = self.get_order(request, dept_id, day)
+        except OrderNotOpened as exc:
+            raise Http404 from exc     # only the nurse (or admin) opens an order
         diets = list(services.orderable_diets())
         action = request.POST.get("action", "save")
         no_patients = request.POST.get("no_patients") == "on"
