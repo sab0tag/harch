@@ -9,7 +9,7 @@
 </ul>
 <div class="card"><div class="table-responsive">
   <table class="table table-hover align-middle mb-0">
-    <thead class="table-light"><tr><th>Задача</th><th>Дата обслуговування</th><th class="d-none d-md-table-cell">Відділення</th><th>Статус</th><th class="d-none d-md-table-cell">Дедлайн</th><th></th></tr></thead>
+    <thead class="table-light"><tr><th>Задача</th><th>Дата обслуговування</th><th class="d-none d-md-table-cell">Відділення</th><th>Статус</th><th class="d-none d-md-table-cell">{% if tab == 'review' %}Подано{% else %}Дедлайн{% endif %}</th><th></th></tr></thead>
     <tbody>
     {% for task in page %}
       <tr>
@@ -17,7 +17,11 @@
         <td>{{ task.service_date|date:"d.m.Y, l" }}</td>
         <td class="d-none d-md-table-cell">{{ task.department|default:"—" }}</td>
         <td>{% include "workflow/_status.html" %}</td>
-        <td class="d-none d-md-table-cell small {% if task.deadline and task.deadline < now and task.status != 'approved' and task.status != 'submitted' and task.status != 'cancelled' %}text-danger fw-semibold{% else %}text-secondary{% endif %}">{{ task.deadline|date:"d.m H:i"|default:"—" }}</td>
+        {% if tab == 'review' %}
+        <td class="d-none d-md-table-cell small text-secondary">{{ task.submitted_at|date:"d.m H:i"|default:"—" }}{% if task.submitted_by %}<div>{{ task.submitted_by.get_full_name|default:task.submitted_by.username }}</div>{% endif %}</td>
+        {% else %}
+        <td class="d-none d-md-table-cell small {% if task.deadline and task.deadline < now and task.status != 'approved' and task.status != 'submitted' and task.status != 'cancelled' %}text-danger fw-semibold{% else %}text-secondary{% endif %}">{{ task.deadline|date:"d.m H:i"|default:"—" }}{% if tab == 'todo' and task.deadline and task.deadline < now %}<div><span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> прострочено</span></div>{% endif %}</td>
+        {% endif %}
         <td class="text-end text-nowrap">{% if task.doc_url %}<a href="{{ task.doc_url }}" class="btn btn-sm {% if tab == 'history' %}btn-outline-primary{% else %}btn-primary{% endif %}">{{ task.doc_label }}</a>
           <a href="{% url 'workflow:task_detail' task.pk %}" class="btn btn-sm btn-outline-secondary" title="Задача і хронологія"><i class="bi bi-clock-history"></i></a>
           {% else %}<a href="{% url 'workflow:task_detail' task.pk %}" class="btn btn-sm btn-outline-primary">Відкрити</a>{% endif %}</td>
