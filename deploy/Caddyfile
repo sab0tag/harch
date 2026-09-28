@@ -4,3 +4,8 @@
 	encode zstd gzip
 	reverse_proxy web:8000
 }
+
+# www → the bare name: both addresses work, one canonical URL. Needs a DNS record for www too.
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

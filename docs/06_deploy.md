@@ -5,7 +5,7 @@
 - Hetzner Cloud **CX22** (2 vCPU, 4 GB RAM, 40 GB) — с запасом для одной больницы. Локация: Falkenstein/Helsinki.
 - Ubuntu 24.04, пользователь без root, вход только по SSH-ключу, `ufw` открыт 22/80/443, `unattended-upgrades`.
 - Hetzner Firewall дублирует правила. Бэкапы сервера Hetzner (+20%) — включить как вторую линию.
-- Домен: A-запись на IP сервера; Caddy сам получает сертификат Let's Encrypt.
+- Домен: A-запись `@` на IP сервера и `www` (CNAME на основной домен или A на тот же IP); Caddy сам получает сертификаты Let's Encrypt для обоих и перенаправляет `www` на основной адрес.
 
 ## Compose (prod)
 
