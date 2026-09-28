@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import audit_views, views
 
 app_name = "catalog"
 
@@ -17,4 +17,6 @@ urlpatterns = [
     path("products/new/", views.ProductEditView.as_view(), name="product_create"),
     path("products/<int:pk>/edit/", views.ProductEditView.as_view(), name="product_edit"),
     path("diets/", views.DietListView.as_view(), name="diet_list"),
+    path("audit/", audit_views.AuditView.as_view(), name="audit"),
+    path("audit/<int:pk>/dismiss/", audit_views.FindingDismissView.as_view(), name="finding_dismiss"),
 ]

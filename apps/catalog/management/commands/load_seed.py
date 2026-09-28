@@ -90,7 +90,7 @@ class Command(BaseCommand):
             _, created = Product.objects.get_or_create(
                 name=p["name"],
                 defaults=dict(protein=D(p["protein"]), fat=D(p["fat"]), carbs=D(p["carbs"]),
-                              kcal=D(p["kcal"]), verified=False),
+                              kcal=D(p["kcal"]), verified=False, origin=Origin.SEED),
             )
             self.count("products", created)
         self.products = {p.name: p for p in Product.objects.all()}

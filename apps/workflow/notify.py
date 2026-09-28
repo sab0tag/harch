@@ -37,13 +37,13 @@ def checkers(task):
     return users_with_role(task.checker_role, task.department)
 
 
-def notify(users, task, title, body=""):
+def notify(users, task, title, body="", url=""):
     users = [u for u in users if u is not None]
     if not users:
         return []
     now = timezone.now()
     created = Notification.objects.bulk_create(
-        [Notification(user=u, task=task, title=title, body=body, sent_at=now) for u in users]
+        [Notification(user=u, task=task, title=title, body=body, url=url, sent_at=now) for u in users]
     )
     if getattr(settings, "NOTIFY_EMAIL", False):
         for user in users:

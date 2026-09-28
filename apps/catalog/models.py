@@ -22,6 +22,8 @@ class Origin(models.TextChoices):
     SEED = "seed", "Стартові дані"
     MANUAL = "manual", "Внесено вручну"
     AI_IMPORT = "ai_import", "Імпорт ШІ"
+    AI_DRAFT = "ai_draft", "Чернетка ШІ"
+    AI_ESTIMATE = "ai_estimate", "Оцінка ШІ"
 
 
 class ReferenceModel(models.Model):
@@ -101,6 +103,8 @@ class Product(ReferenceModel):
     fat = models.DecimalField("Жири / 100 г", **PER_100)
     carbs = models.DecimalField("Вуглеводи / 100 г", **PER_100)
     kcal = models.DecimalField("Ккал / 100 г", **PER_100)
+    origin = models.CharField("Походження", max_length=12, choices=Origin.choices, default=Origin.MANUAL)
+    source = models.CharField("Джерело значень", max_length=200, blank=True)
     price_per_kg = models.DecimalField(
         "Ціна за кг, грн", max_digits=10, decimal_places=2, null=True, blank=True,
         validators=[MinValueValidator(Decimal("0"))],
@@ -207,3 +211,43 @@ class SeasonalWasteNorm(models.Model):
 
     def __str__(self):
         return self.product
+
+
+class ReferenceFinding(models.Model):
+    """Зауваження нічної перевірки довідника (AI-09). Правила — код; ШІ лише групує дублі."""
+
+    class Severity(models.TextChoices):
+        ERROR = "error", "Помилка"
+        WARN = "warn", "Підозріло"
+        INFO = "info", "До уваги"
+
+    class Status(models.TextChoices):
+        OPEN = "open", "Відкрите"
+        DISMISSED = "dismissed", "Не проблема"
+        RESOLVED = "resolved", "Виправлено"
+
+    kind = models.CharField("тип", max_length=40)
+    severity = models.CharField("важливість", max_length=10, choices=Severity.choices)
+    obj_type = models.CharField(max_length=20)          # product / dish / menu
+    obj_id = models.PositiveIntegerField()
+    title = models.CharField("об'єкт", max_length=200)
+    message = models.CharField("опис", max_length=500)
+    details = models.JSONField(default=dict, blank=True)
+    source = models.CharField(max_length=10, default="rule")  # rule / ai
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
+    note = models.CharField("коментар", max_length=300, blank=True)
+    dismissed_by = models.ForeignKey("accounts.User", null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Зауваження до довідника"
+        verbose_name_plural = "Перевірка довідника"
+        ordering = ["status", "severity", "kind", "title"]
+        constraints = [
+            models.UniqueConstraint(fields=["kind", "obj_type", "obj_id"], name="uniq_finding_per_object"),
+        ]
+
+    def __str__(self):
+        return f"{self.get_severity_display()}: {self.title} — {self.message}"

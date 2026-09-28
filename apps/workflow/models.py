@@ -138,6 +138,7 @@ class Notification(models.Model):
     channel = models.CharField(max_length=10, choices=Channel.choices, default=Channel.IN_APP)
     title = models.CharField(max_length=200)
     body = models.TextField(blank=True)
+    url = models.CharField(max_length=300, blank=True)   # where to go for notifications without a task
     created_at = models.DateTimeField(auto_now_add=True)
     sent_at = models.DateTimeField(null=True, blank=True)
     read_at = models.DateTimeField(null=True, blank=True)
