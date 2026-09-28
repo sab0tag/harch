@@ -1,7 +1,10 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Diet, Dish, DishIngredient, Product, ProductCategory, ProductSubstitution, SeasonalWasteNorm
+from .models import (
+    Diet, Dish, DishIngredient, PriceImport, Product, ProductAlias, ProductCategory, ProductSubstitution,
+    SeasonalWasteNorm,
+)
 
 
 @admin.register(Diet)
@@ -46,3 +49,20 @@ class ProductSubstitutionAdmin(admin.ModelAdmin):
 @admin.register(SeasonalWasteNorm)
 class SeasonalWasteNormAdmin(admin.ModelAdmin):
     list_display = ["product", "until_jan1", "jan_feb", "mar_apr", "may_aug", "sep_dec"]
+
+
+@admin.register(ProductAlias)
+class ProductAliasAdmin(admin.ModelAdmin):
+    """Remembered «name in the accountant's file → product». Delete a wrong one; the next import asks again."""
+
+    list_display = ["name", "product", "created_by", "created_at"]
+    search_fields = ["name", "product__name"]
+    autocomplete_fields = ["product"]
+
+
+@admin.register(PriceImport)
+class PriceImportAdmin(admin.ModelAdmin):
+    list_display = ["filename", "created_at", "uploaded_by", "status", "applied_count"]
+    list_filter = ["status"]
+    exclude = ["sheets"]
+    readonly_fields = ["filename", "uploaded_by", "status", "applied_at", "applied_by", "applied_count"]

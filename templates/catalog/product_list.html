@@ -3,6 +3,7 @@
 {% block content %}
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
   <h1 class="h3 mb-0 me-auto">Продукти</h1>
+  {% if can_edit %}<a href="{% url 'catalog:price_import_start' %}" class="btn btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Імпорт цін з Excel</a>{% endif %}
   {% if full_edit and ai_available %}<a href="{% url 'catalog:product_suggest_start' %}" class="btn btn-outline-info"><i class="bi bi-stars me-1"></i>Нові продукти з ШІ</a>{% endif %}
   {% if full_edit %}<a href="{% url 'catalog:product_create' %}" class="btn btn-outline-success"><i class="bi bi-plus-lg me-1"></i>Новий продукт</a>{% endif %}
 </div>

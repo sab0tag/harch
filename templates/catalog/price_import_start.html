@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Імпорт цін з Excel{% endblock %}
+{% block content %}
+<nav class="small mb-2"><a href="{% url 'catalog:product_list' %}">Продукти</a> ›</nav>
+<h1 class="h3 mb-3"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Імпорт цін з Excel</h1>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body">
+      <form method="post" enctype="multipart/form-data">{% csrf_token %}
+        <label class="form-label fw-semibold" for="file">Файл Excel (.xlsx, до 5 МБ)</label>
+        <input class="form-control mb-3" type="file" name="file" id="file" accept=".xlsx" required>
+        <button class="btn btn-primary"><i class="bi bi-upload me-1"></i>Завантажити</button>
+      </form>
+    </div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card"><div class="card-body small">
+      <p class="fw-semibold mb-2">Як це працює</p>
+      <ol class="mb-0 ps-3">
+        <li>Підійде будь-який ваш файл, де є стовпці з назвою продукту і ціною (прайс, накладна, оборотна відомість).</li>
+        <li>Система сама знайде ці стовпці — або ви вкажете їх один раз, наступного разу вона запам'ятає.</li>
+        <li>Рядки зіставляються з продуктами довідника. Нові назви прив'язуєте вручну — і система їх запам'ятовує.</li>
+        <li>Перед збереженням видно стару й нову ціну. Нічого не змінюється, доки ви не натиснете «Застосувати».</li>
+      </ol>
+      <p class="text-secondary mt-2 mb-0">Ціни в уже поданих і затверджених списаннях не змінюються.</p>
+    </div></div>
+  </div>
+</div>
+
+{% if imports %}
+<h2 class="h5 mt-4">Попередні імпорти</h2>
+<div class="card"><div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Файл</th><th>Завантажено</th><th>Статус</th><th class="text-end">Змінено цін</th></tr></thead>
+    <tbody>{% for i in imports %}
+      <tr>
+        <td><a href="{% url 'catalog:price_import' i.pk %}">{{ i.filename }}</a></td>
+        <td class="small">{{ i.created_at|date:"d.m.Y H:i" }} · {{ i.uploaded_by.get_full_name|default:i.uploaded_by.username|default:"—" }}</td>
+        <td><span class="badge {% if i.status == 'applied' %}text-bg-success{% elif i.status == 'draft' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ i.get_status_display }}</span></td>
+        <td class="text-end">{% if i.status == 'applied' %}{{ i.applied_count }}{% else %}—{% endif %}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endif %}
+{% endblock %}

@@ -251,3 +251,95 @@ class ReferenceFinding(models.Model):
 
     def __str__(self):
         return f"{self.get_severity_display()}: {self.title} — {self.message}"
+
+
+class PriceImport(models.Model):
+    """S5-07: prices from the accountant's Excel. Parsed cells are kept, the file itself is not."""
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Чернетка"
+        APPLIED = "applied", "Застосовано"
+        CANCELLED = "cancelled", "Скасовано"
+
+    class Unit(models.TextChoices):
+        KG = "kg", "за 1 кг (л)"
+        G100 = "100g", "за 100 г"
+        G = "g", "за 1 г"
+
+    filename = models.CharField("файл", max_length=200)
+    uploaded_by = models.ForeignKey("accounts.User", null=True, on_delete=models.SET_NULL, related_name="+",
+                                    verbose_name="завантажив")
+    created_at = models.DateTimeField("завантажено", auto_now_add=True)
+    status = models.CharField("статус", max_length=10, choices=Status.choices, default=Status.DRAFT)
+    sheets = models.JSONField("аркуші", default=dict)   # {sheet name: [[cell text, ...], ...]}
+    # Column mapping; indexes are 0-based, header_row is the row with column titles.
+    sheet = models.CharField("аркуш", max_length=100, blank=True)
+    header_row = models.PositiveIntegerField("рядок заголовків", null=True, blank=True)
+    name_col = models.PositiveIntegerField("стовпець назви", null=True, blank=True)
+    price_col = models.PositiveIntegerField("стовпець ціни", null=True, blank=True)
+    unit_col = models.PositiveIntegerField("стовпець одиниці", null=True, blank=True)
+    unit = models.CharField("ціна вказана", max_length=5, choices=Unit.choices, default=Unit.KG)
+    applied_at = models.DateTimeField("застосовано", null=True, blank=True)
+    applied_by = models.ForeignKey("accounts.User", null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name="+", verbose_name="застосував")
+    applied_count = models.PositiveIntegerField("змінено цін", default=0)
+
+    class Meta:
+        verbose_name = "Імпорт цін"
+        verbose_name_plural = "Імпорти цін"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.filename} ({self.created_at:%d.%m.%Y})"
+
+    @property
+    def is_mapped(self):
+        return self.header_row is not None and self.name_col is not None and self.price_col is not None
+
+
+class PriceImportRow(models.Model):
+    class Match(models.TextChoices):
+        ALIAS = "alias", "Як минулого разу"
+        EXACT = "exact", "Точний збіг"
+        FUZZY = "fuzzy", "Схожа назва — перевірте"
+        MANUAL = "manual", "Обрано вручну"
+        NONE = "none", "Не знайдено"
+
+    price_import = models.ForeignKey(PriceImport, on_delete=models.CASCADE, related_name="rows")
+    row_no = models.PositiveIntegerField("рядок у файлі")
+    raw_name = models.CharField("назва у файлі", max_length=300)
+    raw_price = models.CharField("ціна у файлі", max_length=50, blank=True)
+    raw_unit = models.CharField("одиниця у файлі", max_length=30, blank=True)
+    price_per_kg = models.DecimalField("ціна за кг", max_digits=10, decimal_places=2, null=True, blank=True)
+    problem = models.CharField("проблема", max_length=200, blank=True)
+    product = models.ForeignKey(Product, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    match = models.CharField(max_length=10, choices=Match.choices, default=Match.NONE)
+    score = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    old_price = models.DecimalField("стара ціна", max_digits=10, decimal_places=2, null=True, blank=True)
+    selected = models.BooleanField("застосувати", default=False)
+    applied = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["row_no"]
+
+    @property
+    def change_pct(self):
+        if self.old_price in (None, 0) or self.price_per_kg is None:
+            return None
+        return (self.price_per_kg - self.old_price) / self.old_price * 100
+
+
+class ProductAlias(models.Model):
+    """«Назва у файлі бухгалтерії» → продукт. Remembered when a person confirms a match."""
+
+    name = models.CharField("назва (нормалізована)", max_length=300, unique=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="aliases")
+    created_by = models.ForeignKey("accounts.User", null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Назва продукту у файлах"
+        verbose_name_plural = "Назви продуктів у файлах"
+
+    def __str__(self):
+        return f"{self.name} → {self.product}"
