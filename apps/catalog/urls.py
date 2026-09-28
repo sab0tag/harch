@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import ai_views, audit_views, views
+from . import ai_views, audit_views, price_views, views
 
 app_name = "catalog"
 
@@ -20,6 +20,8 @@ urlpatterns = [
     path("products/", views.ProductListView.as_view(), name="product_list"),
     path("products/new/", views.ProductEditView.as_view(), name="product_create"),
     path("products/<int:pk>/edit/", views.ProductEditView.as_view(), name="product_edit"),
+    path("products/prices/import/", price_views.PriceImportStartView.as_view(), name="price_import_start"),
+    path("products/prices/import/<int:pk>/", price_views.PriceImportView.as_view(), name="price_import"),
     path("diets/", views.DietListView.as_view(), name="diet_list"),
     path("audit/", audit_views.AuditView.as_view(), name="audit"),
     path("audit/<int:pk>/dismiss/", audit_views.FindingDismissView.as_view(), name="finding_dismiss"),

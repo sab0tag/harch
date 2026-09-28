@@ -126,3 +126,21 @@ def test_undated_urls_post_to_the_same_day(client, priced):
     assert f'action="/write-off/{DAY.isoformat()}/"' in html
     r = as_user(client, priced.accountant).post("/write-off/", {"action": "submit"})
     assert r.status_code == 302
+
+
+def test_price_import_does_not_touch_submitted_write_off(client, priced):
+    """S5-07: a later price import changes the catalogue, never a write-off already handed in."""
+    from apps.catalog import price_import as pi
+    from apps.catalog.models import PriceImport, PriceImportRow
+
+    w = priced
+    as_user(client, w.accountant).post(WO, {"action": "submit"})
+    product = WriteOff.objects.get(plan=w.plan).lines.first().product
+    imp = PriceImport.objects.create(filename="new.xlsx", sheets={"s": [["Назва", "Ціна"], [product.name, "999"]]})
+    pi.set_mapping(imp, "s", 0, 0, 1)
+    row = imp.rows.get()
+    assert row.match == PriceImportRow.Match.EXACT
+    pi.apply(imp, w.accountant, {row.pk: (True, product.pk)})
+    assert Product.objects.get(pk=product.pk).price_per_kg == Decimal("999.00")
+    rows = services.write_off_rows(WriteOff.objects.get(plan=w.plan))
+    assert all(r["price_per_kg"] == Decimal("100.00") for r in rows)

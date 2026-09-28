@@ -1,0 +1,81 @@
+{% extends "base.html" %}{% load harch %}
+{% block title %}Імпорт цін — {{ imp.filename }}{% endblock %}
+{% block content %}
+<nav class="small mb-2"><a href="{% url 'catalog:product_list' %}">Продукти</a> › <a href="{% url 'catalog:price_import_start' %}">Імпорт цін</a> ›</nav>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0 me-auto"><i class="bi bi-file-earmark-spreadsheet me-2"></i>{{ imp.filename }}</h1>
+  <span class="badge {% if imp.status == 'applied' %}text-bg-success{% elif imp.status == 'draft' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ imp.get_status_display }}</span>
+</div>
+{% if imp.status == 'applied' %}
+  <div class="alert alert-success">Застосовано {{ imp.applied_at|date:"d.m.Y H:i" }} · змінено цін: {{ imp.applied_count }}.</div>
+{% endif %}
+
+{% if editable %}
+<div class="card mb-3"><div class="card-body">
+  <form method="post" class="row g-2 align-items-end">{% csrf_token %}<input type="hidden" name="action" value="map">
+    {% if imp.sheets|length > 1 %}
+    <div class="col-sm-6 col-lg-2"><label class="form-label small">Аркуш</label>
+      <select name="sheet" class="form-select form-select-sm">{% for s in imp.sheets %}<option{% if s == imp.sheet %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+    {% else %}<input type="hidden" name="sheet" value="{{ imp.sheet }}">{% endif %}
+    <div class="col-sm-6 col-lg-3"><label class="form-label small">Рядок із заголовками</label>
+      <select name="header_row" class="form-select form-select-sm"><option value="">— оберіть —</option>
+        {% for i, text in header_choices %}<option value="{{ i }}"{% if i == imp.header_row %} selected{% endif %}>{{ i|add:1 }}: {{ text|default:"(порожній)" }}</option>{% endfor %}</select></div>
+    <div class="col-sm-4 col-lg-2"><label class="form-label small">Назва продукту</label>
+      <select name="name_col" class="form-select form-select-sm"><option value="">—</option>
+        {% for i, letter, title in columns %}<option value="{{ i }}"{% if i == imp.name_col %} selected{% endif %}>{{ letter }}{% if title %}: {{ title|truncatechars:24 }}{% endif %}</option>{% endfor %}</select></div>
+    <div class="col-sm-4 col-lg-2"><label class="form-label small">Ціна</label>
+      <select name="price_col" class="form-select form-select-sm"><option value="">—</option>
+        {% for i, letter, title in columns %}<option value="{{ i }}"{% if i == imp.price_col %} selected{% endif %}>{{ letter }}{% if title %}: {{ title|truncatechars:24 }}{% endif %}</option>{% endfor %}</select></div>
+    <div class="col-sm-4 col-lg-2"><label class="form-label small">Одиниця (необов'язково)</label>
+      <select name="unit_col" class="form-select form-select-sm"><option value="">— немає —</option>
+        {% for i, letter, title in columns %}<option value="{{ i }}"{% if i == imp.unit_col %} selected{% endif %}>{{ letter }}{% if title %}: {{ title|truncatechars:24 }}{% endif %}</option>{% endfor %}</select></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label small">Ціна вказана</label>
+      <select name="unit" class="form-select form-select-sm">{% for v, l in units %}<option value="{{ v }}"{% if v == imp.unit %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Зіставити</button></div>
+  </form>
+  <details class="mt-3"{% if not imp.is_mapped %} open{% endif %}><summary class="small text-secondary">Перші рядки файлу</summary>
+    <div class="table-responsive mt-2"><table class="table table-sm table-bordered small mb-0">
+      <thead class="table-light"><tr><th></th>{% for i, letter, title in columns %}<th>{{ letter }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for n, row in preview %}<tr{% if n|add:-1 == imp.header_row %} class="table-info"{% endif %}><th class="text-secondary">{{ n }}</th>{% for c in row %}<td>{{ c|truncatechars:30 }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table></div>
+  </details>
+</div></div>
+{% endif %}
+
+{% if imp.is_mapped %}
+<p class="small text-secondary">Рядків із ціною: {{ counts.total }} · буде застосовано: <b>{{ counts.selected }}</b>{% if counts.fuzzy %} · схожі назви (перевірте): {{ counts.fuzzy }}{% endif %}{% if counts.none %} · не знайдено: {{ counts.none }}{% endif %}{% if counts.problem %} · з помилками: {{ counts.problem }}{% endif %}</p>
+<form method="post">{% csrf_token %}
+<div class="card mb-3"><div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr>
+      <th>{% if editable %}✓{% endif %}</th><th class="text-secondary">Рядок</th><th>У файлі</th><th>Продукт довідника</th>
+      <th class="text-end">Було, грн/кг</th><th class="text-end">Стане, грн/кг</th><th class="text-end">Зміна</th>
+    </tr></thead>
+    <tbody>{% for r in rows %}
+      <tr class="{% if r.problem %}table-danger{% elif r.match == 'none' %}table-light{% elif r.match == 'fuzzy' %}table-warning{% endif %}">
+        <td>{% if editable %}<input class="form-check-input" type="checkbox" name="apply_{{ r.pk }}" value="1"{% if r.selected %} checked{% endif %}{% if r.problem %} disabled{% endif %} aria-label="Застосувати рядок {{ r.row_no }}">{% elif r.applied %}<i class="bi bi-check-lg text-success"></i>{% endif %}</td>
+        <td class="text-secondary small">{{ r.row_no }}</td>
+        <td>{{ r.raw_name }}<div class="small text-secondary">{{ r.raw_price }}{% if r.raw_unit %} / {{ r.raw_unit }}{% endif %}{% if r.problem %} · <span class="text-danger">{{ r.problem }}</span>{% endif %}</div></td>
+        <td style="min-width: 14rem">{% if editable %}
+          <select name="product_{{ r.pk }}" class="form-select form-select-sm">
+            <option value="">— не зіставлено —</option>
+            {% for p in products %}<option value="{{ p.pk }}"{% if p.pk == r.product_id %} selected{% endif %}>{{ p.name }}</option>{% endfor %}
+          </select>{% else %}{{ r.product.name|default:"—" }}{% endif %}
+          {% if r.match != 'none' %}<div class="small text-secondary">{{ r.get_match_display }}</div>{% endif %}</td>
+        <td class="text-end">{% if r.old_price is not None %}{{ r.old_price|money }}{% else %}<span class="text-secondary">—</span>{% endif %}</td>
+        <td class="text-end fw-semibold">{% if r.price_per_kg is not None %}{{ r.price_per_kg|money }}{% else %}—{% endif %}</td>
+        <td class="text-end{% if r.big_change %} text-danger fw-semibold{% endif %}">{% if r.pct is not None %}{{ r.pct|num:0 }}%{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="7" class="text-center text-secondary py-4">Під заголовком немає рядків із ціною. Перевірте рядок заголовків і стовпці.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% if editable %}
+<div class="d-flex flex-wrap gap-2">
+  <button class="btn btn-success" name="action" value="apply"><i class="bi bi-check2-circle me-1"></i>Застосувати позначені</button>
+  <button class="btn btn-outline-secondary" name="action" value="cancel" formnovalidate>Скасувати імпорт</button>
+</div>
+<p class="small text-secondary mt-2">Жовті рядки — схожа назва: перевірте продукт і поставте позначку. Зміна понад 30% підсвічена червоним. Обраний вручну продукт система запам'ятає для наступних файлів.</p>
+{% endif %}
+</form>
+{% endif %}
+{% endblock %}

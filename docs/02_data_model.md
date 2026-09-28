@@ -59,7 +59,7 @@ class Product(Model):
     category = ForeignKey(ProductCategory, null=True)
     unit = CharField(default="g")            # для отображения: г / мл / шт
     protein, fat, carbs, kcal = Decimal(6,2)  # на 100 г нетто
-    price_per_kg = Decimal(10,2, null=True)  # текущая цена; история цен — v0.2
+    price_per_kg = Decimal(10,2, null=True)  # текущая цена (ручной ввод или импорт S5-07); изменения — в simple-history
 
 class Dish(Model):                           # картка-розкладка
     card_no = PositiveIntegerField(unique=True)
@@ -82,6 +82,31 @@ class DishIngredient(Model):
 ```
 
 `ProductSubstitution` и `SeasonalWasteNorm` — справочные таблицы из seed, только чтение в v0.1.
+
+Импорт цен из Excel (S5-07, `apps/catalog/price_import.py`):
+
+```python
+class PriceImport(Model):          # один загруженный файл; сам файл не хранится, только ячейки
+    filename, uploaded_by, created_at
+    status = CharField(choices=[draft, applied, cancelled])
+    sheets = JSONField             # {аркуш: [[текст ячейки, ...], ...]}, ≤ 10 аркушів × 3000 рядків × 30 стовпців
+    sheet, header_row, name_col, price_col, unit_col   # сопоставление столбцов (0-based)
+    unit = CharField(choices=[kg, 100g, g])            # в чём указана цена, если нет столбца одиниці
+    applied_at, applied_by, applied_count
+
+class PriceImportRow(Model):       # строка файла после сопоставления
+    price_import = ForeignKey(PriceImport, related_name="rows")
+    row_no, raw_name, raw_price, raw_unit
+    price_per_kg = Decimal(10,2, null=True)            # приведено к грн/кг
+    problem = CharField(blank=True)                    # не читается цена / «шт» и т.п. — применить нельзя
+    product = ForeignKey(Product, null=True)
+    match = CharField(choices=[alias, exact, fuzzy, manual, none])
+    old_price, selected, applied
+
+class ProductAlias(Model):         # «назва у файлі бухгалтерії» → продукт; пишется при подтверждении человеком
+    name = CharField(unique=True)  # нормализованное (audit.normalize)
+    product = ForeignKey(Product, on_delete=CASCADE)
+```
 
 ## menus
 
