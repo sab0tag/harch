@@ -22,11 +22,11 @@ class AIStatusView(RoleRequiredMixin, View):
 
     def post(self, request):
         try:
-            client.check_connection(request.user)
+            checked = client.check_connection(request.user)
         except client.AIUnavailable:
             messages.error(request, "ШІ вимкнено або ключ не вказано — дивіться інструкцію нижче.")
         except (client.AILimitExceeded, client.AIError) as exc:
             messages.error(request, str(exc))
         else:
-            messages.success(request, "З'єднання з Anthropic працює.")
+            messages.success(request, "З'єднання з Anthropic працює: " + ", ".join(checked) + ".")
         return redirect("assist:status")

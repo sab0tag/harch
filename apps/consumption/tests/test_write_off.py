@@ -144,3 +144,49 @@ def test_price_import_does_not_touch_submitted_write_off(client, priced):
     assert Product.objects.get(pk=product.pk).price_per_kg == Decimal("999.00")
     rows = services.write_off_rows(WriteOff.objects.get(plan=w.plan))
     assert all(r["price_per_kg"] == Decimal("100.00") for r in rows)
+
+
+def test_missing_prices_round_trip_through_excel(client, write_off_day):
+    """S5-07: export «без ціни» → accountant fills column D → import reads it back without asking."""
+    from django.core.files.uploadedfile import SimpleUploadedFile
+    from openpyxl import load_workbook
+
+    from apps.catalog.models import PriceImport
+
+    w = write_off_day
+    c = as_user(client, w.accountant)
+    missing = [r for r in services.live_write_off_rows(w.plan) if r["price_per_kg"] is None]
+    assert missing
+    html = c.get(WO).content.decode()
+    assert "?export=missing-prices" in html and "/catalog/products/prices/import/?back=" in html
+
+    r = c.get(WO + "?export=missing-prices")
+    assert r["Content-Type"].startswith("application/vnd.openxmlformats")
+    wb = load_workbook(BytesIO(r.content))
+    ws = wb.active
+    assert [ws.cell(row=4, column=i).value for i in range(1, 6)] == ["№", "Найменування", "Од. вим.", "Ціна, грн", "До списання, кг"]
+    names = [ws.cell(row=i, column=2).value for i in range(5, ws.max_row + 1)]
+    assert sorted(names) == sorted(Product.objects.get(pk=m["product_id"]).name for m in missing)
+    for i in range(5, ws.max_row + 1):
+        ws.cell(row=i, column=4, value="87,50")                 # the accountant types prices, comma and all
+    buf = BytesIO()
+    wb.save(buf)
+
+    c.post("/catalog/products/prices/import/", {"back": WO, "file": SimpleUploadedFile("filled.xlsx", buf.getvalue())})
+    imp = PriceImport.objects.latest("pk")
+    assert (imp.header_row, imp.name_col, imp.unit_col, imp.price_col) == (3, 1, 2, 3)   # recognised without asking
+    rows = list(imp.rows.all())
+    assert len(rows) == len(missing) and all(r.match == "exact" and r.selected for r in rows)
+    c.post(f"/catalog/products/prices/import/{imp.pk}/",
+           {"action": "apply", **{f"apply_{r.pk}": "1" for r in rows}, **{f"product_{r.pk}": r.product_id for r in rows}})
+    done = c.get(f"/catalog/products/prices/import/{imp.pk}/").content.decode()
+    assert f'href="{WO}"' in done and "До списання" in done
+    assert all(r["price_per_kg"] == Decimal("87.50") for r in services.live_write_off_rows(w.plan))
+    assert "Немає ціни" not in c.get(WO).content.decode()
+
+
+def test_missing_prices_export_access_and_back_link_is_local(client, write_off_day):
+    w = write_off_day
+    assert as_user(client, w.chef).get(WO + "?export=missing-prices").status_code == 403
+    html = as_user(client, w.accountant).get("/catalog/products/prices/import/?back=https://evil.example/x").content.decode()
+    assert "evil.example" not in html

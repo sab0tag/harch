@@ -19,7 +19,12 @@
       <span class="input-group-text text-truncate" style="max-width: 60%">{{ r.product_name }}</span>
       <input name="price_{{ r.product_id }}" inputmode="decimal" class="form-control text-end" placeholder="грн/кг" aria-label="Ціна за кг: {{ r.product_name }}"></div></div>
   {% endfor %}</div>
-  <button name="action" value="prices" class="btn btn-sm btn-warning mt-2">Зберегти ціни</button>
+  <div class="d-flex flex-wrap gap-2 mt-2">
+    <button name="action" value="prices" class="btn btn-sm btn-warning">Зберегти ціни</button>
+    <a class="btn btn-sm btn-outline-dark" href="?export=missing-prices"><i class="bi bi-download me-1"></i>Вивантажити в Excel</a>
+    <a class="btn btn-sm btn-outline-dark" href="{% url 'catalog:price_import_start' %}?back={{ request.path|urlencode }}"><i class="bi bi-upload me-1"></i>Завантажити ціни з Excel</a>
+  </div>
+  <div class="small text-secondary mt-1">Багато цін? Вивантажте список, заповніть стовпець «Ціна, грн» (наприклад, з договору з постачальником) і завантажте файл назад.</div>
   {% endif %}
 </div>
 {% endif %}

@@ -294,3 +294,27 @@ def menu_vymoha_xlsx(plan):
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth = 1
     return _response(wb, f"menu-vymoha_{day.isoformat()}.xlsx")
+
+
+def missing_prices_xlsx(products, quantities, day):
+    """Products of a write-off that have no price, laid out so «Імпорт цін з Excel» reads it back
+    without asking: same header words the importer looks for, catalogue names as they are."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Без ціни"
+    ws.cell(row=1, column=1, value=f"Продукти без ціни — списання за {day:%d.%m.%Y}").font = Font(bold=True, size=12)
+    ws.cell(row=2, column=1, value="Впишіть ціну за 1 кг (л) у стовпець D, збережіть і завантажте файл: "
+                                   "Продукти → «Імпорт цін з Excel». Назви не змінюйте.")
+    ws.cell(row=2, column=1).font = Font(italic=True, color="555555")
+    _header(ws, 4, ["№", "Найменування", "Од. вим.", "Ціна, грн", "До списання, кг"], [6, 40, 10, 14, 16])
+    for i, p in enumerate(sorted(products, key=lambda p: uk_sort_key(p.name)), 1):
+        row = 4 + i
+        ws.cell(row=row, column=1, value=i)
+        ws.cell(row=row, column=2, value=p.name)
+        ws.cell(row=row, column=3, value="кг")
+        ws.cell(row=row, column=4).number_format = MONEY_FMT
+        ws.cell(row=row, column=4).fill = PatternFill("solid", fgColor="FFF4D6")
+        qty = ws.cell(row=row, column=5, value=_kg(quantities.get(p.pk, 0)))
+        qty.number_format = KG_FMT
+    ws.freeze_panes = "A5"
+    return _response(wb, f"bez-tsiny_{day.isoformat()}.xlsx")

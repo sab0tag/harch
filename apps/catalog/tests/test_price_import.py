@@ -71,13 +71,13 @@ def by_name(imp):
 # ------------------------------------------------------------------ parsing
 @pytest.mark.parametrize("text,value", [
     ("45,50", "45.50"), ("45.5", "45.5"), ("1 234,50", "1234.50"), ("1\xa0234.50 грн", "1234.50"),
-    ("1.234,50", "1234.50"), ("1,234.50", "1234.50"), ("78.9 ₴", "78.9"), ("640", "640"),
+    ("1.234,50", "1234.50"), ("1,234.50", "1234.50"), ("78.9 ₴", "78.9"), ("640", "640"), ("0", "0"),
 ])
 def test_parse_price(text, value):
     assert pi.parse_price(text) == Decimal(value)
 
 
-@pytest.mark.parametrize("text", ["", "ціна уточнюється", "0", "-5", "45,5,5"])
+@pytest.mark.parametrize("text", ["", "ціна уточнюється", "-5", "45,5,5"])
 def test_parse_price_rejects(text):
     assert pi.parse_price(text) is None
 

@@ -2,12 +2,15 @@
 {% block title %}Імпорт цін з Excel{% endblock %}
 {% block content %}
 <nav class="small mb-2"><a href="{% url 'catalog:product_list' %}">Продукти</a> ›</nav>
-<h1 class="h3 mb-3"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Імпорт цін з Excel</h1>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0 me-auto"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Імпорт цін з Excel</h1>
+  {% if back %}<a class="btn btn-outline-secondary" href="{{ back }}"><i class="bi bi-arrow-left me-1"></i>До списання</a>{% endif %}
+</div>
 
 <div class="row g-3">
   <div class="col-lg-6">
     <div class="card"><div class="card-body">
-      <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <form method="post" enctype="multipart/form-data">{% csrf_token %}{% if back %}<input type="hidden" name="back" value="{{ back }}">{% endif %}
         <label class="form-label fw-semibold" for="file">Файл Excel (.xlsx, до 5 МБ)</label>
         <input class="form-control mb-3" type="file" name="file" id="file" accept=".xlsx" required>
         <button class="btn btn-primary"><i class="bi bi-upload me-1"></i>Завантажити</button>

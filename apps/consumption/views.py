@@ -185,11 +185,18 @@ class WriteOffView(RoleRequiredMixin, View):
                 "day": day, "plan": plan, "cooking": cooking, **day_nav(day)})
         wo = services.open_write_off(plan)
         rows = services.write_off_rows(wo)
+        missing = [r for r in rows if r["price_per_kg"] is None]
+        if request.GET.get("export") == "missing-prices":
+            from apps.catalog.models import Product
+            from apps.reports.exports import missing_prices_xlsx
+
+            products = Product.objects.filter(pk__in=[r["product_id"] for r in missing])
+            return missing_prices_xlsx(products, {r["product_id"]: r["quantity_g"] for r in missing}, day)
         editable = services.write_off_editable(wo, request.user)
         return render(request, "consumption/write_off.html", {
             "plan": plan, "wo": wo, "task": wo.task, "rows": rows,
             "total": sum((r["cost"] or 0 for r in rows), Decimal(0)),
-            "missing": [r for r in rows if r["price_per_kg"] is None],
+            "missing": missing,
             "editable": editable,
             "can_edit_prices": editable and request.user.has_role(*PRICE_EDITORS),
             "can_review": wf.can(request.user, wo.task, "approve"),
