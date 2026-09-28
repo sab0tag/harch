@@ -30,3 +30,31 @@ class AIRequestLog(models.Model):
 
     def __str__(self):
         return f"{self.feature} · {self.get_status_display()} · {self.created_at:%d.%m %H:%M}"
+
+
+class AIDraft(models.Model):
+    """A model proposal waiting for a human: nothing in the catalog changes until they accept it."""
+
+    class Kind(models.TextChoices):
+        DISH = "dish", "Чернетка картки"
+        PRODUCTS = "products", "Пропозиція продуктів"
+
+    class Status(models.TextChoices):
+        READY = "ready", "Чекає рішення"
+        ACCEPTED = "accepted", "Прийнято"
+        DISCARDED = "discarded", "Відхилено"
+
+    kind = models.CharField(max_length=20, choices=Kind.choices)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.READY)
+    input = models.JSONField(default=dict)
+    result = models.JSONField(default=dict)
+    created_ids = models.JSONField(default=list, blank=True)
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "чернетка ШІ"
+        verbose_name_plural = "чернетки ШІ"
+        ordering = ["-created_at"]
