@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Замовлення · {{ department }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-1">
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'orders:edit' department.pk prev_day.isoformat %}" title="Попередній день">‹</a>
+  <h1 class="h4 mb-0 flex-grow-1 text-center">Замовлення на {{ day|date:"d.m, l" }}</h1>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'orders:edit' department.pk next_day.isoformat %}" title="Наступний день">›</a>
+</div>
+<p class="text-center text-secondary mb-3">{{ department }}{% if task %} · <span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% endif %}</p>
+<div class="card card-body text-center">
+  {% if task_closed %}
+  <p class="mb-2">Задачу закрито ({{ task.get_status_display|lower }}), але документа замовлення на цю дату немає — порції не подавались.</p>
+  <p class="text-secondary small mb-3">{% else %}
+  <p class="mb-2">Відділення ще не відкривало замовлення на цю дату.</p>
+  <p class="text-secondary small mb-3">{% endif %}{% if task_closed %}{% elif task %}Задачу створено{% if task.deadline %}, подати до {{ task.deadline|date:"d.m H:i" }}{% endif %}.{% else %}Задачу на цю дату ще не створено — планувальник створює їх щоночі на завтра.{% endif %}</p>
+  <div><a class="btn btn-outline-primary" href="{% url 'orders:summary' %}?date={{ day.isoformat }}"><i class="bi bi-table me-1"></i>Зведення замовлень на {{ day|date:"d.m" }}</a></div>
+</div>
+{% endblock %}

@@ -164,3 +164,19 @@ def test_force_plan_uses_only_approved_orders(client, world):
 
 def test_summary_forbidden_for_nurse(client, world):
     assert as_user(client, world.nurse["Терапевтичне"]).get("/orders/summary/").status_code == 403
+
+
+def test_dietician_day_arrows_reach_a_day_without_order(client, world):
+    """Bug from the pilot demo: the reviewer stepped «›» to a day the nurse had not opened yet and got a 404."""
+    ther = world.depts["Терапевтичне"]
+    c = as_user(client, world.dietician)
+    r = c.get("/orders/{}/2026-10-02/".format(ther.pk))
+    assert r.status_code == 200
+    html = r.content.decode()
+    assert "ще не відкривало замовлення" in html
+    assert "/orders/summary/?date=2026-10-02" in html
+    assert 'href="/orders/{}/2026-10-01/"'.format(ther.pk) in html           # «‹» back still works
+    assert not DailyOrder.objects.filter(department=ther, service_date="2026-10-02").exists()  # viewing creates nothing
+    assert c.post("/orders/{}/2026-10-02/".format(ther.pk), {"action": "submit"}).status_code == 404
+    # The other department's nurse still cannot see it.
+    assert as_user(client, world.nurse["Хірургічне"]).get("/orders/{}/2026-10-02/".format(ther.pk)).status_code == 404
