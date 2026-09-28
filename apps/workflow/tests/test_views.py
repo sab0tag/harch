@@ -109,7 +109,8 @@ class TestNotifications:
         assert "Нова задача" in client.get("/tasks/notifications/").content.decode()
         note = Notification.objects.get(user=hospital.nurses[0])
         r = client.get(f"/tasks/notifications/{note.pk}/open/")
-        assert r.status_code == 302 and r.url == f"/tasks/{order.pk}/"
+        # Straight to the document, not to the task card (pilot feedback: the write-off was hard to find).
+        assert r.status_code == 302 and r.url == f"/orders/{hospital.depts[0].pk}/{DAY.isoformat()}/"
         note.refresh_from_db()
         assert note.read_at is not None
 
@@ -146,3 +147,36 @@ def test_badge_polls_into_itself(client, hospital):
 
 def test_fresh_notification_says_just_now(client, hospital, order):
     assert "щойно" in as_user(client, hospital.nurses[0]).get("/tasks/notifications/").content.decode()
+
+
+class TestTabOrder:
+    def test_review_tab_longest_waiting_first(self, client, hospital):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        tasks = [fill_doc(wf.ensure_task(ORDER_SUBMISSION, DAY, department=d)[0]) for d in hospital.depts]
+        for t, nurse in zip(tasks, hospital.nurses):
+            submit(t, nurse)
+        now = timezone.now()
+        # Same service date for all three, so only the submission time decides the order.
+        for t, hours_ago in zip(tasks, (5, 1, 9)):
+            Task.objects.filter(pk=t.pk).update(submitted_at=now - timedelta(hours=hours_ago))
+        c = as_user(client, hospital.dietician)
+        page = c.get("/tasks/?tab=review").context["page"]
+        assert [t.pk for t in page] == [tasks[2].pk, tasks[0].pk, tasks[1].pk]
+        assert "Подано" in c.get("/tasks/?tab=review").content.decode()
+
+    def test_todo_tab_overdue_on_top_and_marked(self, client, hospital):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        late = wf.ensure_task(ORDER_SUBMISSION, DAY, department=hospital.depts[0])[0]
+        next_day = wf.ensure_task(ORDER_SUBMISSION, DAY + timedelta(days=1), department=hospital.depts[0])[0]
+        Task.objects.filter(pk=late.pk).update(deadline=timezone.now() - timedelta(hours=2))
+        Task.objects.filter(pk=next_day.pk).update(deadline=timezone.now() + timedelta(hours=20))
+        c = as_user(client, hospital.nurses[0])
+        page = c.get("/tasks/?tab=todo").context["page"]
+        assert [t.pk for t in page][:2] == [late.pk, next_day.pk]
+        assert "прострочено" in c.get("/tasks/?tab=todo").content.decode()

@@ -1,8 +1,10 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
@@ -50,7 +52,13 @@ class MyTasksView(RoleRequiredMixin, View):
 
     def get(self, request):
         user = request.user
-        querysets = {"todo": wf.todo_for(user), "review": wf.review_for(user), "history": wf.history_for(user)}
+        querysets = {
+            # Most urgent first: overdue and nearest deadlines on top.
+            "todo": wf.todo_for(user).order_by(F("deadline").asc(nulls_last=True), "service_date", "id"),
+            # The checker has no deadline of their own: whoever has waited longest comes first.
+            "review": wf.review_for(user).select_related("submitted_by").order_by(F("submitted_at").asc(nulls_last=True), "id"),
+            "history": wf.history_for(user),
+        }
         tab = request.GET.get("tab")
         if tab not in querysets:
             tab = "review" if not querysets["todo"].exists() and querysets["review"].exists() else "todo"
@@ -154,7 +162,11 @@ class NotificationOpenView(RoleRequiredMixin, View):
             note.read_at = timezone.now()
             note.save(update_fields=["read_at"])
         if note.task_id:
-            return redirect("workflow:task_detail", pk=note.task_id)
+            # Straight to the document where the work (or the review) happens; the card is one click further.
+            task = note.task
+            definition = task.definition
+            url = definition.subject_url(task) if definition.subject_url else None
+            return redirect(url or reverse("workflow:task_detail", kwargs={"pk": task.pk}))
         if note.url and url_has_allowed_host_and_scheme(note.url, allowed_hosts={request.get_host()}):
             return redirect(note.url)
         return redirect("workflow:my_tasks")
