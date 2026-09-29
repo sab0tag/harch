@@ -1,4 +1,5 @@
 """Base settings shared by all environments."""
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "simple_history",
+    "axes",
     "apps.core",
     "apps.accounts",
     "apps.orgstructure",
@@ -69,6 +71,7 @@ MIDDLEWARE = [
     "apps.accounts.middleware.IdleLogoutMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -95,6 +98,16 @@ TEMPLATES = [
 DATABASES = {"default": env.db("DATABASE_URL")}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
+
+# S6-03: 5 failed sign-ins for the same login from the same address → that pair waits 15 minutes.
+# The whole hospital shares one public IP, so never lock by IP alone. Unlock: Django admin → «Access
+# attempts», or `manage.py axes_reset_username <login>` (docs/06_deploy.md).
+AUTHENTICATION_BACKENDS = ["axes.backends.AxesStandaloneBackend", "django.contrib.auth.backends.ModelBackend"]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = "registration/locked.html"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
