@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 compose() { docker compose -f compose.prod.yml "$@"; }
 log() { echo "$(date '+%F %T') update: $*"; }
 
+before=$(git rev-parse HEAD)
 git pull --ff-only
 log "code at $(git log --oneline -1)"
 compose build
@@ -21,6 +22,12 @@ if compose config --services | grep -qx demo-web; then  # training copy (COMPOSE
   fi
 fi
 compose up -d --remove-orphans
+# Caddy sees its Caddyfile through a single-file bind mount, which keeps the old file after git pull:
+# recreate it when the file changed (a few seconds without HTTPS).
+if ! git diff --quiet "$before" HEAD -- deploy/Caddyfile; then
+  log "Caddyfile changed — recreating caddy"
+  compose up -d --force-recreate caddy
+fi
 # Wait for the web healthcheck (DB reachable), then check the full picture through Caddy.
 for _ in $(seq 1 30); do
   [[ "$(docker inspect -f '{{.State.Health.Status}}' "$(compose ps -q web)")" == healthy ]] && break

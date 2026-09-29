@@ -58,3 +58,5 @@ body { background: #f4f6f5; }
   background: #f5b300; color: #2b2100;
   font-size: .9rem; text-align: center; padding: .35rem 1rem; line-height: 1.35;
 }
+
+.harch-footer { font-size: .8rem; color: #8a968f; text-align: center; padding: .75rem 1rem 1rem; }
