@@ -11,6 +11,11 @@ from . import health
 from .navigation import PLACEHOLDERS
 
 
+def robots_txt(request):
+    """S6-04: nothing here is for search engines (the X-Robots-Tag header says the same)."""
+    return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
+
+
 def healthz(request):
     db = health.check_db()
     status = 200 if db == health.OK else 503
