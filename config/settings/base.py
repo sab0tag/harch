@@ -9,6 +9,7 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, []),
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
+    SESSION_IDLE_MINUTES=(int, 60),
     HOSPITAL_FULL_NAME=(str, ""),
     HOSPITAL_EDRPOU=(str, ""),
     HOSPITAL_ADDRESS=(str, ""),
@@ -65,6 +66,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.accounts.middleware.IdleLogoutMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
@@ -118,6 +120,11 @@ STORAGES = {
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
+# S6-02: shared department computers. Sign-in ends after SESSION_IDLE_MINUTES without activity
+# (apps/accounts/middleware.py), when the browser closes, and in any case after a 12-hour shift.
+SESSION_IDLE_MINUTES = env("SESSION_IDLE_MINUTES")
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 12 * 60 * 60
 
 HOSPITAL_NAME = env("HOSPITAL_NAME")  # on screen: short name
 # Printed forms (PDF, typical forms З-4а / З-13): official name from the ЄДР, code, address, who approves.
