@@ -1,4 +1,5 @@
 """Base settings shared by all environments."""
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -9,6 +10,7 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, []),
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
+    SESSION_IDLE_MINUTES=(int, 60),
     HOSPITAL_FULL_NAME=(str, ""),
     HOSPITAL_EDRPOU=(str, ""),
     HOSPITAL_ADDRESS=(str, ""),
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.postgres",
     "simple_history",
+    "axes",
     "apps.core",
     "apps.accounts",
     "apps.orgstructure",
@@ -57,6 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "apps.core.middleware.NoIndexMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -64,9 +68,11 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "apps.accounts.middleware.IdleLogoutMiddleware",
     "apps.accounts.middleware.ForcePasswordChangeMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -94,6 +100,16 @@ DATABASES = {"default": env.db("DATABASE_URL")}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
+# S6-03: 5 failed sign-ins for the same login from the same address → that pair waits 15 minutes.
+# The whole hospital shares one public IP, so never lock by IP alone. Unlock: Django admin → «Access
+# attempts», or `manage.py axes_reset_username <login>` (docs/06_deploy.md).
+AUTHENTICATION_BACKENDS = ["axes.backends.AxesStandaloneBackend", "django.contrib.auth.backends.ModelBackend"]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = "registration/locked.html"
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -118,6 +134,11 @@ STORAGES = {
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
+# S6-02: shared department computers. Sign-in ends after SESSION_IDLE_MINUTES without activity
+# (apps/accounts/middleware.py), when the browser closes, and in any case after a 12-hour shift.
+SESSION_IDLE_MINUTES = env("SESSION_IDLE_MINUTES")
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 12 * 60 * 60
 
 HOSPITAL_NAME = env("HOSPITAL_NAME")  # on screen: short name
 # Printed forms (PDF, typical forms З-4а / З-13): official name from the ЄДР, code, address, who approves.
