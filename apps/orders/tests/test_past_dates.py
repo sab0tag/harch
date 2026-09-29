@@ -45,10 +45,19 @@ def test_today_and_later_still_open_for_the_nurse(client, world, ther, day):
 
 
 def test_an_open_past_order_is_read_only_for_the_nurse(client, world, ther):
-    wf.ensure_task(ORDER_SUBMISSION, PAST, department=ther)
+    from apps.orders.services import open_order
+
     nurse = as_user(client, world.nurse["Терапевтичне"])
+    wf.ensure_task(ORDER_SUBMISSION, PAST, department=ther)                 # task, never opened
     html = nurse.get(url(ther, PAST)).content.decode()
-    assert "Дата минула — замовлення не подано" in html and 'name="action" value="submit"' not in html
+    assert "Замовлення на цю дату не подавалось" in html and 'value="submit"' not in html
+    open_order(ther, PAST)                                                   # a draft left unsubmitted
+    html = nurse.get(url(ther, PAST)).content.decode()
+    assert "Дата минула — замовлення не подано" in html and 'value="submit"' not in html
+    from apps.catalog.models import Diet
+
+    r = nurse.post(url(ther, PAST), {"action": "submit", f"diet_{Diet.objects.get(code='ОВД').pk}": "5"}, follow=True)
+    assert "Дата минула — замовлення можна лише переглянути" in r.content.decode()
     task = Task.objects.get(service_date=PAST, department=ther)
     assert task not in wf.todo_for(world.nurse["Терапевтичне"])            # not in «Мені виконати»
     nurse.post(f"/tasks/{task.pk}/submit/")                                 # the generic route is closed too
