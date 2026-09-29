@@ -122,3 +122,33 @@ def test_demo_history_is_entered_as_admin_catch_up(settings):
     yesterday = TODAY - timedelta(days=1)
     orders = Task.objects.filter(type=ORDER_SUBMISSION, service_date=yesterday)
     assert orders.exists() and all(t.status == TaskStatus.APPROVED for t in orders)
+
+
+# ------------------------------------------------------------------ switched-off departments
+def test_a_switched_off_departments_order_stays_readable(client, world, ther):
+    """Notifications and history link to it: no 404 after sync_departments switched it off."""
+    from apps.catalog.models import Diet
+    from apps.workflow.models import Notification
+
+    nurse = world.nurse["Терапевтичне"]
+    from apps.orders.services import open_order, submit_order
+
+    submit_order(open_order(ther, TOMORROW), nurse, {Diet.objects.get(code="ОВД").pk: 4})
+    task = Task.objects.get(service_date=TOMORROW, department=ther)
+    wf.approve(task, world.dietician)
+    ther.is_active = False
+    ther.save()
+    admin = as_user(client, world.admin)
+    note = Notification.objects.filter(task=task).first() or Notification.objects.create(
+        user=world.admin, task=task, title="Затверджено")
+    note.user = world.admin
+    note.save()
+    r = admin.get(f"/tasks/notifications/{note.pk}/open/", follow=True)
+    assert r.status_code == 200 and "відділення вимкнено" in r.content.decode()
+
+
+def test_nothing_new_is_opened_for_a_switched_off_department(client, world, ther):
+    ther.is_active = False
+    ther.save()
+    html = as_user(client, world.admin).get(url(ther, TOMORROW)).content.decode()
+    assert "відділення вимкнено" in html and not Task.objects.filter(department=ther).exists()

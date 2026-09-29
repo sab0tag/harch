@@ -6,7 +6,7 @@
   <h1 class="h4 mb-0 flex-grow-1 text-center">Замовлення на {{ order.service_date|date:"d.m, l" }}</h1>
   <a class="btn btn-outline-secondary btn-sm" href="{% url 'orders:edit' order.department_id next_day.isoformat %}" title="Наступний день">›</a>
 </div>
-<p class="text-center text-secondary mb-3">{{ order.department }}
+<p class="text-center text-secondary mb-3">{{ order.department }}{% if not order.department.is_active %} <span class="badge text-bg-secondary">відділення вимкнено</span>{% endif %}
   {% if task %} · <span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% endif %}
   {% if overdue %} <span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> дедлайн минув</span>{% endif %}</p>
 
