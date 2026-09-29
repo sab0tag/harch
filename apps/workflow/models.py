@@ -23,7 +23,10 @@ class TaskQuerySet(models.QuerySet):
         return self.filter(status__in=OPEN_FOR_MAKER)
 
     def overdue(self, now=None):
-        return self.open_for_maker().filter(deadline__lt=now or timezone.now())
+        from .registry import all_definitions
+
+        alerting = [d.type for d in all_definitions() if d.overdue_alerts]
+        return self.open_for_maker().filter(type__in=alerting, deadline__lt=now or timezone.now())
 
 
 class Task(models.Model):
@@ -91,7 +94,8 @@ class Task(models.Model):
         return self.definition.title
 
     def is_overdue(self, now=None):
-        return bool(self.deadline) and self.status in OPEN_FOR_MAKER and self.deadline < (now or timezone.now())
+        return (bool(self.deadline) and self.definition.overdue_alerts and self.status in OPEN_FOR_MAKER
+                and self.deadline < (now or timezone.now()))
 
     @property
     def last_rejection(self):

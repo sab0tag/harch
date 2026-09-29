@@ -57,7 +57,7 @@ harch <команда> — управление сервером Харчобл�
   demo-reset                  вернуть demo.… к свежему учебному дню прямо сейчас
 
 Расписание и проверки
-  tasks                       создать задачи-замовлення на завтра (если планировщик пропустил)
+  tasks                       создать задачи-замовлення до ближайшего рабочего дня (если планировщик пропустил)
   deadlines                   проверить сроки и разослать «Прострочено» сейчас
   monitoring                  проверка, которую делает мониторинг
 
@@ -141,7 +141,7 @@ case "$cmd" in
     manage "shell --no-imports -c \"from apps.accounts.models import User; n=User.objects.filter(username='$1').update(is_active=False); print('выключено' if n else 'нет такого логина')\"" ;;
 
   demo-reset) run "$DC exec -T demo-web python manage.py reset_demo 2>&1 | { grep -v '^AXES: ' || true; }" ;;
-  tasks) manage "generate_daily_tasks --days-ahead 1" ;;
+  tasks) manage "generate_daily_tasks" ;;
   deadlines) manage "check_deadlines" ;;
   monitoring) manage "monitoring_check" ;;
 
