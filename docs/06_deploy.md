@@ -69,6 +69,24 @@ deploy/update.sh   # pull → build → migrate → up -d → проверка /
 ```
 Позже — GitHub Actions: build → push в GHCR → ssh deploy.
 
+## Пользователи пилота (S5-03 / S6-05)
+
+Таблица — CSV (`;` или `,`, UTF-8) или `.xlsx`, как в `docs/pilot_users.example.csv`: `логін` (можно пусто —
+будет `фамилия.и` латиницей по таблице КМУ-2010), `ПІБ`, `роль`, `відділення` (для старшей медсестры), `телефон`.
+Одна ошибка в таблице — не меняется ничего, команда перечисляет строки с ошибками.
+
+```bash
+scp staff.xlsx deploy@<сервер>:/opt/harch/backups/          # ./backups смонтирован в web как /backups (ro)
+docker compose -f compose.prod.yml exec web python manage.py create_pilot_users /backups/staff.xlsx --dry-run
+docker compose -f compose.prod.yml exec web python manage.py create_pilot_users /backups/staff.xlsx --deactivate-others
+rm backups/staff.xlsx
+```
+
+- Новым — временный пароль (печатается один раз); при первом входе система пускает только на смену пароля.
+- Кто уже есть — обновляются ФИО/роль/відділення, пароль не трогается; `--reset-passwords` — выдать новые всем из таблицы.
+- `--deactivate-others` — выключить всех, кого нет в таблице (например, заготовки `nurse-therapy`…), кроме суперпользователей.
+- Потерянный пароль: admin → пользователь → «Змінити пароль» + галочка «Змінити пароль при вході».
+
 ## Учебная копия — demo.<домен> (S6-06)
 
 Та же система на отдельной базе `harch_demo`: жёлтая плашка «НАВЧАЛЬНА ВЕРСІЯ», метка «Навчання» в шапке,

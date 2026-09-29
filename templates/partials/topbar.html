@@ -27,6 +27,7 @@
       <ul class="dropdown-menu dropdown-menu-end">
         <li><span class="dropdown-item-text small text-secondary">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</span></li>
         <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{% url 'password_change' %}"><i class="bi bi-key me-2"></i>Змінити пароль</a></li>
         <li>
           <form method="post" action="{% url 'logout' %}">{% csrf_token %}
             <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Вийти</button>
