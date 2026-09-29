@@ -137,6 +137,7 @@ register(TaskDefinition(
     on_approved=_after_order_approved,
     on_cancelled=_after_order_approved,  # cancelling the last open order also completes the day
     lock_group=day_orders,
+    expires_with_day=True,
 ))
 
 register(TaskDefinition(

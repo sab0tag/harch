@@ -46,8 +46,8 @@ def test_generate_bad_args(hospital):
 
 
 def test_check_deadlines_notifies_overdue(hospital):
-    yesterday = timezone.localdate() - timedelta(days=1)
-    run("generate_daily_tasks", "--date", yesterday.isoformat())  # deadline was the day before yesterday
+    today = timezone.localdate()
+    run("generate_daily_tasks", "--date", today.isoformat())  # deadline was yesterday 16:00 — a fresh overdue
     assert "overdue notified: 3" in run("check_deadlines")
     assert "overdue notified: 0" in run("check_deadlines")
     assert Notification.objects.filter(user=hospital.nurses[0], title__startswith="Прострочено").count() == 1

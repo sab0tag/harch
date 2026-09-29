@@ -4,6 +4,8 @@
 # Catch-up in case the server was down at midnight (idempotent).
 5 7 * * *     python manage.py generate_daily_tasks --days-ahead 1
 */15 * * * *  python manage.py check_deadlines
+# Orders of past days left unfilled are closed (no notifications); see expire_stale_tasks.
+10 0 * * *    python manage.py expire_stale_tasks
 # Reference audit (AI-09): rules always; AI groups duplicate products only if AI_ENABLED and a key is set.
 40 2 * * *    python manage.py audit_reference --ai
 # Sign-in log (S6-03, django-axes): keep 90 days.
