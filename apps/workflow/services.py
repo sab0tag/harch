@@ -240,26 +240,33 @@ def notify_overdue(now=None):
     return notified
 
 
+def close_by_system(task, comment, *, run_hook=False):
+    """Close an open task without a person: cancelled, with the reason in its history, no notifications.
+    run_hook: also run the type's on_cancelled (e.g. the day's last open order closing starts the plan)."""
+    with transaction.atomic():
+        task = _locked(task)
+        if task.status not in OPEN_FOR_MAKER:
+            return task
+        prev = task.status
+        task.status = TaskStatus.CANCELLED
+        task.resolved_at = timezone.now()
+        task.save(update_fields=["status", "resolved_at"])
+        _event(task, TaskEvent.Kind.CANCELLED, None, prev, comment)
+        if run_hook:
+            task.definition.on_cancelled(task)
+    return task
+
+
 def expire_stale_tasks(today=None, dry_run=False):
     """Close what is left open of past days' expires_with_day tasks (nightly, deploy/crontab).
 
-    Marked cancelled with a system note; no notifications and no on_cancelled hook — a finished day must
-    not start its menu planning now. Returns the tasks (to be) closed."""
+    No hook: a finished day must not start its menu planning now. Returns the tasks (to be) closed."""
     today = today or timezone.localdate()
     stale = list(Task.objects.open_for_maker().filter(type__in=_expiring_types(), service_date__lt=today)
                  .select_related("department").order_by("service_date", "department__name"))
-    if dry_run:
-        return stale
-    for task in stale:
-        with transaction.atomic():
-            task = _locked(task)
-            if task.status not in OPEN_FOR_MAKER:
-                continue
-            prev = task.status
-            task.status = TaskStatus.CANCELLED
-            task.resolved_at = timezone.now()
-            task.save(update_fields=["status", "resolved_at"])
-            _event(task, TaskEvent.Kind.CANCELLED, None, prev, "Дата минула — закрито автоматично")
+    if not dry_run:
+        for task in stale:
+            close_by_system(task, "Дата минула — закрито автоматично")
     return stale
 
 

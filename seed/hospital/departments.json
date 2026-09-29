@@ -1,0 +1,11 @@
+[
+  {"name": "Терапевтичне", "patient_category": "Дорослі", "default_diet": "ОВД"},
+  {"name": "Хірургічне", "patient_category": "Дорослі", "default_diet": "ВБД"},
+  {"name": "Неврологічне", "patient_category": "Дорослі", "default_diet": "ОВД"},
+  {"name": "Педіатричне", "patient_category": "Діти", "default_diet": "ОВД"},
+  {"name": "Гінекологічне", "patient_category": "Дорослі", "default_diet": "ОВД"},
+  {"name": "Травматологічне", "patient_category": "Дорослі", "default_diet": "ВБД"},
+  {"name": "Реанімація", "patient_category": "Дорослі", "default_diet": "ВБД"},
+  {"name": "Пологове", "patient_category": "Породіллі", "default_diet": "ВБД"},
+  {"name": "Реабілітаційне", "patient_category": "Дорослі", "default_diet": "ОВД"}
+]

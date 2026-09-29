@@ -59,12 +59,13 @@ def test_reset_gives_every_role_something_to_do(settings, monkeypatch):
     tomorrow, yesterday = today + timedelta(days=1), today - timedelta(days=1)
 
     nurses = [u for u in people.values() if u.username.startswith("nurse-")]
-    assert len(nurses) == 15 and len({n.department_id for n in nurses}) == 15  # one per department
+    assert len(nurses) == 9 and len({n.department_id for n in nurses}) == 9   # the hospital's 9 departments
+    assert "nurse-rehab" in people and "nurse-cardio" not in people
     assert people["nurse-surgery"].get_full_name() == "Наталія Ткаченко"      # a person, not a job title
     waiting_for_nurse = [n for n in nurses + [people["nurse"]]
                          if any(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in wf.todo_for(n))]
-    assert people["nurse"] in waiting_for_nurse and len(waiting_for_nurse) >= 7  # a class has orders to enter
+    assert people["nurse"] in waiting_for_nurse and len(waiting_for_nurse) >= 5  # a class has orders to enter
     to_review = wf.review_for(people["dietician"])
-    assert sum(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in to_review) >= 5
+    assert sum(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in to_review) >= 4
     assert any(t.type == COOKING and t.service_date == today for t in wf.todo_for(people["chef"]))
     assert any(t.type == WRITE_OFF and t.service_date == yesterday for t in wf.todo_for(people["accountant"]))

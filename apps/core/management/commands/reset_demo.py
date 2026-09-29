@@ -1,6 +1,6 @@
 """S6-06: the training copy back to a fresh, lived-in day (nightly, deploy/crontab.demo).
 
-Wipes the WHOLE database, then: seed reference data → demo users → N past days played through
+Wipes the WHOLE database, then: seed reference data → the hospital's departments → demo users → N past days played through
 the chain → today up to the kitchen, tomorrow's orders waiting for review. Runs only with
 DEMO_MODE and on a database whose name contains "demo" — never on the real system.
 """
@@ -29,5 +29,6 @@ class Command(BaseCommand):
         quiet = open("/dev/null", "w")
         call_command("flush", interactive=False, verbosity=0)
         call_command("load_seed", str(Path(settings.BASE_DIR) / "seed"), verbosity=0, stdout=quiet)
+        call_command("sync_departments", stdout=quiet)       # the hospital's real departments, as on the live site
         call_command("demo_days", days=days, live=True, stdout=self.stdout)
         self.stdout.write(self.style.SUCCESS("training copy reset"))

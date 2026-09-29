@@ -21,6 +21,7 @@ NURSE_LOGINS = {
     "Педіатричне": "pediatrics", "Гінекологічне": "gyneco", "Травматологічне": "trauma", "Урологічне": "uro",
     "Гастроентерологічне": "gastro", "Пульмонологічне": "pulmo", "Ендокринологічне": "endo",
     "Нефрологічне": "nephro", "Опікове": "burns", "Реанімація": "icu", "Пологове": "maternity",
+    "Реабілітаційне": "rehab",
 }
 
 # Made-up names for the training copy's head nurses, in department order.
