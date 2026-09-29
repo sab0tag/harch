@@ -12,6 +12,7 @@ env = environ.Env(
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
     DEMO_MODE=(bool, False),
     SESSION_IDLE_MINUTES=(int, 60),
+    CORRECTION_LUNCH_CUTOFF=(str, "14:00"),
     HOSPITAL_FULL_NAME=(str, ""),
     HOSPITAL_EDRPOU=(str, ""),
     HOSPITAL_ADDRESS=(str, ""),
@@ -152,6 +153,8 @@ HOSPITAL_ADDRESS = env("HOSPITAL_ADDRESS")
 HOSPITAL_CITY = env("HOSPITAL_CITY")  # page footer: «Харчоблок · <name>, <city> · 2026»
 APPROVER_TITLE = env("APPROVER_TITLE")
 ORDER_DEADLINE = env("ORDER_DEADLINE")
+# S7-01: today's order may be corrected from lunch until this time, afterwards from dinner only
+CORRECTION_LUNCH_CUTOFF = env("CORRECTION_LUNCH_CUTOFF")
 NOTIFY_EMAIL = env("NOTIFY_EMAIL")
 
 # AI (docs/07_ai.md). Only non-secret knobs live in settings; ANTHROPIC_API_KEY is read from the

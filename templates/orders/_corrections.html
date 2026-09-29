@@ -1,0 +1,15 @@
+{# S7-01: corrections of one day — used on the order page, in the summary and in the kitchen #}
+{% if corrections %}
+<ul class="list-group list-group-flush">
+  {% for c in corrections %}
+  <li class="list-group-item d-flex flex-wrap align-items-center gap-2">
+    <a href="{% url 'orders:correction' c.pk %}" class="text-decoration-none me-auto">
+      <span class="fw-semibold">{{ c.department }}</span> · {{ c.get_reason_display }}{% if c.transfer_from %} з «{{ c.transfer_from }}»{% endif %}
+      <span class="small text-secondary">{{ c.from_meal_phrase }}</span>
+      <span class="small">{% for l in c.lines.all %}{% if not forloop.first %}, {% endif %}{% if l.department_id != c.department_id %}{{ l.department }} {% endif %}{{ l.diet.code }} <b class="{% if l.delta > 0 %}text-success{% else %}text-danger{% endif %}">{{ l.delta|stringformat:"+d" }}</b>{% endfor %}</span>
+    </a>
+    {% if c.task %}<span class="badge badge-status-{{ c.task.status }}">{{ c.task.get_status_display }}</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

@@ -8,6 +8,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views import View
 
+from apps.orders.corrections import corrections_for
 from apps.accounts.access import RoleRequiredMixin
 from apps.catalog.models import Product
 from apps.core.navigation import PRICE_EDITORS, roles_for
@@ -107,6 +108,7 @@ class KitchenView(RoleRequiredMixin, View):
             "can_review": task is not None and wf.can(request.user, task, "approve"),
             "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,
             "threshold": services.DEVIATION_REASON_PCT,
+            "corrections": [c for c in corrections_for(plan.service_date) if c.task and c.task.status == TaskStatus.APPROVED],
             **day_nav(plan.service_date),
         })
 

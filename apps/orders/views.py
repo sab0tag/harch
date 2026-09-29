@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
@@ -16,8 +17,8 @@ from apps.workflow import services as wf
 from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
 from apps.workflow.models import CLOSED, Task, TaskStatus
 
-from . import services
-from .models import DailyOrder
+from . import corrections, services
+from .models import DailyOrder, OrderCorrection
 
 
 def parse_date(value, default=None):
@@ -147,6 +148,10 @@ class OrderEditView(RoleRequiredMixin, View):
             "prev_day": order.service_date - timedelta(days=1),
             "next_day": order.service_date + timedelta(days=1),
             "can_review": task is not None and wf.can(request.user, task, "approve"),
+            "corrections": corrections.corrections_for(order.service_date, order.department),
+            "can_correct": (task is not None and task.status == TaskStatus.APPROVED
+                            and corrections.can_create(request.user, order.department)
+                            and corrections.allowed_meals(order.department, order.service_date)[1] is None),
         })
 
 
@@ -171,7 +176,11 @@ class OrderSummaryView(RoleRequiredMixin, View):
             counts[key] += 1
         counts["approvable"] = counts["submitted"] - sum(r["own"] for r in rows)
         plan_task = Task.objects.filter(type=MENU_PLANNING, service_date=day).first()
+        day_corrections = list(corrections.corrections_for(day))
+        for c in day_corrections:
+            c.can_review = c.task is not None and wf.can(request.user, c.task, "approve")
         return render(request, "orders/summary.html", {
+            "corrections": day_corrections,
             "day_over": day < timezone.localdate() and request.user.role != Role.ADMIN,
             "day": day,
             "rows": rows,
@@ -216,3 +225,100 @@ class OrderSummaryView(RoleRequiredMixin, View):
             messages.success(request, "План меню сформовано з уже затверджених замовлень.")
             return redirect("planning:plan", day.isoformat())
         return back
+
+
+# ------------------------------------------------------------------ S7-01 corrections
+def read_deltas(post, diets):
+    deltas = {}
+    for diet in diets:
+        raw = (post.get(f"diet_{diet.pk}") or "").strip().replace("−", "-").replace(" ", "")
+        if raw in ("", "0", "+0", "-0"):
+            continue
+        try:
+            deltas[diet.pk] = int(raw)
+        except ValueError as exc:
+            raise ValidationError(f"{diet.code}: вкажіть ціле число, наприклад +2 або -1.") from exc
+    return deltas
+
+
+class CorrectionNewView(RoleRequiredMixin, View):
+    allowed_roles = roles_for("orders")
+
+    def post(self, request, dept_id, day):
+        day = parse_date(day)
+        department = get_object_or_404(Department, pk=dept_id, is_active=True)
+        try:
+            correction = corrections.open_correction(department, day, request.user)
+        except (ValidationError, PermissionDenied) as exc:
+            for msg in getattr(exc, "messages", [str(exc)]):
+                messages.error(request, msg)
+            return redirect("orders:edit", dept_id, day.isoformat())
+        return redirect("orders:correction", correction.pk)
+
+
+class CorrectionView(RoleRequiredMixin, View):
+    allowed_roles = roles_for("orders")
+
+    def get_correction(self, request, pk):
+        correction = get_object_or_404(OrderCorrection.objects.select_related("department", "task", "transfer_from"), pk=pk)
+        user = request.user
+        if user.role == Role.DEPT_NURSE and user.department_id not in (correction.department_id, correction.transfer_from_id):
+            raise Http404
+        return correction
+
+    def get(self, request, pk):
+        return self.render(request, self.get_correction(request, pk))
+
+    def post(self, request, pk):
+        correction = self.get_correction(request, pk)
+        diets = list(corrections.available_diets(correction.service_date))
+        action = request.POST.get("action", "save")
+        transfer_id = request.POST.get("transfer_from") or None
+        fields = {
+            "from_meal": request.POST.get("from_meal", ""),
+            "reason": request.POST.get("reason", ""),
+            "transfer_from": Department.objects.filter(pk=transfer_id, is_active=True).first() if transfer_id else None,
+            "note": request.POST.get("note", "").strip(),
+        }
+        try:
+            deltas = read_deltas(request.POST, diets)
+            if action == "submit":
+                corrections.submit_correction(correction, request.user, deltas, **fields)
+                messages.success(request, "Коригування подано дієтсестрі.")
+            else:
+                corrections.save_correction(correction, request.user, deltas, **fields)
+                messages.success(request, "Чернетку збережено.")
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+            return self.render(request, correction, posted=request.POST)
+        except (PermissionDenied, wf.InvalidTransition) as exc:
+            messages.error(request, str(exc) or "Коригування вже подано — редагування недоступне.")
+        return redirect("orders:correction", correction.pk)
+
+    def render(self, request, correction, posted=None):
+        correction.refresh_from_db()
+        day, dept = correction.service_date, correction.department
+        meals, why = corrections.allowed_meals(dept, day)
+        own = {l.diet_id: l.delta for l in correction.lines.all() if l.department_id == dept.pk}
+        have = corrections.department_portions(dept, day, exclude=correction)
+        rows = []
+        for d in corrections.available_diets(day):
+            value = posted.get(f"diet_{d.pk}", "") if posted else (f"{own[d.pk]:+d}" if d.pk in own else "")
+            rows.append({"diet": d, "value": value, "have": have.get(d.pk, 0)})
+        task = correction.task
+        return render(request, "orders/correction.html", {
+            "correction": correction,
+            "task": task,
+            "rows": rows,
+            "lines": correction.lines.select_related("department", "diet"),
+            "editable": corrections.is_editable_by(correction, request.user),
+            "meals": [(m, corrections.SLOT_LABELS[m]) for m in meals],
+            "closed_reason": why,
+            "reasons": OrderCorrection.Reason.choices,
+            "departments": Department.objects.filter(is_active=True).exclude(pk=dept.pk),
+            "posted": posted,
+            "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,
+            "can_review": task is not None and wf.can(request.user, task, "approve"),
+            "cutoff": settings.CORRECTION_LUNCH_CUTOFF,
+        })

@@ -70,4 +70,35 @@
     <tfoot class="table-group-divider"><tr class="fw-semibold"><td>Разом (усі замовлення)</td>{% for d in diets %}<td class="text-end">{{ totals|get:d.pk|default:"" }}</td>{% endfor %}<td></td><td></td><td></td></tr></tfoot>
   </table>
 </div></div>
+{% if corrections %}
+<div class="card mt-3">
+  <div class="card-header bg-white fw-semibold"><i class="bi bi-plus-slash-minus me-1"></i>Коригування на {{ day|date:"d.m" }}</div>
+  <ul class="list-group list-group-flush">
+  {% for c in corrections %}
+    <li class="list-group-item">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <a href="{% url 'orders:correction' c.pk %}" class="text-decoration-none me-auto">
+          <span class="fw-semibold">{{ c.department }}</span> · {{ c.get_reason_display }}{% if c.transfer_from %} з «{{ c.transfer_from }}»{% endif %}
+          <span class="small text-secondary">{{ c.from_meal_phrase }}</span>
+          <span class="small">{% for l in c.lines.all %}{% if not forloop.first %}, {% endif %}{% if l.department_id != c.department_id %}{{ l.department }} {% endif %}{{ l.diet.code }} <b class="{% if l.delta > 0 %}text-success{% else %}text-danger{% endif %}">{{ l.delta|stringformat:"+d" }}</b>{% endfor %}</span>
+        </a>
+        <span class="badge badge-status-{{ c.task.status }}">{{ c.task.get_status_display }}</span>
+        {% if c.can_review %}
+          <form method="post" action="{% url 'workflow:task_action' c.task.pk 'approve' %}" class="d-inline">{% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn btn-sm btn-success" title="Затвердити"><i class="bi bi-check2"></i></button></form>
+          <button class="btn btn-sm btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#crej-{{ c.pk }}" title="Повернути"><i class="bi bi-arrow-return-left"></i></button>
+        {% endif %}
+      </div>
+      {% if c.can_review %}
+      <form method="post" action="{% url 'workflow:task_action' c.task.pk 'reject' %}" class="collapse mt-2 d-flex gap-2" id="crej-{{ c.pk }}">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <input name="comment" class="form-control" placeholder="Що виправити в коригуванні «{{ c.department }}»?" required>
+        <button class="btn btn-danger text-nowrap">Повернути</button></form>
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}
 {% endblock %}

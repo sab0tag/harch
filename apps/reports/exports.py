@@ -6,6 +6,7 @@ from decimal import Decimal
 from io import BytesIO
 
 from django.conf import settings
+from django.db.models import Sum
 from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -180,9 +181,13 @@ def menu_vymoha_data(plan):
 
     snapshot = ConsumptionSnapshotLine.objects.filter(plan=plan)
     eaters = OrderedDict()
-    for code, menu_no, portions in snapshot.order_by("diet_code").values_list(
+    for code, menu_no, portions in snapshot.filter(correction__isnull=True).order_by("diet_code").values_list(
             "diet_code", "menu_number", "portions").distinct():
         eaters[code] = portions
+    from apps.orders.models import OrderCorrectionLine        # S7-01: approved corrections change who eats
+    for code, delta in (OrderCorrectionLine.objects.filter(correction__in=snapshot.values("correction"))
+                        .values("diet__code").annotate(total=Sum("delta")).values_list("diet__code", "total")):
+        eaters[code] = eaters.get(code, 0) + delta
     slots_used = set(snapshot.values_list("meal_slot", flat=True))
     slots = [(v, label) for v, label in MealSlot.choices if v in slots_used]
 

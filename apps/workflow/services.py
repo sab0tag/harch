@@ -86,6 +86,8 @@ def ensure_task(definition: TaskDefinition | str, service_date: date, *, departm
         definition = get(definition)
     if definition.per_department and department is None:
         raise ValueError(f"{definition.type} needs a department")
+    if definition.repeatable:
+        raise ValueError(f"{definition.type} may repeat within a day: use create_task")
     lookup = {"type": definition.type, "service_date": service_date, "department": department}
     existing = Task.objects.filter(**lookup).first()
     if existing:
@@ -105,6 +107,24 @@ def ensure_task(definition: TaskDefinition | str, service_date: date, *, departm
         return Task.objects.get(**lookup), False
     n.notify(n.makers(task), task, f"Нова задача: {task}", definition.description)
     return task, True
+
+
+def create_task(definition: TaskDefinition | str, service_date: date, *, department=None, subject=None):
+    """A new task every time — for repeatable types (a department may correct its order several times a day).
+    The maker creates it for herself, so nobody is notified until it is submitted."""
+    if isinstance(definition, str):
+        definition = get(definition)
+    if not definition.repeatable:
+        raise ValueError(f"{definition.type} is created once per day: use ensure_task")
+    if definition.per_department and department is None:
+        raise ValueError(f"{definition.type} needs a department")
+    task = Task.objects.create(
+        type=definition.type, service_date=service_date, department=department,
+        maker_role=definition.maker_role, checker_role=definition.checker_role,
+        deadline=definition.deadline(service_date), subject=subject,
+    )
+    TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.CREATED, to_status=task.status)
+    return task
 
 
 # ------------------------------------------------------------------ transitions

@@ -16,6 +16,8 @@ class TaskStatus(models.TextChoices):
 
 OPEN_FOR_MAKER = (TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.REJECTED)
 CLOSED = (TaskStatus.APPROVED, TaskStatus.CANCELLED)
+# Types that may have several tasks per date and department (definitions.py registers them repeatable).
+REPEATABLE_TYPES = ("order_correction",)
 
 
 class TaskQuerySet(models.QuerySet):
@@ -75,6 +77,7 @@ class Task(models.Model):
                 fields=["type", "service_date", "department"],
                 name="task_unique_per_type_date_department",
                 nulls_distinct=False,
+                condition=~models.Q(type__in=REPEATABLE_TYPES),  # several corrections a day are normal
             ),
         ]
         indexes = [models.Index(fields=["status", "deadline"]), models.Index(fields=["service_date", "type"])]
