@@ -80,6 +80,16 @@ def test_no_patients(client, world):
     assert Task.objects.get(department=ther).status == TaskStatus.SUBMITTED
 
 
+def test_no_patients_mark_switches_off_the_portion_fields(client, world):
+    """The form disables portions while «пацієнтів немає» is ticked (the server rejects both anyway)."""
+    ther = world.depts["Терапевтичне"]
+    client = as_user(client, world.nurse["Терапевтичне"])
+    html = client.get(URL.format(ther.pk)).content.decode()
+    assert 'id="no-patients-hint" hidden' in html and "field.disabled = box.checked" in html
+    client.post(URL.format(ther.pk), {"action": "save", "no_patients": "on"})
+    assert 'id="no-patients-hint" hidden' not in client.get(URL.format(ther.pk)).content.decode()
+
+
 def test_submitted_order_is_read_only(client, world):
     ther = world.depts["Терапевтичне"]
     client = as_user(client, world.nurse["Терапевтичне"])
