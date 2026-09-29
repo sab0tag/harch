@@ -12,6 +12,14 @@ git pull --ff-only
 log "code at $(git log --oneline -1)"
 compose build
 compose run --rm web python manage.py migrate --noinput
+if compose config --services | grep -qx demo-web; then  # training copy (COMPOSE_PROFILES=demo)
+  compose up -d demo-db
+  compose run --rm demo-web python manage.py migrate --noinput
+  # A brand-new training database gets its first day right away; afterwards the nightly reset keeps it fresh.
+  if [[ "$(compose run --rm -T demo-web python manage.py shell -c 'from apps.accounts.models import User; print(User.objects.exists())' | tail -1)" != True ]]; then
+    compose run --rm demo-web python manage.py reset_demo
+  fi
+fi
 compose up -d --remove-orphans
 # Wait for the web healthcheck (DB reachable), then check the full picture through Caddy.
 for _ in $(seq 1 30); do

@@ -5,7 +5,7 @@ from .navigation import visible_groups
 
 
 def site(request):
-    return {"HOSPITAL_NAME": settings.HOSPITAL_NAME}
+    return {"HOSPITAL_NAME": settings.HOSPITAL_NAME, "DEMO_MODE": settings.DEMO_MODE}
 
 
 def _href(item):

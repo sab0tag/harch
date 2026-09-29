@@ -1,4 +1,4 @@
-"""Dev-only: one user per role so the UI can be clicked through. Refuses to run with DEBUG=False."""
+"""One user per role so the UI can be clicked through. Dev and training copy only (DEBUG or DEMO_MODE)."""
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
@@ -16,11 +16,11 @@ DEMO = [
 
 
 class Command(BaseCommand):
-    help = f"Create demo users (one per role), password '{PASSWORD}'. DEBUG only."
+    help = f"Create demo users (one per role), password '{PASSWORD}'. Dev/training copy only."
 
     def handle(self, *args, **options):
-        if not settings.DEBUG:
-            raise CommandError("create_demo_users is disabled when DEBUG=False")
+        if not (settings.DEBUG or settings.DEMO_MODE):
+            raise CommandError("create_demo_users runs only in dev (DEBUG) or on the training copy (DEMO_MODE)")
         dept, _ = Department.objects.get_or_create(name="Терапевтичне")
         for username, first, last, role in DEMO:
             user, created = User.objects.get_or_create(

@@ -52,3 +52,9 @@ body { background: #f4f6f5; }
 .help .lead-in { font-size: 1.05rem; }
 .help .red { color: var(--bs-danger); font-weight: 600; }
 .help .note { margin-top: 1rem; padding: .6rem .8rem; background: var(--bs-light); border-left: 4px solid var(--bs-success); }
+
+/* S6-06: training copy — impossible to mistake for the real system */
+.harch-demo-banner {
+  background: #f5b300; color: #2b2100;
+  font-size: .9rem; text-align: center; padding: .35rem 1rem; line-height: 1.35;
+}

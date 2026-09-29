@@ -1,0 +1,4 @@
+# Training copy scheduler (compose service demo-scheduler). Times are Europe/Kyiv.
+# Every night: wipe and rebuild a lived-in day, so each role finds work in the morning.
+0 3 * * *     python manage.py reset_demo
+*/15 * * * *  python manage.py check_deadlines

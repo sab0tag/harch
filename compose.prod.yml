@@ -63,6 +63,59 @@ services:
       db:
         condition: service_healthy
 
+  # ---- S6-06: training copy at demo.$DOMAIN (profile "demo": COMPOSE_PROFILES=demo in .env) ----
+  # Own database, same image; nightly reset_demo (deploy/crontab.demo). No AI, no Sentry, no backups.
+  demo-db:
+    image: postgres:16
+    profiles: [demo]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: harch_demo
+      POSTGRES_USER: harch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - demo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harch"]
+      interval: 5s
+      retries: 10
+
+  demo-web:
+    <<: *app
+    profiles: [demo]
+    environment: &demo-env
+      DJANGO_SETTINGS_MODULE: config.settings.prod
+      TZ: Europe/Kyiv
+      DEMO_MODE: "true"
+      DATABASE_URL: postgres://harch:${POSTGRES_PASSWORD}@demo-db:5432/harch_demo
+      DJANGO_ALLOWED_HOSTS: demo.${DOMAIN}
+      DJANGO_SECRET_KEY: ${DEMO_SECRET_KEY:-}  # required with the demo profile: Django refuses an empty key
+      AI_ENABLED: "false"
+      SENTRY_DSN: ""
+      NOTIFY_EMAIL: "false"
+      HEALTH_BACKUP_FILE: ""
+    depends_on:
+      demo-db:
+        condition: service_healthy
+    command: >-
+      gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60
+      --access-logfile - --error-logfile -
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, urllib.request as u; u.urlopen(u.Request('http://127.0.0.1:8000/healthz/', headers={'Host': os.environ['DJANGO_ALLOWED_HOSTS'].split(',')[0], 'X-Forwarded-Proto': 'https'}), timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+
+  demo-scheduler:
+    <<: *app
+    profiles: [demo]
+    environment: *demo-env
+    depends_on:
+      demo-db:
+        condition: service_healthy
+    command: /usr/local/bin/supercronic /app/deploy/crontab.demo
+
   caddy:
     image: caddy:2
     restart: unless-stopped
@@ -82,5 +135,6 @@ services:
 
 volumes:
   pgdata:
+  demo_pgdata:
   caddy_data:
   caddy_config:

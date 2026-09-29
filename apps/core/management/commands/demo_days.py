@@ -1,11 +1,15 @@
-"""Dev-only: play the last N days through the whole chain so every role has something to look at.
+"""Play the last N days through the whole chain so every role has something to look at.
 
     python manage.py demo_days --days 10
+    python manage.py demo_days --days 7 --live   # the training copy: open work for every role today
 
 Each day goes orders → plan → kitchen fact → write-off through the same workflow services the UI
 uses (maker ≠ checker, validations, snapshots). The last day stops at the write-off, so the
 accountant finds an open task. Days that already have an approved plan are skipped. Products
-without a price get an indicative demo price. Refuses to run with DEBUG=False.
+without a price get an indicative demo price. Dev and training copy only (DEBUG or DEMO_MODE).
+
+--live also plays today up to the kitchen (the chef enters the fact) and submits tomorrow's orders
+for every department except the demo nurse's (she submits hers; the dietician reviews the rest).
 """
 import random
 from datetime import timedelta
@@ -51,14 +55,15 @@ def demo_price(name):
 
 
 class Command(BaseCommand):
-    help = "Play the last N days through orders → plan → kitchen → write-off (demo data). DEBUG only."
+    help = "Play the last N days through orders → plan → kitchen → write-off (demo data). Dev/training copy only."
 
     def add_arguments(self, parser):
         parser.add_argument("--days", type=int, default=10, help="How many days back from yesterday (1–31)")
+        parser.add_argument("--live", action="store_true", help="Also today (to the kitchen) and tomorrow (orders)")
 
-    def handle(self, *args, days=10, **options):
-        if not settings.DEBUG:
-            raise CommandError("demo_days is disabled when DEBUG=False")
+    def handle(self, *args, days=10, live=False, **options):
+        if not (settings.DEBUG or settings.DEMO_MODE):
+            raise CommandError("demo_days runs only in dev (DEBUG) or on the training copy (DEMO_MODE)")
         if not 1 <= days <= 31:
             raise CommandError("--days must be 1..31")
         call_command("create_demo_users", stdout=self.stdout)
@@ -79,10 +84,14 @@ class Command(BaseCommand):
             if DailyPlan.objects.filter(service_date=day, approved_at__isnull=False).exists():
                 self.stdout.write(f"{day}: already played, skipped")
                 continue
-            self.play_day(day, close_write_off=day != span[-1])
+            self.play_day(day, stop="closed" if day != span[-1] else "write_off")
+        if live:
+            self.play_day(today, stop="cooking")
+            self.play_day(today + timedelta(days=1), stop="orders")
 
     # ------------------------------------------------------------------ one day
-    def play_day(self, day, close_write_off):
+    def play_day(self, day, stop):
+        """stop: orders (submitted, not reviewed) · cooking (plan approved) · write_off (open) · closed."""
         rng = random.Random(day.toordinal())
         dietician, chef, accountant = self.people["dietician"], self.people["chef"], self.people["accountant"]
 
@@ -96,9 +105,16 @@ class Command(BaseCommand):
             if rng.random() < 0.35:                      # a few patients on another diet
                 other = rng.choice(list(diets.values()))
                 portions[other.pk] = portions.get(other.pk, 0) + rng.randint(1, 4)
-            nurse = self.people["nurse"] if self.people["nurse"].department_id == dept.pk else self.people["admin"]
+            own = self.people["nurse"].department_id == dept.pk
+            if stop == "orders" and own:
+                continue                                 # left for the demo nurse
+            nurse = self.people["nurse"] if own else self.people["admin"]
             submit_order(open_order(dept, day), nurse, portions)
             portions_total += sum(portions.values())
+        if stop == "orders":
+            wf.ensure_task(ORDER_SUBMISSION, day, department=self.people["nurse"].department)
+            self.stdout.write(f"{day}: {portions_total} portions submitted — waiting for the dietician")
+            return
         for task in Task.objects.filter(type=ORDER_SUBMISSION, service_date=day, status=TaskStatus.SUBMITTED):
             wf.approve(task, dietician)
 
@@ -106,6 +122,9 @@ class Command(BaseCommand):
         wf.submit(Task.objects.get(type=MENU_PLANNING, service_date=day), dietician)
         wf.approve(Task.objects.get(type=MENU_PLANNING, service_date=day), chef)
         plan.refresh_from_db()
+        if stop == "cooking":
+            self.stdout.write(f"{day}: {portions_total} portions, plan approved — the chef enters the fact")
+            return
 
         # Kitchen: mostly as planned, small noise, one real deviation with a reason.
         ensure_actuals(plan)
@@ -123,7 +142,7 @@ class Command(BaseCommand):
 
         write_off = write_off_task(day)
         state = "write-off waiting for the accountant"
-        if close_write_off:
+        if stop == "closed":
             wf.submit(write_off, accountant)
             wf.approve(write_off, dietician)
             state = "closed"
