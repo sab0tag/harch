@@ -28,6 +28,31 @@ def test_menu_pdf_context_matches_plan(cooking_day):
     assert ctx["portions"] == 60 and all(d["slots"] for d in ctx["diets"])
 
 
+@pytest.fixture
+def requisites(settings):
+    settings.HOSPITAL_NAME = "КНП ОМР «ОХТИРСЬКА ЦРЛ»"
+    settings.HOSPITAL_FULL_NAME = "КОМУНАЛЬНЕ НЕКОМЕРЦІЙНЕ ПІДПРИЄМСТВО ОХТИРСЬКОЇ МІСЬКОЇ РАДИ «ОХТИРСЬКА ЦЕНТРАЛЬНА РАЙОННА ЛІКАРНЯ»"
+    settings.HOSPITAL_EDRPOU = "02007472"
+    settings.HOSPITAL_ADDRESS = "42700, м. Охтирка, вул. Петропавлівська, 15"
+    settings.APPROVER_TITLE = "Директор"
+    return settings
+
+
+def test_printed_menu_carries_official_requisites(cooking_day, requisites):
+    from django.template.loader import render_to_string
+
+    html = render_to_string("reports/menu_rozkladka.html", menu_rozkladka_context(cooking_day.plan))
+    assert requisites.HOSPITAL_FULL_NAME in html and "ЄДРПОУ 02007472" in html and "Петропавлівська, 15" in html
+    assert "ЗАТВЕРДЖУЮ<br>Директор" in html and "Головний лікар" not in html
+
+
+def test_typical_forms_carry_official_requisites(client, cooking_day, requisites):
+    ws = _vymoha(client, cooking_day.accountant)
+    assert ws["A1"].value == requisites.HOSPITAL_FULL_NAME
+    assert ws["A2"].value == "Ідентифікаційний код за ЄДРПОУ 02007472"
+    assert any(c.value == "Директор ____________" for c in ws[3])
+
+
 def test_menu_pdf_refused_before_approval(client, world):
     r = as_user(client, world.dietician).get(f"/reports/menu/{DAY.isoformat()}.pdf")
     assert r.status_code == 302 and "/plan/" in r.url

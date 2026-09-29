@@ -51,7 +51,7 @@ def consumption_xlsx(data, d_from, d_to, group):
     ws = wb.active
     ws.title = "Розхід"
     period = d_from.strftime("%d.%m.%Y") + ("" if d_from == d_to else " – " + d_to.strftime("%d.%m.%Y"))
-    ws["A1"] = settings.HOSPITAL_NAME
+    ws["A1"] = settings.HOSPITAL_FULL_NAME
     ws["A2"] = f"Розхід продуктів {period} ({GROUPS[group]})"
     ws["A2"].font = Font(bold=True, size=13)
     ws["A3"] = "Джерело: зафіксований розхід затверджених планів. Сума — за поточними цінами довідника."
@@ -110,8 +110,10 @@ MONTHS = ["", "січень", "лютий", "березень", "квітень"
 
 
 def _form_header(ws, form_no, last_col):
-    ws["A1"] = settings.HOSPITAL_NAME
+    ws["A1"] = settings.HOSPITAL_FULL_NAME
     ws["A1"].font = BOLD
+    if settings.HOSPITAL_EDRPOU:
+        ws["A2"] = f"Ідентифікаційний код за ЄДРПОУ {settings.HOSPITAL_EDRPOU}"
     c = ws.cell(row=1, column=last_col, value=f"Типова форма № {form_no}")
     c.alignment = Alignment(horizontal="right")
 
@@ -238,7 +240,7 @@ def menu_vymoha_xlsx(plan):
     ws.title = "Меню-вимога"
     _form_header(ws, "З-4а", last_col)
     ws.cell(row=2, column=last_col, value="ЗАТВЕРДЖУЮ").alignment = Alignment(horizontal="right")
-    ws.cell(row=3, column=last_col, value="Головний лікар ____________").alignment = Alignment(horizontal="right")
+    ws.cell(row=3, column=last_col, value=f"{settings.APPROVER_TITLE} ____________").alignment = Alignment(horizontal="right")
     day = plan.service_date
     ws["A5"] = f"МЕНЮ-ВИМОГА № {day:%j} на видачу продуктів харчування на {day:%d.%m.%Y} р."
     ws["A5"].font = Font(bold=True, size=13)

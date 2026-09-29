@@ -9,6 +9,10 @@ env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DJANGO_ALLOWED_HOSTS=(list, []),
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
+    HOSPITAL_FULL_NAME=(str, ""),
+    HOSPITAL_EDRPOU=(str, ""),
+    HOSPITAL_ADDRESS=(str, ""),
+    APPROVER_TITLE=(str, "Директор"),
     ORDER_DEADLINE=(str, "16:00"),
     NOTIFY_EMAIL=(bool, False),
     AI_ENABLED=(bool, False),
@@ -114,7 +118,12 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
 
-HOSPITAL_NAME = env("HOSPITAL_NAME")
+HOSPITAL_NAME = env("HOSPITAL_NAME")  # on screen: short name
+# Printed forms (PDF, typical forms З-4а / З-13): official name from the ЄДР, code, address, who approves.
+HOSPITAL_FULL_NAME = env("HOSPITAL_FULL_NAME") or HOSPITAL_NAME
+HOSPITAL_EDRPOU = env("HOSPITAL_EDRPOU")
+HOSPITAL_ADDRESS = env("HOSPITAL_ADDRESS")
+APPROVER_TITLE = env("APPROVER_TITLE")
 ORDER_DEADLINE = env("ORDER_DEADLINE")
 NOTIFY_EMAIL = env("NOTIFY_EMAIL")
 
