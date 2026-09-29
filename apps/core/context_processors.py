@@ -1,11 +1,17 @@
 from django.conf import settings
+from django.utils import timezone
 from django.urls import reverse
 
 from .navigation import visible_groups
 
 
+FIRST_YEAR = 2026
+
+
 def site(request):
-    return {"HOSPITAL_NAME": settings.HOSPITAL_NAME, "DEMO_MODE": settings.DEMO_MODE}
+    year = timezone.localdate().year
+    return {"HOSPITAL_NAME": settings.HOSPITAL_NAME, "HOSPITAL_CITY": settings.HOSPITAL_CITY,
+            "DEMO_MODE": settings.DEMO_MODE, "FOOTER_YEARS": f"{FIRST_YEAR}–{year}" if year > FIRST_YEAR else str(FIRST_YEAR)}
 
 
 def _href(item):
