@@ -10,10 +10,16 @@ FIRST_YEAR = 2026
 
 def demo_nurses():
     """Training copy sign-in page: every department's head-nurse login (called only if the page shows it)."""
-    from apps.accounts.models import Role, User
+    from django.db.models import Exists, OuterRef
 
+    from apps.accounts.models import Role, User
+    from apps.workflow.definitions import ORDER_SUBMISSION
+    from apps.workflow.models import Task
+
+    open_order = Task.objects.open_for_maker().filter(type=ORDER_SUBMISSION, department=OuterRef("department"))
     return User.objects.filter(role=Role.DEPT_NURSE, is_active=True, username__startswith="nurse-") \
-        .select_related("department").order_by("department__sort_order", "department__name")
+        .select_related("department").annotate(has_order_to_enter=Exists(open_order)) \
+        .order_by("department__sort_order", "department__name")
 
 
 def site(request):
