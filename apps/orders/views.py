@@ -5,6 +5,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 
 from apps.accounts.access import RoleRequiredMixin
@@ -67,7 +68,9 @@ class OrderEditView(RoleRequiredMixin, View):
         if user.role == Role.DEPT_NURSE and user.department_id != dept_id:
             raise Http404  # other departments' orders are not revealed
         department = get_object_or_404(Department, pk=dept_id, is_active=True)
-        if user.role in (Role.DEPT_NURSE, Role.ADMIN):
+        # A nurse opens (creates) orders only for today onwards; a past day is view-only for her.
+        # An admin may still open a past day to catch it up (docs/08_ops.md).
+        if user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and day >= timezone.localdate()):
             return services.open_order(department, day)
         order = DailyOrder.objects.filter(department=department, service_date=day).select_related("task").first()
         if order is None:
@@ -84,6 +87,7 @@ class OrderEditView(RoleRequiredMixin, View):
             return render(request, "orders/order_missing.html", {
                 "department": missing.department, "day": day, "task": task,
                 "task_closed": task is not None and task.status in CLOSED,
+                "day_over": day < timezone.localdate(),
                 "prev_day": day - timedelta(days=1), "next_day": day + timedelta(days=1),
             })
         return self.render(request, order)
@@ -111,7 +115,10 @@ class OrderEditView(RoleRequiredMixin, View):
                 messages.error(request, msg)
             return self.render(request, order, posted=request.POST)
         except (PermissionDenied, wf.InvalidTransition):
-            messages.error(request, "Замовлення вже подано — редагування недоступне.")
+            if order.task and wf.day_is_over(order.task) and request.user.role != Role.ADMIN:
+                messages.error(request, "Дата минула — замовлення можна лише переглянути.")
+            else:
+                messages.error(request, "Замовлення вже подано — редагування недоступне.")
         return redirect("orders:edit", dept_id, day.isoformat())
 
     def render(self, request, order, posted=None):
@@ -133,6 +140,7 @@ class OrderEditView(RoleRequiredMixin, View):
             "total": sum(values.values()),
             "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,
             "overdue": task.is_overdue() if task else False,
+            "day_over": order.service_date < timezone.localdate(),
             "prev_day": order.service_date - timedelta(days=1),
             "next_day": order.service_date + timedelta(days=1),
             "can_review": task is not None and wf.can(request.user, task, "approve"),
@@ -161,6 +169,7 @@ class OrderSummaryView(RoleRequiredMixin, View):
         counts["approvable"] = counts["submitted"] - sum(r["own"] for r in rows)
         plan_task = Task.objects.filter(type=MENU_PLANNING, service_date=day).first()
         return render(request, "orders/summary.html", {
+            "day_over": day < timezone.localdate() and request.user.role != Role.ADMIN,
             "day": day,
             "rows": rows,
             "diets": diets,
@@ -177,6 +186,9 @@ class OrderSummaryView(RoleRequiredMixin, View):
         day = parse_date(request.POST.get("date"))
         action = request.POST.get("action")
         back = redirect(reverse("orders:summary") + f"?date={day.isoformat()}")
+        if action in ("create_tasks", "force_plan") and day < timezone.localdate() and request.user.role != Role.ADMIN:
+            messages.error(request, "Дата минула: задачі й план на неї створює лише адміністратор.")
+            return back
         if action == "create_tasks":
             created = sum(
                 wf.ensure_task(ORDER_SUBMISSION, day, department=d)[1]

@@ -112,7 +112,9 @@ class Command(BaseCommand):
             if stop == "orders" and (i % 2 == 0 or dept.pk == self.people["nurse"].department_id):
                 open_order(dept, day)                    # left for this department's head nurse
                 continue
-            submit_order(open_order(dept, day), self.head_nurse.get(dept.pk, self.people["admin"]), portions)
+            # A past day is closed for nurses (expires_with_day): history is entered as the admin catching up.
+            maker = self.people["admin"] if day < timezone.localdate() else self.head_nurse.get(dept.pk, self.people["admin"])
+            submit_order(open_order(dept, day), maker, portions)
             portions_total += sum(portions.values())
         if stop == "orders":
             waiting = Task.objects.filter(type=ORDER_SUBMISSION, service_date=day, status=TaskStatus.SUBMITTED).count()

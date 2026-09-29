@@ -9,10 +9,14 @@
 <p class="text-center text-secondary mb-3">{{ department }}{% if task %} · <span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% endif %}</p>
 <div class="card card-body text-center">
   {% if task_closed %}
-  <p class="mb-2">Задачу закрито ({{ task.get_status_display|lower }}), але документа замовлення на цю дату немає — порції не подавались.</p>
-  <p class="text-secondary small mb-3">{% else %}
-  <p class="mb-2">Відділення ще не відкривало замовлення на цю дату.</p>
-  <p class="text-secondary small mb-3">{% endif %}{% if task_closed %}{% elif task %}Задачу створено{% if task.deadline %}, подати до {{ task.deadline|date:"d.m H:i" }}{% endif %}.{% else %}Задачу на цю дату ще не створено — планувальник створює їх щоночі на завтра.{% endif %}</p>
-  <div><a class="btn btn-outline-primary" href="{% url 'orders:summary' %}?date={{ day.isoformat }}"><i class="bi bi-table me-1"></i>Зведення замовлень на {{ day|date:"d.m" }}</a></div>
+    <p class="mb-2">Задачу закрито ({{ task.get_status_display|lower }}), але документа замовлення на цю дату немає — порції не подавались.</p>
+  {% elif day_over %}
+    <p class="mb-2">Замовлення на цю дату не подавалось.</p>
+    <p class="text-secondary small mb-3">Дата минула — внести його заднім числом може лише адміністратор.</p>
+  {% else %}
+    <p class="mb-2">Відділення ще не відкривало замовлення на цю дату.</p>
+    <p class="text-secondary small mb-3">{% if task %}Задачу створено{% if task.deadline %}, подати до {{ task.deadline|date:"d.m H:i" }}{% endif %}.{% else %}Задачу на цю дату ще не створено — планувальник створює їх щоночі на завтра.{% endif %}</p>
+  {% endif %}
+  {% if user.role != 'dept_nurse' %}<div><a class="btn btn-outline-primary" href="{% url 'orders:summary' %}?date={{ day.isoformat }}"><i class="bi bi-table me-1"></i>Зведення замовлень на {{ day|date:"d.m" }}</a></div>{% endif %}
 </div>
 {% endblock %}

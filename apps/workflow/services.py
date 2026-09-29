@@ -3,7 +3,7 @@
 Every transition: row lock (select_for_update) → permission check → status check →
 TaskEvent → notifications → optional hook, all in one transaction.
 """
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
@@ -14,7 +14,7 @@ from apps.accounts.models import Role
 
 from . import notify as n
 from .models import CLOSED, OPEN_FOR_MAKER, Task, TaskEvent, TaskStatus
-from .registry import TaskDefinition, get
+from .registry import TaskDefinition, all_definitions, get
 
 
 class InvalidTransition(Exception):
@@ -46,6 +46,15 @@ def is_checker(user, task):
     return _role_matches(user, task.checker_role, task)
 
 
+def day_is_over(task, today=None) -> bool:
+    """An expires_with_day task (a department order) whose service date has already passed."""
+    return task.definition.expires_with_day and task.service_date < (today or timezone.localdate())
+
+
+def _expiring_types():
+    return [d.type for d in all_definitions() if d.expires_with_day]
+
+
 def can(user, task, action) -> bool:
     """Single permission check used by services, views and templates."""
     if action == "view":
@@ -56,7 +65,9 @@ def can(user, task, action) -> bool:
             or task.events.filter(actor=user).exists()
         )
     if action in ("start", "submit"):
-        return task.status in OPEN_FOR_MAKER and is_maker(user, task)
+        # A past day's order is no longer the nurse's to fill in; an admin may still catch up a missed day.
+        return (task.status in OPEN_FOR_MAKER and is_maker(user, task)
+                and (user.role == Role.ADMIN or not day_is_over(task)))
     if action in ("approve", "reject"):
         return (
             task.status == TaskStatus.SUBMITTED
@@ -205,12 +216,16 @@ def cancel(task, user, comment):
 
 # ------------------------------------------------------------------ deadlines
 def notify_overdue(now=None):
-    """Notify once per overdue task: makers + all dieticians. Returns the tasks notified."""
+    """Notify once per overdue task: makers + all dieticians. Returns the tasks notified.
+
+    Only deadlines missed within the last 24 hours: a past day an admin opens to catch up must not
+    bring a wave of «Прострочено» (and after a long outage, old news helps nobody)."""
     from django.contrib.auth import get_user_model
 
     now = now or timezone.now()
     notified = []
-    for task in Task.objects.overdue(now).filter(overdue_notified_at__isnull=True).select_related("department"):
+    fresh = Task.objects.overdue(now).filter(overdue_notified_at__isnull=True, deadline__gte=now - timedelta(days=1))
+    for task in fresh.select_related("department"):
         with transaction.atomic():
             task = Task.objects.select_for_update().get(pk=task.pk)
             if task.overdue_notified_at or task.status in CLOSED:
@@ -225,6 +240,29 @@ def notify_overdue(now=None):
     return notified
 
 
+def expire_stale_tasks(today=None, dry_run=False):
+    """Close what is left open of past days' expires_with_day tasks (nightly, deploy/crontab).
+
+    Marked cancelled with a system note; no notifications and no on_cancelled hook — a finished day must
+    not start its menu planning now. Returns the tasks (to be) closed."""
+    today = today or timezone.localdate()
+    stale = list(Task.objects.open_for_maker().filter(type__in=_expiring_types(), service_date__lt=today)
+                 .select_related("department").order_by("service_date", "department__name"))
+    if dry_run:
+        return stale
+    for task in stale:
+        with transaction.atomic():
+            task = _locked(task)
+            if task.status not in OPEN_FOR_MAKER:
+                continue
+            prev = task.status
+            task.status = TaskStatus.CANCELLED
+            task.resolved_at = timezone.now()
+            task.save(update_fields=["status", "resolved_at"])
+            _event(task, TaskEvent.Kind.CANCELLED, None, prev, "Дата минула — закрито автоматично")
+    return stale
+
+
 # ------------------------------------------------------------------ inbox queries
 def todo_for(user):
     """Tasks the user can work on as maker."""
@@ -232,6 +270,7 @@ def todo_for(user):
     if user.role == Role.ADMIN:
         return qs
     qs = qs.filter(maker_role=user.role).filter(Q(maker__isnull=True) | Q(maker=user))
+    qs = qs.exclude(type__in=_expiring_types(), service_date__lt=timezone.localdate())  # see day_is_over
     if user.role == Role.DEPT_NURSE:
         qs = qs.filter(department_id=user.department_id)
     return qs
