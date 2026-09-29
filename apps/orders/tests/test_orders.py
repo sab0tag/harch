@@ -129,6 +129,16 @@ def test_summary_matrix_and_approve_all(client, world):
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()
 
 
+def test_summary_disables_review_of_own_submission(client, world):
+    fill_all(client, world)
+    Task.objects.filter(department=world.depts["Хірургічне"]).update(submitted_by=world.admin)
+    r = as_user(client, world.admin).get("/orders/summary/?date=2026-10-01")
+    own = {row["department"].name for row in r.context["rows"] if row["own"]}
+    assert own == {"Хірургічне"}
+    assert r.context["counts"]["approvable"] == 2
+    assert "Подано вами" in r.content.decode()
+
+
 def test_inline_reject_from_summary_returns_to_summary(client, world):
     fill_all(client, world)
     task = Task.objects.get(department=world.depts["Хірургічне"])

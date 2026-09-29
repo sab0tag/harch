@@ -156,7 +156,9 @@ class OrderSummaryView(RoleRequiredMixin, View):
                 TaskStatus.SUBMITTED: "submitted", TaskStatus.APPROVED: "approved", TaskStatus.CANCELLED: "cancelled",
             }.get(t.status, "open")
             r["state"] = key
+            r["own"] = key == "submitted" and t.submitted_by_id == request.user.pk  # maker ≠ checker
             counts[key] += 1
+        counts["approvable"] = counts["submitted"] - sum(r["own"] for r in rows)
         plan_task = Task.objects.filter(type=MENU_PLANNING, service_date=day).first()
         return render(request, "orders/summary.html", {
             "day": day,
