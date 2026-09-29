@@ -1,0 +1,238 @@
+{% load static %}<!doctype html>
+<html lang="uk"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Контур дня Харчоблоку</title>
+<link rel="stylesheet" href="{% static 'vendor/fonts/kontur-fonts.css' %}">
+<style>
+:root{
+  --bg:#f6f8f7;--surface:#ffffff;--lane:#eef2f0;--line:#cfd8d4;--ink:#18221f;--dim:#55625d;--faint:#7c8883;
+  --go:#0f7c6e;--go-soft:#e2f2ef;--back:#c0452d;--back-soft:#fbe9e4;--sys:#566579;--sys-soft:#e8ecf2;
+  --warn:#a8701a;--done:#1f7a3f;--done-soft:#e3f2e7;--admin:#6b5b95;--admin-soft:#eeeaf6;--decide:#fff7e3;
+  --display:'Unbounded','Onest',system-ui,sans-serif;--body:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#111715;--surface:#18201d;--lane:#1d2622;--line:#34423c;--ink:#e5ece9;--dim:#a2b0aa;--faint:#76847e;
+  --go:#3fc1aa;--go-soft:#173a33;--back:#f0806a;--back-soft:#3d2320;--sys:#9fb0c6;--sys-soft:#232c38;
+  --warn:#e2ae55;--done:#63c985;--done-soft:#1a3524;--admin:#b7a6e6;--admin-soft:#2a2440;--decide:#3a3220;}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#111715;--surface:#18201d;--lane:#1d2622;--line:#34423c;--ink:#e5ece9;--dim:#a2b0aa;--faint:#76847e;
+  --go:#3fc1aa;--go-soft:#173a33;--back:#f0806a;--back-soft:#3d2320;--sys:#9fb0c6;--sys-soft:#232c38;
+  --warn:#e2ae55;--done:#63c985;--done-soft:#1a3524;--admin:#b7a6e6;--admin-soft:#2a2440;--decide:#3a3220;}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+.page{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:36px 56px;display:grid;gap:40px}
+header{display:grid;gap:10px;max-width:760px}
+.eyebrow{margin:0;font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--go)}
+h1{margin:0;font:600 clamp(28px,4vw,40px)/1.15 var(--display);letter-spacing:-.01em;text-wrap:balance}
+.lead{margin:0;font-size:17px;color:var(--dim);max-width:66ch}
+h2{margin:0;font:600 20px/1.3 var(--body);text-wrap:balance}
+h3{margin:0;font:600 17px/1.3 var(--body)}
+section{display:grid;gap:14px}
+.sub{margin:0;color:var(--dim);max-width:70ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--dim)}
+.key{display:inline-flex;align-items:center;gap:8px}
+.key svg{width:34px;height:10px;overflow:visible}
+.key .k-fwd{stroke:var(--go)}.key .k-back{stroke:var(--back)}.key .k-sys{stroke:var(--sys)}
+.swatch{width:14px;height:14px;border-radius:4px;border:1.5px solid}
+.sw-check{background:var(--decide);border-color:var(--warn)}.sw-done{background:var(--done-soft);border-color:var(--done)}
+.sw-sys{background:var(--sys-soft);border-color:var(--sys)}.sw-admin{background:var(--admin-soft);border-color:var(--admin)}
+figure{margin:0;display:grid;gap:10px}
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.scroll svg{display:block;width:100%;height:auto}
+.wide svg{min-width:1040px}.mid svg{min-width:640px}.narrow svg{min-width:380px}
+figcaption{font-size:14px;color:var(--dim);max-width:80ch}
+.hint{font:12px var(--mono);color:var(--faint)}
+@media (min-width:1100px){.hint{display:none}}
+/* diagram marks */
+.b-step{fill:var(--surface);stroke:var(--ink);stroke-width:1.3}
+.b-entry{fill:var(--go-soft);stroke:var(--go);stroke-width:1.5}
+.b-check{fill:var(--decide);stroke:var(--warn);stroke-width:1.5}
+.b-sys{fill:var(--sys-soft);stroke:var(--sys);stroke-width:1.3}
+.b-done{fill:var(--done-soft);stroke:var(--done);stroke-width:1.5}
+.b-back{fill:var(--back-soft);stroke:var(--back);stroke-width:1.5}
+.b-admin{fill:var(--admin-soft);stroke:var(--admin);stroke-width:1.3}
+.b-state{fill:var(--surface);stroke:var(--ink);stroke-width:1.3}
+.b-decide{fill:var(--decide);stroke:var(--warn);stroke-width:1.5}
+.t-head{fill:var(--ink);font:600 13px var(--body)}
+.t-body{fill:var(--dim);font:400 12.5px var(--body)}
+.e-fwd{stroke:var(--go);stroke-width:1.8}.e-back{stroke:var(--back);stroke-width:1.8}
+.e-sys{stroke:var(--sys);stroke-width:1.6}.e-warn{stroke:var(--warn);stroke-width:1.6}
+.m-fwd{fill:var(--go)}.m-back{fill:var(--back)}.m-sys{fill:var(--sys)}.m-warn{fill:var(--warn)}
+.l-fwd{fill:var(--go);font:500 12px var(--body)}.l-back{fill:var(--back);font:500 12px var(--body)}
+.l-sys{fill:var(--sys);font:500 12px var(--body)}.l-warn{fill:var(--warn);font:500 12px var(--body)}
+.lane-a{fill:var(--surface)}.lane-b{fill:var(--lane)}
+.lane-name{fill:var(--ink);font:600 13.5px var(--body)}.lane-sub{fill:var(--faint);font:400 12px var(--body)}
+.lane-edge{stroke:var(--line);stroke-width:1}
+.col-time{fill:var(--ink);font:500 12.5px var(--mono)}.col-sub{fill:var(--faint);font:400 12px var(--body)}
+/* rules, roles, tables */
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:12px;margin:0;padding:0;list-style:none}
+.rules li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px}
+.rules b{display:block;font-weight:600;margin-bottom:2px}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,34rem),1fr));gap:18px}
+.role{display:grid;gap:10px;align-content:start}
+.role.full{grid-column:1/-1}
+.who{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.who .tag{font:12px var(--mono);color:var(--faint)}
+.role p{margin:0;color:var(--dim);font-size:15px;max-width:72ch}
+.admin-list{margin:0;padding-left:1.1em;color:var(--dim);font-size:15px;display:grid;gap:4px}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.clock{display:grid;gap:0;margin:0;padding:0;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.clock li{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:14px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:15px}
+.clock li:last-child{border-bottom:0}
+.clock time{font:500 13px var(--mono);color:var(--warn);padding-top:2px}
+.entry{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:15px}
+.entry span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.entry i{font-style:normal;color:var(--go)}
+code{font:13px var(--mono)}
+footer{font-size:13px;color:var(--faint)}
+@media (max-width:560px){.page{padding-inline:16px}.clock li{grid-template-columns:minmax(0,1fr);gap:2px}}
+.back{justify-self:start;font:500 14px var(--body);color:var(--go);text-decoration:none}
+.back:hover{text-decoration:underline}
+</style>
+</head><body>
+
+<main class="page">
+  <header>
+    <a class="back" href="{% url 'help' %}">← Інструкції</a>
+    <p class="eyebrow">Харчоблок · операційний контур</p>
+    <h1>Контур дня: від замовлення відділення до списання</h1>
+    <p class="lead">Харчування на один день проходить чотири передачі між людьми. На кожній один подає, інший перевіряє. «Затвердити» відкриває наступний етап, «Повернути» — лише з коментарем — відправляє документ назад тому, хто подав.</p>
+  </header>
+
+  <section aria-labelledby="h-entry">
+    <h2 id="h-entry">Як людина потрапляє до своєї роботи</h2>
+    <div class="entry"><span><code>{{ request.get_host }}/login</code></span><i>→</i><span>«Мої задачі»: Мені виконати · Мені перевірити · Історія</span><i>або</i><span>дзвіночок зі сповіщенням</span><i>→</i><span>одразу документ: замовлення, план, кухня чи списання</span></div>
+  </section>
+
+  <section aria-labelledby="h-day">
+    <h2 id="h-day">Весь день на одній схемі</h2>
+    <div class="legend" aria-label="Умовні позначення">
+      <span class="key"><svg aria-hidden="true"><line class="k-fwd" x1="0" y1="5" x2="34" y2="5" stroke-width="2"/></svg>подала / затвердила — вперед</span>
+      <span class="key"><svg aria-hidden="true"><line class="k-back" x1="0" y1="5" x2="34" y2="5" stroke-width="2"/></svg>повернула з коментарем</span>
+      <span class="key"><svg aria-hidden="true"><line class="k-sys" x1="0" y1="5" x2="34" y2="5" stroke-width="2"/></svg>система створює наступну задачу</span>
+      <span class="key"><i class="swatch sw-check"></i>перевірка</span>
+      <span class="key"><i class="swatch sw-sys"></i>автоматично</span>
+      <span class="key"><i class="swatch sw-done"></i>день закрито</span>
+      <span class="key"><i class="swatch sw-admin"></i>адміністратор</span>
+    </div>
+    <figure>
+      <div class="scroll wide"><svg viewBox="0 0 1240 706" role="img" aria-label="Контур дня: замовлення від 15 відділень, план меню, кухня і списання — хто подає, хто затверджує, куди повертається" xmlns="http://www.w3.org/2000/svg"><defs>
+<marker id="sw-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fwd" d="M0 0L10 5L0 10z"/></marker>
+<marker id="sw-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-back" d="M0 0L10 5L0 10z"/></marker>
+<marker id="sw-sys" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-sys" d="M0 0L10 5L0 10z"/></marker>
+<marker id="sw-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-warn" d="M0 0L10 5L0 10z"/></marker>
+</defs><rect class="lane-a" x="0" y="64" width="1240" height="104"/><text class="lane-name" x="14" y="114.0">Система</text><text class="lane-sub" x="14" y="131.0">планувальник</text><rect class="lane-b" x="0" y="168" width="1240" height="104"/><text class="lane-name" x="14" y="218.0">Старша медсестра</text><text class="lane-sub" x="14" y="235.0">×15 відділень</text><rect class="lane-a" x="0" y="272" width="1240" height="104"/><text class="lane-name" x="14" y="322.0">Дієтсестра</text><text class="lane-sub" x="14" y="339.0">перевіряє все</text><rect class="lane-b" x="0" y="376" width="1240" height="104"/><text class="lane-name" x="14" y="426.0">Шеф-кухар</text><text class="lane-sub" x="14" y="443.0">завідувач виробництва</text><rect class="lane-a" x="0" y="480" width="1240" height="104"/><text class="lane-name" x="14" y="530.0">Бухгалтер</text><rect class="lane-b" x="0" y="584" width="1240" height="104"/><text class="lane-name" x="14" y="634.0">Адміністратор</text><line class="lane-edge" x1="150" y1="64" x2="150" y2="688"/><text class="col-time" x="160" y="26">Д−1 · 00:05</text><text class="col-sub" x="160" y="44">задачі створено</text><text class="col-time" x="380" y="26">Д−1 · до 16:00</text><text class="col-sub" x="380" y="44">замовлення</text><text class="col-time" x="600" y="26">Д−1 · до 18:00</text><text class="col-sub" x="600" y="44">план меню</text><text class="col-time" x="840" y="26">День Д · до 20:00</text><text class="col-sub" x="840" y="44">кухня</text><text class="col-time" x="1050" y="26">Д+1 · до 12:00</text><text class="col-sub" x="1050" y="44">списання</text><rect class="b-sys" x="160" y="87.0" width="176" height="58" rx="8"/><text class="t-head" x="248.0" y="112.5" text-anchor="middle">Створює 15 задач</text><text class="t-body" x="248.0" y="128.5" text-anchor="middle">«Замовлення відділення»</text><rect class="b-sys" x="550" y="87.0" width="150" height="58" rx="8"/><text class="t-head" x="625.0" y="112.5" text-anchor="middle">Усі замовлення</text><text class="t-body" x="625.0" y="128.5" text-anchor="middle">закриті → «План меню»</text><rect class="b-sys" x="790" y="87.0" width="170" height="58" rx="8"/><text class="t-head" x="875.0" y="112.5" text-anchor="middle">Розхід заморожено</text><text class="t-body" x="875.0" y="128.5" text-anchor="middle">→ «Приготування»</text><rect class="b-sys" x="1020" y="87.0" width="120" height="58" rx="8"/><text class="t-body" x="1080.0" y="120.5" text-anchor="middle">→ «Списання»</text><rect class="b-done" x="1160" y="87.0" width="74" height="58" rx="8"/><text class="t-head" x="1197.0" y="112.5" text-anchor="middle">День</text><text class="t-body" x="1197.0" y="128.5" text-anchor="middle">закрито</text><rect class="b-step" x="160" y="191.0" width="176" height="58" rx="8"/><text class="t-head" x="248.0" y="216.5" text-anchor="middle">Внести порції</text><text class="t-body" x="248.0" y="232.5" text-anchor="middle">по дієтах → «Подати»</text><rect class="b-check" x="380" y="295.0" width="160" height="58" rx="8"/><text class="t-head" x="460.0" y="320.5" text-anchor="middle">Перевірити</text><text class="t-body" x="460.0" y="336.5" text-anchor="middle">замовлення</text><rect class="b-step" x="580" y="295.0" width="170" height="58" rx="8"/><text class="t-head" x="665.0" y="320.5" text-anchor="middle">Скласти план меню</text><text class="t-body" x="665.0" y="336.5" text-anchor="middle">→ «Подати шеф-кухарю»</text><rect class="b-check" x="840" y="295.0" width="150" height="58" rx="8"/><text class="t-head" x="915.0" y="320.5" text-anchor="middle">Перевірити</text><text class="t-body" x="915.0" y="336.5" text-anchor="middle">факт кухні</text><rect class="b-check" x="1050" y="295.0" width="140" height="58" rx="8"/><text class="t-head" x="1120.0" y="320.5" text-anchor="middle">Затвердити</text><text class="t-body" x="1120.0" y="336.5" text-anchor="middle">списання</text><rect class="b-check" x="600" y="399.0" width="150" height="58" rx="8"/><text class="t-head" x="675.0" y="424.5" text-anchor="middle">Перевірити</text><text class="t-body" x="675.0" y="440.5" text-anchor="middle">план меню</text><rect class="b-step" x="790" y="399.0" width="190" height="58" rx="8"/><text class="t-head" x="885.0" y="424.5" text-anchor="middle">Готувати · внести факт</text><text class="t-body" x="885.0" y="440.5" text-anchor="middle">→ «Подати дієтсестрі»</text><rect class="b-step" x="1030" y="503.0" width="180" height="58" rx="8"/><text class="t-head" x="1120.0" y="528.5" text-anchor="middle">Ціни · «Подати</text><text class="t-body" x="1120.0" y="544.5" text-anchor="middle">на звірку»</text><rect class="b-admin" x="160" y="607.0" width="176" height="58" rx="8"/><text class="t-head" x="248.0" y="632.5" text-anchor="middle">Скасувати замовлення</text><text class="t-body" x="248.0" y="648.5" text-anchor="middle">(лише з причиною)</text><rect class="b-admin" x="570" y="607.0" width="330" height="58" rx="8"/><text class="t-head" x="735.0" y="632.5" text-anchor="middle">Користувачі і ролі · журнал подій · ШІ-помічник</text><text class="t-body" x="735.0" y="648.5" text-anchor="middle">бачить усе, власну подачу не затверджує</text><path class="e-sys" d="M248 145.0 V191.0" fill="none" marker-end="url(#sw-sys)"/><text class="l-sys" x="254" y="165.0" text-anchor="start">нова задача</text><path class="e-fwd" d="M336 220.0 H450 V295.0" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="400" y="213.0" text-anchor="middle">подала</text><path class="e-fwd" d="M540 314.0 H565 V145.0" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="559" y="250.0" text-anchor="end">затвердила</text><path class="e-sys" d="M625 145.0 V295.0" fill="none" marker-end="url(#sw-sys)"/><path class="e-fwd" d="M675 353.0 V399.0" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="681" y="373.0" text-anchor="start">подала</text><path class="e-fwd" d="M750 416.0 H770 V94 H790" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="775" y="398.0" text-anchor="start">затвердив</text><path class="e-sys" d="M885 145.0 V399.0" fill="none" marker-end="url(#sw-sys)"/><path class="e-fwd" d="M915 399.0 V353.0" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="921" y="387.0" text-anchor="start">подав</text><path class="e-fwd" d="M990 314.0 H1005 V94 H1020" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="995" y="86" text-anchor="end">затвердила</text><path class="e-sys" d="M1080 145.0 V503.0" fill="none" marker-end="url(#sw-sys)"/><path class="e-fwd" d="M1140 503.0 V353.0" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="1146" y="491.0" text-anchor="start">подав</text><path class="e-fwd" d="M1190 314.0 H1197 V145.0" fill="none" marker-end="url(#sw-fwd)"/><text class="l-fwd" x="1191" y="181.0" text-anchor="end">затвердила</text><path class="e-back" d="M400 295.0 V234.0 H336" fill="none" marker-end="url(#sw-back)"/><text class="l-back" x="358" y="285.0" text-anchor="middle">повернула з коментарем</text><path class="e-back" d="M620 399.0 V353.0" fill="none" marker-end="url(#sw-back)"/><text class="l-back" x="614" y="387.0" text-anchor="end">повернув</text><path class="e-back" d="M850 353.0 V399.0" fill="none" marker-end="url(#sw-back)"/><text class="l-back" x="844" y="373.0" text-anchor="end">повернула</text><path class="e-back" d="M1060 353.0 V503.0" fill="none" marker-end="url(#sw-back)"/><text class="l-back" x="1054" y="373.0" text-anchor="end">повернула</text><path class="e-sys" d="M336 636.0 H555 V149.0" fill="none" stroke-dasharray="5 4" marker-end="url(#sw-sys)"/><text class="l-sys" x="354" y="628.0" text-anchor="start">скасоване = закрите</text></svg></div>
+      <figcaption>Рядки — ролі, стовпці — час. План меню з'являється лише тоді, коли всі 15 замовлень затверджені або скасовані. Затвердження плану заморожує розхід продуктів: пізніші правки карток його вже не змінять. <span class="hint">На вузькому екрані схему можна прокрутити вбік.</span></figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-life">
+    <h2 id="h-life">Як живе кожна задача</h2>
+    <p class="sub">Усі чотири задачі дня — замовлення, план меню, приготування, списання — проходять ті самі стани.</p>
+    <figure>
+      <div class="scroll mid"><svg viewBox="0 0 980 250" role="img" aria-label="Життєвий цикл будь-якої задачі: очікує, в роботі, на перевірці, затверджено або повернуто; скасувати може лише адміністратор до подачі" xmlns="http://www.w3.org/2000/svg"><defs>
+<marker id="lc-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fwd" d="M0 0L10 5L0 10z"/></marker>
+<marker id="lc-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-back" d="M0 0L10 5L0 10z"/></marker>
+<marker id="lc-sys" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-sys" d="M0 0L10 5L0 10z"/></marker>
+<marker id="lc-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-warn" d="M0 0L10 5L0 10z"/></marker>
+</defs><rect class="b-state" x="20" y="70" width="130" height="54" rx="8"/><text class="t-head" x="85.0" y="93.5" text-anchor="middle">Очікує</text><text class="t-body" x="85.0" y="109.5" text-anchor="middle">pending</text><rect class="b-state" x="210" y="70" width="150" height="54" rx="8"/><text class="t-head" x="285.0" y="93.5" text-anchor="middle">В роботі</text><text class="t-body" x="285.0" y="109.5" text-anchor="middle">документ редагується</text><rect class="b-check" x="430" y="70" width="150" height="54" rx="8"/><text class="t-head" x="505.0" y="93.5" text-anchor="middle">На перевірці</text><text class="t-body" x="505.0" y="109.5" text-anchor="middle">лише читання</text><rect class="b-done" x="660" y="22" width="150" height="54" rx="8"/><text class="t-head" x="735.0" y="45.5" text-anchor="middle">Затверджено</text><text class="t-body" x="735.0" y="61.5" text-anchor="middle">заблоковано назавжди</text><rect class="b-back" x="660" y="130" width="150" height="54" rx="8"/><text class="t-head" x="735.0" y="153.5" text-anchor="middle">Повернуто</text><text class="t-body" x="735.0" y="169.5" text-anchor="middle">коментар обов&#x27;язковий</text><rect class="b-sys" x="860" y="22" width="104" height="54" rx="8"/><text class="t-head" x="912.0" y="45.5" text-anchor="middle">Наступний</text><text class="t-body" x="912.0" y="61.5" text-anchor="middle">етап дня</text><path class="e-fwd" d="M150 97 H210" fill="none" marker-end="url(#lc-fwd)"/><text class="l-fwd" x="180" y="88" text-anchor="middle">відкрила</text><path class="e-fwd" d="M360 97 H430" fill="none" marker-end="url(#lc-fwd)"/><text class="l-fwd" x="395" y="88" text-anchor="middle">«Подати»</text><path class="e-fwd" d="M580 84 H620 V49 H660" fill="none" marker-end="url(#lc-fwd)"/><text class="l-fwd" x="622" y="40" text-anchor="end">перевіряючий: ✓</text><path class="e-back" d="M580 110 H620 V157 H660" fill="none" marker-end="url(#lc-back)"/><text class="l-back" x="614" y="176" text-anchor="end">✗ + коментар</text><path class="e-sys" d="M810 49 H860" fill="none" marker-end="url(#lc-sys)"/><path class="e-back" d="M735 184 V220 H285 V124" fill="none" marker-end="url(#lc-back)"/><text class="l-back" x="510" y="236" text-anchor="middle">виправити і «Подати повторно»</text><rect class="b-admin" x="20" y="198" width="130" height="48" rx="8"/><text class="t-head" x="85.0" y="218.5" text-anchor="middle">Скасовано</text><text class="t-body" x="85.0" y="234.5" text-anchor="middle">день може йти далі</text><path class="e-sys" d="M85 124 V198" fill="none" stroke-dasharray="5 4" marker-end="url(#lc-sys)"/><text class="l-sys" x="92" y="156" text-anchor="start">адмін скасовує</text><text class="l-sys" x="92" y="171" text-anchor="start">з причиною, до подачі</text></svg></div>
+      <figcaption>Повернута задача знову стає редагованою у того, хто її подав; після виправлення — «Подати повторно». Затверджена — заблокована назавжди: виправлення робиться новою задачею.</figcaption>
+    </figure>
+    <ul class="rules">
+      <li><b>Хто подав — той не затверджує</b>Навіть адміністратор не може затвердити власну подачу.</li>
+      <li><b>Повернути — лише з коментарем</b>Той, хто подав, бачить коментар червоним блоком над документом.</li>
+      <li><b>Після подачі — лише читання</b>Змінити можна, тільки якщо перевіряючий поверне документ.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="h-roles">
+    <h2 id="h-roles">Шлях кожної людини</h2>
+    <div class="roles">
+      <article class="role">
+        <div class="who"><h3>Старша медсестра відділення</h3><span class="tag">подає · до 16:00 напередодні</span></div>
+        <figure><div class="scroll narrow"><svg viewBox="0 0 490 480" role="img" aria-label="Старша медсестра: подає порції свого відділення, дієтсестра затверджує або повертає з коментарем" xmlns="http://www.w3.org/2000/svg"><defs>
+<marker id="nu-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fwd" d="M0 0L10 5L0 10z"/></marker>
+<marker id="nu-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-back" d="M0 0L10 5L0 10z"/></marker>
+<marker id="nu-sys" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-sys" d="M0 0L10 5L0 10z"/></marker>
+<marker id="nu-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-warn" d="M0 0L10 5L0 10z"/></marker>
+</defs><rect class="b-entry" x="24" y="20" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="41.5" text-anchor="middle">Вхід · «Мої задачі»</text><text class="t-body" x="134.0" y="57.5" text-anchor="middle">або дзвіночок</text><rect class="b-step" x="24" y="92" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="113.5" text-anchor="middle">«Внести порції»</text><text class="t-body" x="134.0" y="129.5" text-anchor="middle">замовлення на завтра</text><path class="e-fwd" d="M134.0 70 V92" fill="none" marker-end="url(#nu-fwd)"/><rect class="b-step" x="24" y="164" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="185.5" text-anchor="middle">Порції по дієтах</text><text class="t-body" x="134.0" y="201.5" text-anchor="middle">або «Пацієнтів немає»</text><path class="e-fwd" d="M134.0 142 V164" fill="none" marker-end="url(#nu-fwd)"/><rect class="b-step" x="24" y="236" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="257.5" text-anchor="middle">«Зберегти чернетку»</text><text class="t-body" x="134.0" y="273.5" text-anchor="middle">можна повернутись</text><path class="e-fwd" d="M134.0 214 V236" fill="none" marker-end="url(#nu-fwd)"/><path class="e-fwd" d="M134.0 286 V306" fill="none" marker-end="url(#nu-fwd)"/><text class="l-fwd" x="140.0" y="306" text-anchor="start">подано</text><polygon class="b-decide" points="134.0,306.0 229.0,336 134.0,366.0 39.0,336"/><text class="t-body" x="134.0" y="333.0" text-anchor="middle">Дієтсестра</text><text class="t-body" x="134.0" y="348.0" text-anchor="middle">перевіряє</text><rect class="b-done" x="24" y="406" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="427.5" text-anchor="middle">Затверджено</text><text class="t-body" x="134.0" y="443.5" text-anchor="middle">змінити вже не можна</text><path class="e-fwd" d="M134.0 366 V406" fill="none" marker-end="url(#nu-fwd)"/><text class="l-fwd" x="140.0" y="386" text-anchor="start">✓ затвердив(ла)</text><path class="e-back" d="M229.0 336 H364 V189.0 H244" fill="none" marker-end="url(#nu-back)"/><text class="l-back" x="370" y="328" text-anchor="start">✗ повернув(ла)</text><text class="l-back" x="370" y="346" text-anchor="start">з коментарем</text><text class="l-back" x="264" y="181.0" text-anchor="start">виправити →</text><text class="l-back" x="370" y="364" text-anchor="start">→ червоний блок</text></svg></div>
+          <figcaption>Бачить лише своє відділення. Жодних даних пацієнтів — тільки кількість порцій за дієтами.</figcaption></figure>
+      </article>
+      <article class="role">
+        <div class="who"><h3>Бухгалтер</h3><span class="tag">подає · до 12:00 наступного дня</span></div>
+        <figure><div class="scroll narrow"><svg viewBox="0 0 490 480" role="img" aria-label="Бухгалтер: вносить ціни і подає списання на звірку, дієтсестра затверджує або повертає" xmlns="http://www.w3.org/2000/svg"><defs>
+<marker id="ac-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fwd" d="M0 0L10 5L0 10z"/></marker>
+<marker id="ac-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-back" d="M0 0L10 5L0 10z"/></marker>
+<marker id="ac-sys" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-sys" d="M0 0L10 5L0 10z"/></marker>
+<marker id="ac-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-warn" d="M0 0L10 5L0 10z"/></marker>
+</defs><rect class="b-entry" x="24" y="20" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="41.5" text-anchor="middle">Вхід · «Мої задачі»</text><text class="t-body" x="134.0" y="57.5" text-anchor="middle">до 12:00 Д+1</text><rect class="b-step" x="24" y="92" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="113.5" text-anchor="middle">«Списати продукти»</text><text class="t-body" x="134.0" y="129.5" text-anchor="middle">кількості з факту кухні</text><path class="e-fwd" d="M134.0 70 V92" fill="none" marker-end="url(#ac-fwd)"/><rect class="b-step" x="24" y="164" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="185.5" text-anchor="middle">Ціни за кг</text><text class="t-body" x="134.0" y="201.5" text-anchor="middle">вручну або «Завантажити з Excel»</text><path class="e-fwd" d="M134.0 142 V164" fill="none" marker-end="url(#ac-fwd)"/><rect class="b-step" x="24" y="236" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="257.5" text-anchor="middle">«Подати на звірку»</text><text class="t-body" x="134.0" y="273.5" text-anchor="middle">ціни фіксуються</text><path class="e-fwd" d="M134.0 214 V236" fill="none" marker-end="url(#ac-fwd)"/><path class="e-fwd" d="M134.0 286 V306" fill="none" marker-end="url(#ac-fwd)"/><text class="l-fwd" x="140.0" y="306" text-anchor="start">подано</text><polygon class="b-decide" points="134.0,306.0 229.0,336 134.0,366.0 39.0,336"/><text class="t-body" x="134.0" y="333.0" text-anchor="middle">Дієтсестра</text><text class="t-body" x="134.0" y="348.0" text-anchor="middle">перевіряє</text><rect class="b-done" x="24" y="406" width="220" height="50" rx="8"/><text class="t-head" x="134.0" y="427.5" text-anchor="middle">Затверджено</text><text class="t-body" x="134.0" y="443.5" text-anchor="middle">день закрито</text><path class="e-fwd" d="M134.0 366 V406" fill="none" marker-end="url(#ac-fwd)"/><text class="l-fwd" x="140.0" y="386" text-anchor="start">✓ затвердив(ла)</text><path class="e-back" d="M229.0 336 H364 V189.0 H244" fill="none" marker-end="url(#ac-back)"/><text class="l-back" x="370" y="328" text-anchor="start">✗ повернув(ла)</text><text class="l-back" x="370" y="346" text-anchor="start">з коментарем</text><text class="l-back" x="264" y="181.0" text-anchor="start">виправити →</text></svg></div>
+          <figcaption>Кількості беруться з затвердженого факту кухні, змінювати їх бухгалтер не може. Ціни зберігаються в довіднику для наступних днів.</figcaption></figure>
+      </article>
+      <article class="role full">
+        <div class="who"><h3>Дієтсестра</h3><span class="tag">перевіряє три етапи, подає один</span></div>
+        <figure><div class="scroll wide"><svg viewBox="0 0 980 470" role="img" aria-label="Дієтсестра: перевіряє замовлення, складає план для шеф-кухаря, перевіряє факт кухні і списання — що відбувається після ✓ і ✗" xmlns="http://www.w3.org/2000/svg"><defs>
+<marker id="dt-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fwd" d="M0 0L10 5L0 10z"/></marker>
+<marker id="dt-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-back" d="M0 0L10 5L0 10z"/></marker>
+<marker id="dt-sys" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-sys" d="M0 0L10 5L0 10z"/></marker>
+<marker id="dt-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-warn" d="M0 0L10 5L0 10z"/></marker>
+</defs><text class="col-time" x="20" y="22">1 · Замовлення</text><text class="col-sub" x="20" y="40">до 16:00 Д−1</text><text class="col-time" x="262" y="22">2 · План меню</text><text class="col-sub" x="262" y="40">до 18:00 Д−1</text><text class="col-time" x="504" y="22">3 · Факт кухні</text><text class="col-sub" x="504" y="40">після 20:00 Д</text><text class="col-time" x="746" y="22">4 · Списання</text><text class="col-sub" x="746" y="40">до 12:00 Д+1</text><rect class="b-entry" x="20" y="60" width="214" height="50" rx="8"/><text class="t-head" x="127.0" y="81.5" text-anchor="middle">Зведення замовлень</text><text class="t-body" x="127.0" y="97.5" text-anchor="middle">15 відділень</text><polygon class="b-decide" points="127.0,145.0 222.0,175 127.0,205.0 32.0,175"/><text class="t-body" x="127.0" y="172.0" text-anchor="middle">Кожне замовлення</text><text class="t-body" x="127.0" y="187.0" text-anchor="middle">перевірити</text><path class="e-fwd" d="M127.0 110 V145" fill="none" marker-end="url(#dt-fwd)"/><rect class="b-done" x="20" y="250" width="214" height="50" rx="8"/><text class="t-head" x="127.0" y="271.5" text-anchor="middle">Затверджено</text><text class="t-body" x="127.0" y="287.5" text-anchor="middle">(можна всі разом)</text><path class="e-fwd" d="M127.0 205 V250" fill="none" marker-end="url(#dt-fwd)"/><text class="l-fwd" x="135.0" y="232" text-anchor="start">✓</text><rect class="b-back" x="20" y="380" width="214" height="50" rx="8"/><text class="t-head" x="127.0" y="401.5" text-anchor="middle">Медсестрі: червоний блок</text><text class="t-body" x="127.0" y="417.5" text-anchor="middle">→ «Подати повторно»</text><path class="e-back" d="M32 175 H14 V405 H20" fill="none" marker-end="url(#dt-back)"/><text class="l-back" x="24" y="350" text-anchor="start">✗ + коментар</text><rect class="b-sys" x="20" y="315" width="214" height="44" rx="8"/><text class="t-body" x="127.0" y="341.5" text-anchor="middle">усі закриті → план меню</text><path class="e-sys" d="M127.0 300 V315" fill="none" marker-end="url(#dt-sys)"/><rect class="b-entry" x="262" y="60" width="214" height="50" rx="8"/><text class="t-head" x="369.0" y="81.5" text-anchor="middle">Меню для кожної дієти</text><text class="t-body" x="369.0" y="97.5" text-anchor="middle">лише меню цієї дієти</text><rect class="b-step" x="262" y="130" width="214" height="50" rx="8"/><text class="t-head" x="369.0" y="151.5" text-anchor="middle">Звірити ккал і БЖУ</text><text class="t-body" x="369.0" y="167.5" text-anchor="middle">з нормою → «Зберегти»</text><path class="e-fwd" d="M369.0 110 V130" fill="none" marker-end="url(#dt-fwd)"/><polygon class="b-decide" points="369.0,215.0 464.0,245 369.0,275.0 274.0,245"/><text class="t-body" x="369.0" y="242.0" text-anchor="middle">Шеф-кухар</text><text class="t-body" x="369.0" y="257.0" text-anchor="middle">перевіряє</text><path class="e-fwd" d="M369.0 180 V215" fill="none" marker-end="url(#dt-fwd)"/><text class="l-fwd" x="363.0" y="200" text-anchor="end">«Подати шеф-кухарю»</text><rect class="b-done" x="262" y="320" width="214" height="50" rx="8"/><text class="t-head" x="369.0" y="341.5" text-anchor="middle">Розхід заморожено</text><text class="t-body" x="369.0" y="357.5" text-anchor="middle">меню-розкладка PDF</text><path class="e-fwd" d="M369.0 275 V320" fill="none" marker-end="url(#dt-fwd)"/><text class="l-fwd" x="377.0" y="302" text-anchor="start">✓</text><path class="e-back" d="M464.0 245 H486 V155 H476" fill="none" marker-end="url(#dt-back)"/><text class="l-back" x="480" y="290" text-anchor="end">✗ виправити</text><rect class="b-entry" x="504" y="60" width="214" height="50" rx="8"/><text class="t-head" x="611.0" y="81.5" text-anchor="middle">Задача «Приготування»</text><text class="t-body" x="611.0" y="97.5" text-anchor="middle">у «Мені перевірити»</text><polygon class="b-decide" points="611.0,145.0 706.0,175 611.0,205.0 516.0,175"/><text class="t-body" x="611.0" y="172.0" text-anchor="middle">Факт vs план,</text><text class="t-body" x="611.0" y="187.0" text-anchor="middle">причини відхилень</text><path class="e-fwd" d="M611.0 110 V145" fill="none" marker-end="url(#dt-fwd)"/><rect class="b-done" x="504" y="250" width="214" height="50" rx="8"/><text class="t-head" x="611.0" y="271.5" text-anchor="middle">«Затвердити факт»</text><text class="t-body" x="611.0" y="287.5" text-anchor="middle">→ задача «Списання»</text><path class="e-fwd" d="M611.0 205 V250" fill="none" marker-end="url(#dt-fwd)"/><text class="l-fwd" x="619.0" y="232" text-anchor="start">✓</text><rect class="b-back" x="504" y="330" width="214" height="50" rx="8"/><text class="t-head" x="611.0" y="351.5" text-anchor="middle">Шеф-кухарю: виправити</text><text class="t-body" x="611.0" y="367.5" text-anchor="middle">факт → подати повторно</text><path class="e-back" d="M516 175 H498 V355 H504" fill="none" marker-end="url(#dt-back)"/><text class="l-back" x="508" y="318" text-anchor="start">✗ + коментар</text><rect class="b-entry" x="746" y="60" width="214" height="50" rx="8"/><text class="t-head" x="853.0" y="81.5" text-anchor="middle">Списання від бухгалтера</text><text class="t-body" x="853.0" y="97.5" text-anchor="middle">у «Мені перевірити»</text><polygon class="b-decide" points="853.0,145.0 948.0,175 853.0,205.0 758.0,175"/><text class="t-body" x="853.0" y="172.0" text-anchor="middle">Кількості і ціни</text><text class="t-body" x="853.0" y="187.0" text-anchor="middle">перевірити</text><path class="e-fwd" d="M853.0 110 V145" fill="none" marker-end="url(#dt-fwd)"/><rect class="b-done" x="746" y="250" width="214" height="50" rx="8"/><text class="t-head" x="853.0" y="271.5" text-anchor="middle">«Затвердити списання»</text><text class="t-body" x="853.0" y="287.5" text-anchor="middle">день закрито</text><path class="e-fwd" d="M853.0 205 V250" fill="none" marker-end="url(#dt-fwd)"/><text class="l-fwd" x="861.0" y="232" text-anchor="start">✓</text><rect class="b-back" x="746" y="330" width="214" height="50" rx="8"/><text class="t-head" x="853.0" y="351.5" text-anchor="middle">Бухгалтеру: виправити</text><text class="t-body" x="853.0" y="367.5" text-anchor="middle">→ «Подати повторно»</text><path class="e-back" d="M758 175 H740 V355 H746" fill="none" marker-end="url(#dt-back)"/><text class="l-back" x="750" y="318" text-anchor="start">✗ + коментар</text></svg></div>
+          <figcaption>Центральна роль контуру: вона перевіряє замовлення, факт кухні і списання, а план меню складає сама — його перевіряє шеф-кухар. Власну подачу вона не затверджує.</figcaption></figure>
+      </article>
+      <article class="role full">
+        <div class="who"><h3>Шеф-кухар</h3><span class="tag">перевіряє план · подає факт</span></div>
+        <figure><div class="scroll mid"><svg viewBox="0 0 980 450" role="img" aria-label="Шеф-кухар: перевіряє план меню від дієтсестри, потім готує і подає фактичний розхід" xmlns="http://www.w3.org/2000/svg"><defs>
+<marker id="cf-fwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fwd" d="M0 0L10 5L0 10z"/></marker>
+<marker id="cf-back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-back" d="M0 0L10 5L0 10z"/></marker>
+<marker id="cf-sys" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-sys" d="M0 0L10 5L0 10z"/></marker>
+<marker id="cf-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-warn" d="M0 0L10 5L0 10z"/></marker>
+</defs><text class="col-time" x="20" y="22">1 · Перевірити план</text><text class="col-sub" x="20" y="40">до 18:00 Д−1</text><text class="col-time" x="520" y="22">2 · Кухня і факт</text><text class="col-sub" x="520" y="40">до 20:00 Д</text><rect class="b-entry" x="20" y="60" width="250" height="50" rx="8"/><text class="t-head" x="145.0" y="81.5" text-anchor="middle">План від дієтсестри</text><text class="t-body" x="145.0" y="97.5" text-anchor="middle">у «Мені перевірити»</text><polygon class="b-decide" points="145.0,145.0 245.0,175 145.0,205.0 45.0,175"/><text class="t-body" x="145.0" y="172.0" text-anchor="middle">Склад меню</text><text class="t-body" x="145.0" y="187.0" text-anchor="middle">і розхід</text><path class="e-fwd" d="M145.0 110 V145" fill="none" marker-end="url(#cf-fwd)"/><rect class="b-done" x="20" y="250" width="250" height="50" rx="8"/><text class="t-head" x="145.0" y="271.5" text-anchor="middle">«Затвердити план»</text><text class="t-body" x="145.0" y="287.5" text-anchor="middle">розхід заморожено</text><path class="e-fwd" d="M145.0 205 V250" fill="none" marker-end="url(#cf-fwd)"/><text class="l-fwd" x="153.0" y="232" text-anchor="start">✓</text><rect class="b-back" x="20" y="330" width="250" height="50" rx="8"/><text class="t-head" x="145.0" y="351.5" text-anchor="middle">«Повернути дієтсестрі»</text><text class="t-body" x="145.0" y="367.5" text-anchor="middle">з коментарем</text><path class="e-back" d="M45 175 H14 V355 H20" fill="none" marker-end="url(#cf-back)"/><text class="l-back" x="24" y="318" text-anchor="start">✗</text><path class="e-fwd" d="M270 275 H490 V85 H520" fill="none" marker-end="url(#cf-fwd)"/><text class="l-fwd" x="278" y="268" text-anchor="start">друк меню-розкладки</text><rect class="b-entry" x="520" y="60" width="250" height="50" rx="8"/><text class="t-head" x="645.0" y="81.5" text-anchor="middle">«Сьогодні на кухні»</text><text class="t-body" x="645.0" y="97.5" text-anchor="middle">страви × порції</text><rect class="b-step" x="520" y="130" width="250" height="50" rx="8"/><text class="t-head" x="645.0" y="151.5" text-anchor="middle">Факт у кг = план</text><text class="t-body" x="645.0" y="167.5" text-anchor="middle">змінити лише відмінності</text><path class="e-fwd" d="M645.0 110 V130" fill="none" marker-end="url(#cf-fwd)"/><rect class="b-step" x="520" y="200" width="250" height="50" rx="8"/><text class="t-head" x="645.0" y="221.5" text-anchor="middle">Заміна продукту · причина</text><text class="t-body" x="645.0" y="237.5" text-anchor="middle">якщо відхилення &gt; 10%</text><path class="e-fwd" d="M645.0 180 V200" fill="none" marker-end="url(#cf-fwd)"/><polygon class="b-decide" points="645.0,280.0 745.0,310 645.0,340.0 545.0,310"/><text class="t-body" x="645.0" y="307.0" text-anchor="middle">Дієтсестра</text><text class="t-body" x="645.0" y="322.0" text-anchor="middle">перевіряє</text><path class="e-fwd" d="M645.0 250 V280" fill="none" marker-end="url(#cf-fwd)"/><text class="l-fwd" x="651.0" y="268" text-anchor="start">«Подати дієтсестрі»</text><rect class="b-done" x="520" y="380" width="250" height="50" rx="8"/><text class="t-head" x="645.0" y="401.5" text-anchor="middle">Факт затверджено</text><text class="t-body" x="645.0" y="417.5" text-anchor="middle">→ бухгалтеру «Списання»</text><path class="e-fwd" d="M645.0 340 V380" fill="none" marker-end="url(#cf-fwd)"/><text class="l-fwd" x="653.0" y="364" text-anchor="start">✓</text><path class="e-back" d="M745.0 310 H800 V155 H770" fill="none" marker-end="url(#cf-back)"/><text class="l-back" x="806" y="240" text-anchor="start">✗ виправити</text></svg></div>
+          <figcaption>Затверджуючи план, шеф-кухар фіксує розхід на день і друкує меню-розкладку на підпис. Відхилення факту понад 10% без причини подати не вийде.</figcaption></figure>
+      </article>
+      <article class="role full">
+        <div class="who"><h3>Адміністратор</h3><span class="tag">не має щоденного документа</span></div>
+        <ul class="admin-list">
+          <li>Заводить користувачів і призначає ролі; старшій медсестрі — відділення. Звільненого вимикає, а не видаляє: історія лишається.</li>
+          <li>Скасовує задачу, поки вона у виконавця, і лише з причиною. Скасоване замовлення вважається закритим, тож день іде далі.</li>
+          <li>Бачить «Журнал подій» усіх переходів, «ШІ-помічник» і стан сервера. Затвердити власну подачу не може.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-notify">
+    <h2 id="h-notify">Хто отримує сповіщення</h2>
+    <p class="sub">Сповіщення з'являється на дзвіночку і відкриває одразу документ, над яким треба працювати.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Подія</th><th>Кому</th></tr></thead>
+      <tbody>
+        <tr><td>Нова задача</td><td>Виконавцям ролі; для замовлення — медсестрам цього відділення</td></tr>
+        <tr><td>Подано / подано повторно</td><td>Перевіряючим: дієтсестрі або шеф-кухарю</td></tr>
+        <tr><td>Затверджено</td><td>Тому, хто подав</td></tr>
+        <tr><td>Повернуто з коментарем</td><td>Тому, хто подав — з текстом коментаря</td></tr>
+        <tr><td>Скасовано</td><td>Виконавцям задачі</td></tr>
+        <tr><td>Прострочено</td><td>Виконавцю і всім дієтсестрам, один раз на задачу</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h-auto">
+    <h2 id="h-auto">Що система робить сама</h2>
+    <ul class="clock">
+      <li><time>00:05</time><span>Створює задачі «Замовлення відділення» на завтра для всіх активних відділень. О 07:05 — повторна спроба, якщо вночі сервер не працював.</span></li>
+      <li><time>кожні 15 хв</time><span>Перевіряє дедлайни і надсилає «Прострочено».</span></li>
+      <li><time>02:30</time><span>Резервна копія бази з перевіркою; копії зберігаються 14 днів.</span></li>
+      <li><time>02:40</time><span>Нічна перевірка довідника: нестиковки ккал і БЖУ, меню поза нормою, дублі продуктів — зауваження для дієтсестри.</span></li>
+      <li><time>після кожного ✓</time><span>Відкриває наступний етап: план меню, приготування, списання. Після затвердження списання день закрито.</span></li>
+    </ul>
+  </section>
+
+  <footer>{{ hospital }} · схема відповідає роботі системи на 29.09.2026. Строки подачі — налаштування за замовчуванням.</footer>
+</main>
+
+</body></html>

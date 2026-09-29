@@ -7,6 +7,7 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("s/<slug:slug>/", views.section, name="section"),
     path("help/", views.help_page, name="help"),
+    path("help/kontur/", views.help_kontur, name="help_kontur"),
     path("help/<str:role>/", views.help_page, name="help_role"),
     path("help/<str:role>.pdf", views.help_pdf, name="help_pdf"),
     path("healthz/", views.healthz, name="healthz"),

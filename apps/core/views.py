@@ -64,6 +64,12 @@ def help_page(request, role=None):
 
 
 @login_required
+def help_kontur(request):
+    """The whole day on diagrams: who submits, who approves or returns. Built by docs/kontur/build.py."""
+    return render(request, "help/kontur.html", {"hospital": settings.HOSPITAL_NAME})
+
+
+@login_required
 def help_pdf(request, role):
     from weasyprint import HTML
 

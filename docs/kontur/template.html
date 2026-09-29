@@ -1,0 +1,200 @@
+<title>Контур дня Харчоблоку</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f6f8f7;--surface:#ffffff;--lane:#eef2f0;--line:#cfd8d4;--ink:#18221f;--dim:#55625d;--faint:#7c8883;
+  --go:#0f7c6e;--go-soft:#e2f2ef;--back:#c0452d;--back-soft:#fbe9e4;--sys:#566579;--sys-soft:#e8ecf2;
+  --warn:#a8701a;--done:#1f7a3f;--done-soft:#e3f2e7;--admin:#6b5b95;--admin-soft:#eeeaf6;--decide:#fff7e3;
+  --display:'Unbounded','Onest',system-ui,sans-serif;--body:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+  --bg:#111715;--surface:#18201d;--lane:#1d2622;--line:#34423c;--ink:#e5ece9;--dim:#a2b0aa;--faint:#76847e;
+  --go:#3fc1aa;--go-soft:#173a33;--back:#f0806a;--back-soft:#3d2320;--sys:#9fb0c6;--sys-soft:#232c38;
+  --warn:#e2ae55;--done:#63c985;--done-soft:#1a3524;--admin:#b7a6e6;--admin-soft:#2a2440;--decide:#3a3220;}}
+:root[data-theme="dark"]{color-scheme:dark;
+  --bg:#111715;--surface:#18201d;--lane:#1d2622;--line:#34423c;--ink:#e5ece9;--dim:#a2b0aa;--faint:#76847e;
+  --go:#3fc1aa;--go-soft:#173a33;--back:#f0806a;--back-soft:#3d2320;--sys:#9fb0c6;--sys-soft:#232c38;
+  --warn:#e2ae55;--done:#63c985;--done-soft:#1a3524;--admin:#b7a6e6;--admin-soft:#2a2440;--decide:#3a3220;}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+.page{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:36px 56px;display:grid;gap:40px}
+header{display:grid;gap:10px;max-width:760px}
+.eyebrow{margin:0;font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--go)}
+h1{margin:0;font:600 clamp(28px,4vw,40px)/1.15 var(--display);letter-spacing:-.01em;text-wrap:balance}
+.lead{margin:0;font-size:17px;color:var(--dim);max-width:66ch}
+h2{margin:0;font:600 20px/1.3 var(--body);text-wrap:balance}
+h3{margin:0;font:600 17px/1.3 var(--body)}
+section{display:grid;gap:14px}
+.sub{margin:0;color:var(--dim);max-width:70ch}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--dim)}
+.key{display:inline-flex;align-items:center;gap:8px}
+.key svg{width:34px;height:10px;overflow:visible}
+.key .k-fwd{stroke:var(--go)}.key .k-back{stroke:var(--back)}.key .k-sys{stroke:var(--sys)}
+.swatch{width:14px;height:14px;border-radius:4px;border:1.5px solid}
+.sw-check{background:var(--decide);border-color:var(--warn)}.sw-done{background:var(--done-soft);border-color:var(--done)}
+.sw-sys{background:var(--sys-soft);border-color:var(--sys)}.sw-admin{background:var(--admin-soft);border-color:var(--admin)}
+figure{margin:0;display:grid;gap:10px}
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.scroll svg{display:block;width:100%;height:auto}
+.wide svg{min-width:1040px}.mid svg{min-width:640px}.narrow svg{min-width:380px}
+figcaption{font-size:14px;color:var(--dim);max-width:80ch}
+.hint{font:12px var(--mono);color:var(--faint)}
+@media (min-width:1100px){.hint{display:none}}
+/* diagram marks */
+.b-step{fill:var(--surface);stroke:var(--ink);stroke-width:1.3}
+.b-entry{fill:var(--go-soft);stroke:var(--go);stroke-width:1.5}
+.b-check{fill:var(--decide);stroke:var(--warn);stroke-width:1.5}
+.b-sys{fill:var(--sys-soft);stroke:var(--sys);stroke-width:1.3}
+.b-done{fill:var(--done-soft);stroke:var(--done);stroke-width:1.5}
+.b-back{fill:var(--back-soft);stroke:var(--back);stroke-width:1.5}
+.b-admin{fill:var(--admin-soft);stroke:var(--admin);stroke-width:1.3}
+.b-state{fill:var(--surface);stroke:var(--ink);stroke-width:1.3}
+.b-decide{fill:var(--decide);stroke:var(--warn);stroke-width:1.5}
+.t-head{fill:var(--ink);font:600 13px var(--body)}
+.t-body{fill:var(--dim);font:400 12.5px var(--body)}
+.e-fwd{stroke:var(--go);stroke-width:1.8}.e-back{stroke:var(--back);stroke-width:1.8}
+.e-sys{stroke:var(--sys);stroke-width:1.6}.e-warn{stroke:var(--warn);stroke-width:1.6}
+.m-fwd{fill:var(--go)}.m-back{fill:var(--back)}.m-sys{fill:var(--sys)}.m-warn{fill:var(--warn)}
+.l-fwd{fill:var(--go);font:500 12px var(--body)}.l-back{fill:var(--back);font:500 12px var(--body)}
+.l-sys{fill:var(--sys);font:500 12px var(--body)}.l-warn{fill:var(--warn);font:500 12px var(--body)}
+.lane-a{fill:var(--surface)}.lane-b{fill:var(--lane)}
+.lane-name{fill:var(--ink);font:600 13.5px var(--body)}.lane-sub{fill:var(--faint);font:400 12px var(--body)}
+.lane-edge{stroke:var(--line);stroke-width:1}
+.col-time{fill:var(--ink);font:500 12.5px var(--mono)}.col-sub{fill:var(--faint);font:400 12px var(--body)}
+/* rules, roles, tables */
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:12px;margin:0;padding:0;list-style:none}
+.rules li{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px}
+.rules b{display:block;font-weight:600;margin-bottom:2px}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,34rem),1fr));gap:18px}
+.role{display:grid;gap:10px;align-content:start}
+.role.full{grid-column:1/-1}
+.who{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.who .tag{font:12px var(--mono);color:var(--faint)}
+.role p{margin:0;color:var(--dim);font-size:15px;max-width:72ch}
+.admin-list{margin:0;padding-left:1.1em;color:var(--dim);font-size:15px;display:grid;gap:4px}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.clock{display:grid;gap:0;margin:0;padding:0;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.clock li{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:14px;padding:11px 14px;border-bottom:1px solid var(--line);font-size:15px}
+.clock li:last-child{border-bottom:0}
+.clock time{font:500 13px var(--mono);color:var(--warn);padding-top:2px}
+.entry{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:15px}
+.entry span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.entry i{font-style:normal;color:var(--go)}
+code{font:13px var(--mono)}
+footer{font-size:13px;color:var(--faint)}
+@media (max-width:560px){.page{padding-inline:16px}.clock li{grid-template-columns:minmax(0,1fr);gap:2px}}
+</style>
+
+<main class="page">
+  <header>
+    <p class="eyebrow">Харчоблок · операційний контур</p>
+    <h1>Контур дня: від замовлення відділення до списання</h1>
+    <p class="lead">Харчування на один день проходить чотири передачі між людьми. На кожній один подає, інший перевіряє. «Затвердити» відкриває наступний етап, «Повернути» — лише з коментарем — відправляє документ назад тому, хто подав.</p>
+  </header>
+
+  <section aria-labelledby="h-entry">
+    <h2 id="h-entry">Як людина потрапляє до своєї роботи</h2>
+    <div class="entry"><span><code>beyondthesignal.to/login</code></span><i>→</i><span>«Мої задачі»: Мені виконати · Мені перевірити · Історія</span><i>або</i><span>дзвіночок зі сповіщенням</span><i>→</i><span>одразу документ: замовлення, план, кухня чи списання</span></div>
+  </section>
+
+  <section aria-labelledby="h-day">
+    <h2 id="h-day">Весь день на одній схемі</h2>
+    <div class="legend" aria-label="Умовні позначення">
+      <span class="key"><svg aria-hidden="true"><line class="k-fwd" x1="0" y1="5" x2="34" y2="5" stroke-width="2"/></svg>подала / затвердила — вперед</span>
+      <span class="key"><svg aria-hidden="true"><line class="k-back" x1="0" y1="5" x2="34" y2="5" stroke-width="2"/></svg>повернула з коментарем</span>
+      <span class="key"><svg aria-hidden="true"><line class="k-sys" x1="0" y1="5" x2="34" y2="5" stroke-width="2"/></svg>система створює наступну задачу</span>
+      <span class="key"><i class="swatch sw-check"></i>перевірка</span>
+      <span class="key"><i class="swatch sw-sys"></i>автоматично</span>
+      <span class="key"><i class="swatch sw-done"></i>день закрито</span>
+      <span class="key"><i class="swatch sw-admin"></i>адміністратор</span>
+    </div>
+    <figure>
+      <div class="scroll wide">%%SWIM%%</div>
+      <figcaption>Рядки — ролі, стовпці — час. План меню з'являється лише тоді, коли всі 15 замовлень затверджені або скасовані. Затвердження плану заморожує розхід продуктів: пізніші правки карток його вже не змінять. <span class="hint">На вузькому екрані схему можна прокрутити вбік.</span></figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="h-life">
+    <h2 id="h-life">Як живе кожна задача</h2>
+    <p class="sub">Усі чотири задачі дня — замовлення, план меню, приготування, списання — проходять ті самі стани.</p>
+    <figure>
+      <div class="scroll mid">%%LIFE%%</div>
+      <figcaption>Повернута задача знову стає редагованою у того, хто її подав; після виправлення — «Подати повторно». Затверджена — заблокована назавжди: виправлення робиться новою задачею.</figcaption>
+    </figure>
+    <ul class="rules">
+      <li><b>Хто подав — той не затверджує</b>Навіть адміністратор не може затвердити власну подачу.</li>
+      <li><b>Повернути — лише з коментарем</b>Той, хто подав, бачить коментар червоним блоком над документом.</li>
+      <li><b>Після подачі — лише читання</b>Змінити можна, тільки якщо перевіряючий поверне документ.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="h-roles">
+    <h2 id="h-roles">Шлях кожної людини</h2>
+    <div class="roles">
+      <article class="role">
+        <div class="who"><h3>Старша медсестра відділення</h3><span class="tag">подає · до 16:00 напередодні</span></div>
+        <figure><div class="scroll narrow">%%NURSE%%</div>
+          <figcaption>Бачить лише своє відділення. Жодних даних пацієнтів — тільки кількість порцій за дієтами.</figcaption></figure>
+      </article>
+      <article class="role">
+        <div class="who"><h3>Бухгалтер</h3><span class="tag">подає · до 12:00 наступного дня</span></div>
+        <figure><div class="scroll narrow">%%ACC%%</div>
+          <figcaption>Кількості беруться з затвердженого факту кухні, змінювати їх бухгалтер не може. Ціни зберігаються в довіднику для наступних днів.</figcaption></figure>
+      </article>
+      <article class="role full">
+        <div class="who"><h3>Дієтсестра</h3><span class="tag">перевіряє три етапи, подає один</span></div>
+        <figure><div class="scroll wide">%%DIET%%</div>
+          <figcaption>Центральна роль контуру: вона перевіряє замовлення, факт кухні і списання, а план меню складає сама — його перевіряє шеф-кухар. Власну подачу вона не затверджує.</figcaption></figure>
+      </article>
+      <article class="role full">
+        <div class="who"><h3>Шеф-кухар</h3><span class="tag">перевіряє план · подає факт</span></div>
+        <figure><div class="scroll mid">%%CHEF%%</div>
+          <figcaption>Затверджуючи план, шеф-кухар фіксує розхід на день і друкує меню-розкладку на підпис. Відхилення факту понад 10% без причини подати не вийде.</figcaption></figure>
+      </article>
+      <article class="role full">
+        <div class="who"><h3>Адміністратор</h3><span class="tag">не має щоденного документа</span></div>
+        <ul class="admin-list">
+          <li>Заводить користувачів і призначає ролі; старшій медсестрі — відділення. Звільненого вимикає, а не видаляє: історія лишається.</li>
+          <li>Скасовує задачу, поки вона у виконавця, і лише з причиною. Скасоване замовлення вважається закритим, тож день іде далі.</li>
+          <li>Бачить «Журнал подій» усіх переходів, «ШІ-помічник» і стан сервера. Затвердити власну подачу не може.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-notify">
+    <h2 id="h-notify">Хто отримує сповіщення</h2>
+    <p class="sub">Сповіщення з'являється на дзвіночку і відкриває одразу документ, над яким треба працювати.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Подія</th><th>Кому</th></tr></thead>
+      <tbody>
+        <tr><td>Нова задача</td><td>Виконавцям ролі; для замовлення — медсестрам цього відділення</td></tr>
+        <tr><td>Подано / подано повторно</td><td>Перевіряючим: дієтсестрі або шеф-кухарю</td></tr>
+        <tr><td>Затверджено</td><td>Тому, хто подав</td></tr>
+        <tr><td>Повернуто з коментарем</td><td>Тому, хто подав — з текстом коментаря</td></tr>
+        <tr><td>Скасовано</td><td>Виконавцям задачі</td></tr>
+        <tr><td>Прострочено</td><td>Виконавцю і всім дієтсестрам, один раз на задачу</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="h-auto">
+    <h2 id="h-auto">Що система робить сама</h2>
+    <ul class="clock">
+      <li><time>00:05</time><span>Створює задачі «Замовлення відділення» на завтра для всіх активних відділень. О 07:05 — повторна спроба, якщо вночі сервер не працював.</span></li>
+      <li><time>кожні 15 хв</time><span>Перевіряє дедлайни і надсилає «Прострочено».</span></li>
+      <li><time>02:30</time><span>Резервна копія бази з перевіркою; копії зберігаються 14 днів.</span></li>
+      <li><time>02:40</time><span>Нічна перевірка довідника: нестиковки ккал і БЖУ, меню поза нормою, дублі продуктів — зауваження для дієтсестри.</span></li>
+      <li><time>після кожного ✓</time><span>Відкриває наступний етап: план меню, приготування, списання. Після затвердження списання день закрито.</span></li>
+    </ul>
+  </section>
+
+  <footer>Схеми відповідають коду системи на 29.09.2026: реєстр задач <code>apps/workflow/definitions.py</code>, переходи <code>apps/workflow/services.py</code>, розклад <code>deploy/crontab</code>.</footer>
+</main>
