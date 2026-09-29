@@ -59,6 +59,8 @@ services:
       TZ: Europe/Kyiv
     volumes:
       - ./backups:/backups
+      # S6-01: SSH key + pinned host key for the Storage Box (not in git; docs/06_deploy.md «Бэкапы»).
+      - ./secrets/storagebox:/keys:ro
     depends_on:
       db:
         condition: service_healthy

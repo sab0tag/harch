@@ -8,3 +8,4 @@ media/
 .coverage
 *.sqlite3
 backups/
+secrets/

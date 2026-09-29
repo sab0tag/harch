@@ -106,6 +106,25 @@ ls -lh backups/ && cat backups/.last_success
 docker compose -f compose.prod.yml exec backup rclone ls offsite:harch-backups   # что лежит снаружи
 ```
 
+### Копия вне сервера: Hetzner Storage Box по SSH-ключу (S6-01)
+
+Бокс — в другом дата-центре, чем сервер (сервер hel1 → бокс fsn1). В консоли бокса: **SSH support** и
+**External reachability** включены. Пароль бокса не нужен нигде: сервер ходит по своему ключу.
+
+```bash
+cd /opt/harch && mkdir -p secrets/storagebox && chmod 700 secrets secrets/storagebox
+ssh-keygen -t ed25519 -N '' -C harch-backup -f secrets/storagebox/id_ed25519
+cat secrets/storagebox/id_ed25519.pub        # → добавить в Storage Box (консоль Hetzner: SSH keys)
+ssh-keyscan -p 23 uXXXXXX.your-storagebox.de > secrets/storagebox/known_hosts   # закрепить ключ хоста
+# .env: BACKUP_REMOTE и RCLONE_CONFIG_OFFSITE_* как в .env.prod.example, затем
+docker compose -f compose.prod.yml up -d backup
+docker compose -f compose.prod.yml exec backup backup.sh                        # «copied to offsite:…»
+docker compose -f compose.prod.yml exec backup rclone ls offsite:harch-backups
+```
+Если копия наружу не удалась, `backup.sh` падает и не обновляет `.last_success` — `/healthz/full/` покажет
+`backup: stale` на следующий день. Ключ `secrets/storagebox/id_ed25519` — сохранить и в менеджер паролей:
+без него после гибели сервера до копий не добраться (либо войти в бокс паролем из консоли Hetzner).
+
 ## Восстановление из бэкапа (проверить до пилота!)
 
 `restore.sh` накатывает дамп поверх текущей БД одной транзакцией: при любой ошибке ничего не меняется.
