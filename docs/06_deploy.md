@@ -215,7 +215,7 @@ Sentry не получает персональных данных: без по�
 | Сигнал | Первый шаг |
 |---|---|
 | UptimeRobot: сайт недоступен | `docker compose -f compose.prod.yml ps`; `logs --tail 100 web caddy`; жив ли сервер в Hetzner Console |
-| `scheduler: stale` | `ps scheduler`; `logs --tail 50 scheduler`; `up -d scheduler`. Задачи-замовлення на завтра создать вручную: `exec web python manage.py generate_daily_tasks --days-ahead 1` (идемпотентно) |
+| `scheduler: stale` | `ps scheduler`; `logs --tail 50 scheduler`; `up -d scheduler`. Задачи-замовлення до ближайшего рабочего дня (в пятницу — на сб, вс, пн) создать вручную: `exec web python manage.py generate_daily_tasks` (идемпотентно) |
 | `backup: stale/missing` | `logs --tail 50 backup`; `exec backup backup.sh` вручную; место на диске (`df -h`) и доступ к Storage Box |
 | `db: error` | `logs --tail 100 db`; место на диске; при необходимости — раздел «Восстановление из бэкапа» |
 | Сотрудник пишет «Вхід тимчасово заблоковано» | 5 неверных паролей подряд → 15 минут ожидания (S6-03). Снять сразу: Django admin → «Access attempts» → удалить запись, или `exec web python manage.py axes_reset_username <логин>`; забытый пароль — сменить в admin |

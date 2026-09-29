@@ -20,7 +20,7 @@
         {% if tab == 'review' %}
         <td class="d-none d-md-table-cell small text-secondary">{{ task.submitted_at|date:"d.m H:i"|default:"—" }}{% if task.submitted_by %}<div>{{ task.submitted_by.get_full_name|default:task.submitted_by.username }}</div>{% endif %}</td>
         {% else %}
-        <td class="d-none d-md-table-cell small {% if task.deadline and task.deadline < now and task.status != 'approved' and task.status != 'submitted' and task.status != 'cancelled' %}text-danger fw-semibold{% else %}text-secondary{% endif %}">{{ task.deadline|date:"d.m H:i"|default:"—" }}{% if tab == 'todo' and task.deadline and task.deadline < now %}<div><span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> прострочено</span></div>{% endif %}</td>
+        <td class="d-none d-md-table-cell small {% if task.is_overdue %}text-danger fw-semibold{% else %}text-secondary{% endif %}">{{ task.deadline|date:"d.m H:i"|default:"—" }}{% if tab == 'todo' and task.is_overdue %}<div><span class="badge border border-danger text-danger bg-white"><i class="bi bi-alarm"></i> прострочено</span></div>{% endif %}</td>
         {% endif %}
         <td class="text-end text-nowrap">{% if task.doc_url %}<a href="{{ task.doc_url }}" class="btn btn-sm {% if tab == 'history' %}btn-outline-primary{% else %}btn-primary{% endif %}">{{ task.doc_label }}</a>
           <a href="{% url 'workflow:task_detail' task.pk %}" class="btn btn-sm btn-outline-secondary" title="Задача і хронологія"><i class="bi bi-clock-history"></i></a>

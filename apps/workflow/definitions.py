@@ -25,8 +25,24 @@ def _at(day, hhmm):
     return timezone.make_aware(datetime.combine(day, time(h, m)), timezone.get_default_timezone())
 
 
+def previous_workday(day):
+    """The last Monday–Friday before `day` (holidays: not yet)."""
+    day -= timedelta(days=1)
+    while day.weekday() >= 5:
+        day -= timedelta(days=1)
+    return day
+
+
+def next_workday(day):
+    """`day` itself if it is Monday–Friday, otherwise the Monday after."""
+    while day.weekday() >= 5:
+        day += timedelta(days=1)
+    return day
+
+
 def order_deadline(service_date):
-    return _at(service_date - timedelta(days=1), settings.ORDER_DEADLINE)
+    """Orders are handed in on the last working day before: on Friday for Saturday, Sunday and Monday."""
+    return _at(previous_workday(service_date), settings.ORDER_DEADLINE)
 
 
 def day_orders(task):
@@ -142,6 +158,7 @@ register(TaskDefinition(
 
 register(TaskDefinition(
     type=MENU_PLANNING,
+    overdue_alerts=False,  # the hospital: no fixed hour for this stage
     title="План меню на день",
     maker_role=Role.DIETICIAN,
     checker_role=Role.CHEF,
@@ -155,6 +172,7 @@ register(TaskDefinition(
 
 register(TaskDefinition(
     type=COOKING,
+    overdue_alerts=False,  # the hospital: no fixed hour for this stage
     title="Приготування",
     maker_role=Role.CHEF,
     checker_role=Role.DIETICIAN,
@@ -168,6 +186,7 @@ register(TaskDefinition(
 
 register(TaskDefinition(
     type=WRITE_OFF,
+    overdue_alerts=False,  # the hospital: no fixed hour for this stage
     title="Списання продуктів",
     maker_role=Role.ACCOUNTANT,
     checker_role=Role.DIETICIAN,

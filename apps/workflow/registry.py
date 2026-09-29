@@ -35,6 +35,9 @@ class TaskDefinition:
     # over, only an admin may still start/submit it (catching up a missed day), and the nightly
     # expire_stale_tasks closes what was left open.
     expires_with_day: bool = False
+    # «Прострочено» (badges, the home counter, notifications) only where the hospital keeps a real deadline;
+    # elsewhere the deadline is a guide time only.
+    overdue_alerts: bool = True
 
 
 def register(definition: TaskDefinition) -> TaskDefinition:

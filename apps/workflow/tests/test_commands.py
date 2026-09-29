@@ -1,5 +1,5 @@
 """S2-04: scheduled commands."""
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from io import StringIO
 
 import pytest
@@ -51,3 +51,40 @@ def test_check_deadlines_notifies_overdue(hospital):
     assert "overdue notified: 3" in run("check_deadlines")
     assert "overdue notified: 0" in run("check_deadlines")
     assert Notification.objects.filter(user=hospital.nurses[0], title__startswith="Прострочено").count() == 1
+
+
+# ------------------------------------------------------------------ weekends and guide-only deadlines
+FRIDAY, SATURDAY, SUNDAY, MONDAY, TUESDAY = (date(2026, 10, d) for d in (2, 3, 4, 5, 6))
+
+
+def test_weekend_orders_are_due_on_friday(settings):
+    from apps.workflow.definitions import order_deadline
+
+    settings.ORDER_DEADLINE = "12:00"
+    for day in (SATURDAY, SUNDAY, MONDAY):
+        assert timezone.localtime(order_deadline(day)).strftime("%a %d.%m %H:%M") == "Fri 02.10 12:00"
+    assert timezone.localtime(order_deadline(TUESDAY)).strftime("%a %d.%m %H:%M") == "Mon 05.10 12:00"
+
+
+@pytest.mark.parametrize("today, expected", [
+    (date(2026, 10, 1), [FRIDAY]),                    # Thursday night: Friday only
+    (FRIDAY, [SATURDAY, SUNDAY, MONDAY]),             # Friday night: the weekend and Monday at once
+    (SATURDAY, [SUNDAY, MONDAY]),                     # a catch-up run on Saturday adds nothing new
+])
+def test_generation_reaches_the_next_working_day(hospital, today, expected):
+    import time_machine
+
+    with time_machine.travel(timezone.make_aware(datetime.combine(today, time(0, 5))), tick=False):
+        run("generate_daily_tasks")
+    assert sorted(set(Task.objects.values_list("service_date", flat=True))) == expected
+
+
+def test_only_orders_can_be_overdue(hospital):
+    from apps.workflow import services as wf
+    from apps.workflow.definitions import COOKING, MENU_PLANNING, WRITE_OFF
+
+    yesterday = timezone.localdate() - timedelta(days=1)
+    guide_only = [wf.ensure_task(t, yesterday - timedelta(days=1))[0] for t in (MENU_PLANNING, COOKING, WRITE_OFF)]
+    assert all(t.deadline < timezone.now() and not t.is_overdue() for t in guide_only)
+    assert not Task.objects.filter(pk__in=[t.pk for t in guide_only]).overdue().exists()
+    assert "overdue notified: 0" in run("check_deadlines")
