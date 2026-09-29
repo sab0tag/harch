@@ -23,6 +23,14 @@ NURSE_LOGINS = {
     "Нефрологічне": "nephro", "Опікове": "burns", "Реанімація": "icu", "Пологове": "maternity",
 }
 
+# Made-up names for the training copy's head nurses, in department order.
+NURSE_NAMES = [
+    ("Оксана", "Бондаренко"), ("Наталія", "Ткаченко"), ("Людмила", "Кравченко"), ("Тетяна", "Олійник"),
+    ("Ірина", "Шевчук"), ("Галина", "Поліщук"), ("Світлана", "Мороз"), ("Надія", "Лисенко"),
+    ("Валентина", "Савченко"), ("Юлія", "Руденко"), ("Віра", "Марченко"), ("Любов", "Кузьменко"),
+    ("Ганна", "Павленко"), ("Алла", "Гончаренко"), ("Інна", "Клименко"),
+]
+
 
 def nurse_login(department):
     return "nurse-" + (NURSE_LOGINS.get(department.name) or translit(department.name))
@@ -39,9 +47,10 @@ class Command(BaseCommand):
                               "department": dept if role == Role.DEPT_NURSE else None,
                               "is_staff": role == Role.ADMIN, "is_superuser": role == Role.ADMIN})
                   for username, first, last, role in DEMO]
-        people += [(nurse_login(d), {"first_name": "Старша медсестра", "last_name": d.name,
+        people += [(nurse_login(d), {"first_name": NURSE_NAMES[i % len(NURSE_NAMES)][0],
+                                     "last_name": NURSE_NAMES[i % len(NURSE_NAMES)][1],
                                      "role": Role.DEPT_NURSE, "department": d})
-                   for d in Department.objects.filter(is_active=True)]
+                   for i, d in enumerate(Department.objects.filter(is_active=True))]
         for username, defaults in people:
             user, created = User.objects.get_or_create(username=username, defaults=defaults)
             if created:

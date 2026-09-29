@@ -28,7 +28,12 @@ def test_training_copy_is_unmistakable(client, login, settings):
     from apps.accounts.tests.factories import DepartmentFactory, UserFactory
 
     UserFactory(username="nurse-surgery", role=Role.DEPT_NURSE, department=DepartmentFactory(name="Хірургічне"))
-    assert "<code>nurse-surgery</code></td><td>Хірургічне" in client.get("/login/").content.decode()
+    surgery = User.objects.get(username="nurse-surgery").department
+    assert "<code>nurse-surgery</code></td><td>Хірургічне</td>" in client.get("/login/").content.decode()
+    from apps.orders.services import open_order
+
+    open_order(surgery, timezone.localdate() + timedelta(days=1))           # an order waiting for this nurse
+    assert "Хірургічне <span class=\"badge text-bg-success\">є що ввести" in client.get("/login/").content.decode()
     assert ">Навчання</span>" in login("dietician").get("/").content.decode()  # the badge stays in the top bar
 
 
@@ -55,6 +60,7 @@ def test_reset_gives_every_role_something_to_do(settings, monkeypatch):
 
     nurses = [u for u in people.values() if u.username.startswith("nurse-")]
     assert len(nurses) == 15 and len({n.department_id for n in nurses}) == 15  # one per department
+    assert people["nurse-surgery"].get_full_name() == "Наталія Ткаченко"      # a person, not a job title
     waiting_for_nurse = [n for n in nurses + [people["nurse"]]
                          if any(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in wf.todo_for(n))]
     assert people["nurse"] in waiting_for_nurse and len(waiting_for_nurse) >= 7  # a class has orders to enter

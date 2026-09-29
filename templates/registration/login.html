@@ -35,8 +35,9 @@
           <tr><td><code>nurse</code></td><td>старша медсестра (Терапевтичне)</td></tr>
           {% if DEMO_NURSES %}<tr><td colspan="2">
             <details><summary>старші медсестри всіх відділень</summary>
+              <div class="text-secondary mt-1">«є що ввести» — замовлення на завтра чекає цю медсестру; в інших його вже подано, їх перевіряє дієтсестра.</div>
               <table class="table table-sm mb-0 mt-1">{% for n in DEMO_NURSES %}
-                <tr><td><code>{{ n.username }}</code></td><td>{{ n.department.name }}</td></tr>{% endfor %}
+                <tr><td><code>{{ n.username }}</code></td><td>{{ n.department.name }}{% if n.has_order_to_enter %} <span class="badge text-bg-success">є що ввести</span>{% endif %}</td></tr>{% endfor %}
               </table>
             </details></td></tr>{% endif %}
           <tr><td><code>dietician</code></td><td>дієтсестра</td></tr>
