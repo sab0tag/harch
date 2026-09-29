@@ -65,3 +65,19 @@ def test_each_instruction_fits_one_a4_page(role):
 def test_sidebar_links_to_instructions_for_every_role(login):
     for role in Role.values:
         assert 'href="/help/"' in login(role).get("/").content.decode()
+
+
+@pytest.mark.parametrize("role", Role.values)
+def test_kontur_diagrams_open_for_every_role_and_linked_from_instructions(login, role, settings):
+    settings.HOSPITAL_NAME = "КНП ОМР «ОХТИРСЬКА ЦРЛ»"
+    client = login(role)
+    assert "/help/kontur/" in client.get("/help/").content.decode()
+    html = client.get("/help/kontur/").content.decode()
+    assert "Контур дня" in html and html.count("<svg") >= 6
+    assert "fonts.googleapis.com" not in html  # fonts are vendored, the page works offline
+    assert "ОХТИРСЬКА ЦРЛ" in html and 'href="/help/"' in html
+
+
+def test_kontur_needs_login(client):
+    response = client.get("/help/kontur/")
+    assert response.status_code == 302 and response["Location"].startswith("/login/")

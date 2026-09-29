@@ -5,3 +5,4 @@ Vendored static assets (no Node build step):
 Update by replacing files; keep versions in this note.
 Strip "sourceMappingURL" comments when updating: .map files are not vendored
 and ManifestStaticFilesStorage fails collectstatic on missing references.
+- fonts: Unbounded, Onest, JetBrains Mono (SIL OFL 1.1), variable woff2, cyrillic+latin; used by the /help/kontur/ page
