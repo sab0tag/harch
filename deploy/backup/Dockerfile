@@ -16,7 +16,7 @@ RUN case "${TARGETARCH}" in \
     esac \
     && echo "${sum}  /usr/local/bin/supercronic" | sha1sum -c -
 
-COPY --chmod=755 backup.sh restore.sh /usr/local/bin/
+COPY --chmod=755 backup.sh restore.sh restore-check.sh /usr/local/bin/
 COPY crontab /etc/backup.crontab
 
 ENTRYPOINT []
