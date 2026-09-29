@@ -129,5 +129,9 @@ def test_create_demo_users_is_idempotent(settings):
     settings.DEBUG = True
     call_command("create_demo_users")
     call_command("create_demo_users")
-    assert User.objects.count() == 5
+    from apps.orgstructure.models import Department
+
+    # 5 role users + a head nurse per active department (here only Терапевтичне), no duplicates on a rerun
+    assert User.objects.count() == 5 + Department.objects.filter(is_active=True).count()
     assert User.objects.get(username="nurse").department is not None
+    assert User.objects.get(username="nurse-therapy").department.name == "Терапевтичне"
