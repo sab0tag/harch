@@ -33,6 +33,12 @@
         <div class="fw-semibold mb-1">Навчальні входи · пароль <code>demo12345</code></div>
         <table class="table table-sm mb-0">
           <tr><td><code>nurse</code></td><td>старша медсестра (Терапевтичне)</td></tr>
+          {% if DEMO_NURSES %}<tr><td colspan="2">
+            <details><summary>старші медсестри всіх відділень</summary>
+              <table class="table table-sm mb-0 mt-1">{% for n in DEMO_NURSES %}
+                <tr><td><code>{{ n.username }}</code></td><td>{{ n.department.name }}</td></tr>{% endfor %}
+              </table>
+            </details></td></tr>{% endif %}
           <tr><td><code>dietician</code></td><td>дієтсестра</td></tr>
           <tr><td><code>chef</code></td><td>завідувач виробництва</td></tr>
           <tr><td><code>accountant</code></td><td>бухгалтер</td></tr>

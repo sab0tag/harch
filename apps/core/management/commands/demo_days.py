@@ -9,7 +9,8 @@ accountant finds an open task. Days that already have an approved plan are skipp
 without a price get an indicative demo price. Dev and training copy only (DEBUG or DEMO_MODE).
 
 --live also plays today up to the kitchen (the chef enters the fact) and submits tomorrow's orders
-for every department except the demo nurse's (she submits hers; the dietician reviews the rest).
+for every other department; the rest — Терапевтичне (demo `nurse`) included — wait for their head
+nurses, so a class of nurses has orders to enter and the dietician has orders to review.
 """
 import random
 from datetime import timedelta
@@ -69,6 +70,9 @@ class Command(BaseCommand):
         call_command("create_demo_users", stdout=self.stdout)
         self.people = {u.username: u for u in User.objects.filter(
             username__in=["admin", "dietician", "chef", "nurse", "accountant"])}
+        self.head_nurse = {}                             # department → a nurse who submits its orders
+        for u in User.objects.filter(role=Role.DEPT_NURSE, is_active=True).order_by("username"):
+            self.head_nurse.setdefault(u.department_id, u)
 
         priced = 0
         for product in Product.objects.filter(price_per_kg__isnull=True):
@@ -98,22 +102,21 @@ class Command(BaseCommand):
         diets = {d.code: d for d in orderable_diets()}
         fallback = diets.get("ОВД") or next(iter(diets.values()))
         portions_total = 0
-        for dept in Department.objects.filter(is_active=True).order_by("sort_order", "name"):
+        for i, dept in enumerate(Department.objects.filter(is_active=True).order_by("sort_order", "name")):
             main = dept.default_diet if dept.default_diet and dept.default_diet.code in diets else fallback
             base = random.Random(dept.pk).randint(6, 30)
             portions = {main.pk: max(1, round(base * rng.uniform(0.85, 1.15)))}
             if rng.random() < 0.35:                      # a few patients on another diet
                 other = rng.choice(list(diets.values()))
                 portions[other.pk] = portions.get(other.pk, 0) + rng.randint(1, 4)
-            own = self.people["nurse"].department_id == dept.pk
-            if stop == "orders" and own:
-                continue                                 # left for the demo nurse
-            nurse = self.people["nurse"] if own else self.people["admin"]
-            submit_order(open_order(dept, day), nurse, portions)
+            if stop == "orders" and (i % 2 == 0 or dept.pk == self.people["nurse"].department_id):
+                open_order(dept, day)                    # left for this department's head nurse
+                continue
+            submit_order(open_order(dept, day), self.head_nurse.get(dept.pk, self.people["admin"]), portions)
             portions_total += sum(portions.values())
         if stop == "orders":
-            wf.ensure_task(ORDER_SUBMISSION, day, department=self.people["nurse"].department)
-            self.stdout.write(f"{day}: {portions_total} portions submitted — waiting for the dietician")
+            waiting = Task.objects.filter(type=ORDER_SUBMISSION, service_date=day, status=TaskStatus.SUBMITTED).count()
+            self.stdout.write(f"{day}: {waiting} orders submitted for the dietician, the rest wait for their nurses")
             return
         for task in Task.objects.filter(type=ORDER_SUBMISSION, service_date=day, status=TaskStatus.SUBMITTED):
             wf.approve(task, dietician)

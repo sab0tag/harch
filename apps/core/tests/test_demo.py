@@ -24,6 +24,11 @@ def test_training_copy_is_unmistakable(client, login, settings):
     settings.DEMO_MODE = True
     html = client.get("/login/").content.decode()
     assert "НАВЧАЛЬНА ВЕРСІЯ" in html and "demo12345" in html and "<title>[Навчання]" in html
+    from apps.accounts.models import Role
+    from apps.accounts.tests.factories import DepartmentFactory, UserFactory
+
+    UserFactory(username="nurse-surgery", role=Role.DEPT_NURSE, department=DepartmentFactory(name="Хірургічне"))
+    assert "<code>nurse-surgery</code></td><td>Хірургічне" in client.get("/login/").content.decode()
     assert ">Навчання</span>" in login("dietician").get("/").content.decode()  # the badge stays in the top bar
 
 
@@ -48,9 +53,12 @@ def test_reset_gives_every_role_something_to_do(settings, monkeypatch):
     today = timezone.localdate()
     tomorrow, yesterday = today + timedelta(days=1), today - timedelta(days=1)
 
-    nurse_tasks = wf.todo_for(people["nurse"])
-    assert any(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in nurse_tasks)
+    nurses = [u for u in people.values() if u.username.startswith("nurse-")]
+    assert len(nurses) == 15 and len({n.department_id for n in nurses}) == 15  # one per department
+    waiting_for_nurse = [n for n in nurses + [people["nurse"]]
+                         if any(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in wf.todo_for(n))]
+    assert people["nurse"] in waiting_for_nurse and len(waiting_for_nurse) >= 7  # a class has orders to enter
     to_review = wf.review_for(people["dietician"])
-    assert sum(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in to_review) >= 2
+    assert sum(t.type == ORDER_SUBMISSION and t.service_date == tomorrow for t in to_review) >= 5
     assert any(t.type == COOKING and t.service_date == today for t in wf.todo_for(people["chef"]))
     assert any(t.type == WRITE_OFF and t.service_date == yesterday for t in wf.todo_for(people["accountant"]))
