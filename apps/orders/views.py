@@ -67,10 +67,13 @@ class OrderEditView(RoleRequiredMixin, View):
         user = request.user
         if user.role == Role.DEPT_NURSE and user.department_id != dept_id:
             raise Http404  # other departments' orders are not revealed
-        department = get_object_or_404(Department, pk=dept_id, is_active=True)
+        # A switched-off department's orders stay readable (notifications and history link to them),
+        # but nothing new is opened for it.
+        department = get_object_or_404(Department, pk=dept_id)
         # A nurse opens (creates) orders only for today onwards; a past day is view-only for her.
         # An admin may still open a past day to catch it up (docs/08_ops.md).
-        if user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and day >= timezone.localdate()):
+        if department.is_active and (
+                user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and day >= timezone.localdate())):
             return services.open_order(department, day)
         order = DailyOrder.objects.filter(department=department, service_date=day).select_related("task").first()
         if order is None:
