@@ -6,6 +6,13 @@
   {% for e in entries %}{{ e.diet.code }} — меню №{{ e.menu.number }}, {{ e.portions }}{% if not forloop.last %}; {% endif %}{% endfor %}
   · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка</a></p>
 
+{% if corrections %}
+<div class="card border-warning mb-3">
+  <div class="card-header bg-white fw-semibold"><i class="bi bi-plus-slash-minus me-1"></i>Додаткова вимога — коригування відділень</div>
+  {% include "orders/_corrections.html" %}
+  <div class="card-body small text-secondary py-2">Уже враховано в стравах і продуктах нижче.</div>
+</div>
+{% endif %}
 {% if rejection %}
 <div class="alert alert-danger"><div class="fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Повернуто: {{ rejection.actor }}</div>
   <div style="white-space: pre-line">{{ rejection.comment }}</div></div>

@@ -90,5 +90,16 @@
   {% endif %}
 </div>
 {% endif %}
+{% if corrections or can_correct %}
+<div class="card mt-3" style="max-width: 560px; margin: 0 auto">
+  <div class="card-header bg-white d-flex align-items-center">
+    <span class="fw-semibold me-auto">Коригування на цей день</span>
+    {% if can_correct %}<form method="post" action="{% url 'orders:correction_new' order.department_id order.service_date.isoformat %}">{% csrf_token %}
+      <button class="btn btn-sm btn-primary"><i class="bi bi-plus-slash-minus me-1"></i>Нове коригування</button></form>{% endif %}
+  </div>
+  {% include "orders/_corrections.html" %}
+  {% if not corrections %}<div class="card-body small text-secondary">Надходження, виписка, переведення чи зміна дієти після затвердження — тут.</div>{% endif %}
+</div>
+{% endif %}
 {% if task %}<p class="text-center mt-3"><a href="{% url 'workflow:task_detail' task.pk %}" class="small">Хронологія задачі</a></p>{% endif %}
 {% endblock %}

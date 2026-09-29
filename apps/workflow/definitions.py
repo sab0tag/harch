@@ -1,8 +1,10 @@
 """The four task types of a service day (docs/03_task_engine.md, «Типы задач v0.1»).
 
 замовлення (кожне відділення) → план меню → приготування → списання
+                                 ↘ коригування замовлення (S7-01, скільки завгодно на день)
 
-Subjects: order → DailyOrder, menu_planning and cooking → DailyPlan, write_off → WriteOff.
+Subjects: order → DailyOrder, menu_planning and cooking → DailyPlan, write_off → WriteOff,
+order_correction → OrderCorrection.
 """
 from datetime import datetime, time, timedelta
 
@@ -18,6 +20,7 @@ ORDER_SUBMISSION = "order_submission"
 MENU_PLANNING = "menu_planning"
 COOKING = "cooking"
 WRITE_OFF = "write_off"
+ORDER_CORRECTION = "order_correction"  # models.REPEATABLE_TYPES
 
 
 def _at(day, hhmm):
@@ -196,4 +199,41 @@ register(TaskDefinition(
     subject_url=_write_off_url,
     action_label="Списати продукти",
     on_approved=_after_write_off_approved,
+))
+
+
+# ---------------------------------------------------------------- S7-01 order corrections
+def _correction_url(task):
+    from django.urls import reverse
+
+    return reverse("orders:correction", args=[task.object_id]) if task.object_id else None
+
+
+def _validate_correction(task):
+    from apps.orders.corrections import validate_correction_task
+
+    return validate_correction_task(task)
+
+
+def _after_correction_approved(task):
+    from apps.orders.corrections import apply_approved
+
+    apply_approved(task)
+
+
+register(TaskDefinition(
+    type=ORDER_CORRECTION,
+    title="Коригування замовлення",
+    maker_role=Role.DEPT_NURSE,
+    checker_role=Role.DIETICIAN,
+    per_department=True,
+    repeatable=True,
+    deadline=lambda d: None,
+    description="± порції за дієтами з обраного прийому їжі: надходження, виписка, переведення, зміна дієти.",
+    validate_submit=_validate_correction,
+    on_approved=_after_correction_approved,
+    subject_url=_correction_url,
+    action_label="Відкрити коригування",
+    expires_with_day=True,
+    overdue_alerts=False,
 ))

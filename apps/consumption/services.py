@@ -44,9 +44,9 @@ def freeze(plan):
 
 
 def snapshot_totals(plan):
-    """[(product_name, brutto_g, netto_g)] from the frozen snapshot, by product name."""
+    """[(product_name, brutto_g, netto_g)] of the approved plan itself (without later corrections)."""
     acc = OrderedDict()
-    for row in ConsumptionSnapshotLine.objects.filter(plan=plan).order_by("product_name").values(
+    for row in ConsumptionSnapshotLine.objects.filter(plan=plan, correction__isnull=True).order_by("product_name").values(
         "product_name", "brutto_total_g", "netto_total_g"
     ):
         b, n = acc.get(row["product_name"], (Decimal(0), Decimal(0)))
@@ -78,10 +78,11 @@ def kitchen_board(plan):
     """
     seen, dishes = set(), {}
     rows = ConsumptionSnapshotLine.objects.filter(plan=plan).values_list(
-        "meal_slot", "dish_card_no", "dish_name", "dish_output_g", "diet_code", "menu_number", "portions"
+        "meal_slot", "dish_card_no", "dish_name", "dish_output_g", "diet_code", "menu_number", "portions",
+        "correction_id",
     )
-    for slot, card_no, name, output_g, diet_code, menu_number, portions in rows:
-        key = (slot, card_no, diet_code, menu_number)
+    for slot, card_no, name, output_g, diet_code, menu_number, portions, correction_id in rows:
+        key = (slot, card_no, diet_code, menu_number, correction_id)   # corrections add (or remove) portions
         if key in seen:           # one row per ingredient; portions are per dish
             continue
         seen.add(key)
@@ -104,7 +105,7 @@ def scaled_card(plan, slot, card_no, portions=None):
                  .order_by("id"))
     if not lines:
         return None
-    planned = sum({(l.diet_code, l.menu_number): l.portions for l in lines}.values())
+    planned = sum({(l.diet_code, l.menu_number, l.correction_id): l.portions for l in lines}.values())
     n = planned if portions is None else portions
     products = OrderedDict()
     for l in lines:

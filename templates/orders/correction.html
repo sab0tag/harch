@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Коригування · {{ correction.department }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-1">
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'orders:edit' correction.department_id correction.service_date.isoformat %}" title="До замовлення">‹</a>
+  <h1 class="h4 mb-0 flex-grow-1 text-center">Коригування на {{ correction.service_date|date:"d.m, l" }}</h1>
+</div>
+<p class="text-center text-secondary mb-3">{{ correction.department }}{% if task %} · <span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>{% endif %}</p>
+
+{% if rejection %}
+<div class="alert alert-danger">
+  <div class="fw-semibold"><i class="bi bi-arrow-return-left me-1"></i>Дієтсестра повернула коригування</div>
+  <div style="white-space: pre-line">{{ rejection.comment }}</div>
+</div>
+{% endif %}
+
+{% if editable %}
+<form method="post" class="card card-body" style="max-width: 560px; margin: 0 auto">{% csrf_token %}
+  {% if closed_reason %}<div class="alert alert-warning">{{ closed_reason }}</div>{% endif %}
+  <label class="form-label fw-semibold" for="reason">Причина</label>
+  <select class="form-select mb-3" name="reason" id="reason">
+    {% for value, label in reasons %}<option value="{{ value }}"{% if posted and posted.reason == value or not posted and correction.reason == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <div id="transfer-box" class="mb-3"{% if correction.reason != 'transfer' and not posted or posted and posted.reason != 'transfer' %} hidden{% endif %}>
+    <label class="form-label fw-semibold" for="transfer_from">З якого відділення переведено</label>
+    <select class="form-select" name="transfer_from" id="transfer_from">
+      <option value="">—</option>
+      {% for d in departments %}<option value="{{ d.pk }}"{% if correction.transfer_from_id == d.pk %} selected{% endif %}>{{ d }}</option>{% endfor %}
+    </select>
+    <div class="form-text">Вкажіть лише «+» у своєму відділенні — у відділенні, звідки переведено, порції знімуться самі.</div>
+  </div>
+  <label class="form-label fw-semibold" for="from_meal">З якого прийому їжі</label>
+  <select class="form-select mb-1" name="from_meal" id="from_meal">
+    {% for value, label in meals %}<option value="{{ value }}"{% if posted and posted.from_meal == value or not posted and correction.from_meal == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <div class="form-text mb-3">На сьогодні: до {{ cutoff }} — з обіду, пізніше — лише з вечері.</div>
+
+  <div class="fw-semibold mb-1">Порції: + додати, − зняти</div>
+  {% for row in rows %}
+    <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+      <label for="diet_{{ row.diet.pk }}" class="flex-grow-1">
+        <span class="fw-semibold">{{ row.diet.code }}</span> <span class="small text-secondary">{{ row.diet.name }}</span>
+        <div class="small text-secondary">зараз у відділенні: {{ row.have }}</div>
+      </label>
+      <input type="text" inputmode="numeric" name="diet_{{ row.diet.pk }}" id="diet_{{ row.diet.pk }}" value="{{ row.value }}"
+             class="form-control form-control-lg text-end" style="width: 6.5rem" placeholder="+0" autocomplete="off">
+    </div>
+  {% empty %}
+    <p class="text-secondary">На цей день ще немає дієт у плані.</p>
+  {% endfor %}
+  <label class="form-label small mt-3" for="note">Примітка (необов'язково)</label>
+  <textarea name="note" id="note" rows="2" class="form-control mb-3">{% if posted %}{{ posted.note }}{% else %}{{ correction.note }}{% endif %}</textarea>
+  <div class="d-grid gap-2 d-sm-flex">
+    <button name="action" value="submit" class="btn btn-success btn-lg flex-grow-1"><i class="bi bi-send me-1"></i>{% if task.status == 'rejected' %}Подати повторно{% else %}Подати дієтсестрі{% endif %}</button>
+    <button name="action" value="save" class="btn btn-outline-secondary btn-lg">Зберегти чернетку</button>
+  </div>
+  <p class="small text-secondary mt-3 mb-0">Лише кількість порцій — без прізвищ і діагнозів.</p>
+</form>
+<script>
+  (() => {
+    const reason = document.getElementById("reason"), box = document.getElementById("transfer-box");
+    reason.addEventListener("change", () => { box.hidden = reason.value !== "transfer"; });
+  })();
+</script>
+{% else %}
+<div class="card" style="max-width: 560px; margin: 0 auto">
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item"><span class="text-secondary">Причина:</span> {{ correction.get_reason_display }}{% if correction.transfer_from %} — з «{{ correction.transfer_from }}»{% endif %}</li>
+    <li class="list-group-item"><span class="text-secondary">З прийому їжі:</span> {{ correction.get_from_meal_display|default:correction.from_meal }}</li>
+    {% for l in lines %}
+      <li class="list-group-item d-flex"><span class="me-auto">{{ l.department }} · <span class="fw-semibold">{{ l.diet.code }}</span></span>
+        <span class="fw-semibold {% if l.delta > 0 %}text-success{% else %}text-danger{% endif %}">{{ l.delta|stringformat:"+d" }}</span></li>
+    {% empty %}<li class="list-group-item text-secondary">Порції ще не вказано.</li>{% endfor %}
+    {% if correction.note %}<li class="list-group-item small">{{ correction.note }}</li>{% endif %}
+  </ul>
+  <div class="card-body small text-secondary">
+    {% if task.status == 'approved' %}Затверджено{% if correction.applied_at %} і додано до розходу дня{% else %} — додасться до розходу, щойно шеф-кухар затвердить план{% endif %}.
+    {% elif task.status == 'submitted' %}Подано {{ task.submitted_at|date:"d.m H:i" }}. Очікує дієтсестру.
+    {% elif task.status == 'cancelled' %}Скасовано.
+    {% elif closed_reason %}{{ closed_reason }}{% else %}Заповнює старша медсестра відділення.{% endif %}
+  </div>
+  {% if can_review %}
+  <div class="card-footer bg-white">
+    <div class="d-flex flex-wrap gap-2">
+      <form method="post" action="{% url 'workflow:task_action' task.pk 'approve' %}">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-success">Затвердити</button></form>
+      <button class="btn btn-outline-danger" data-bs-toggle="collapse" data-bs-target="#rej">Повернути</button>
+    </div>
+    <form method="post" action="{% url 'workflow:task_action' task.pk 'reject' %}" class="collapse mt-2" id="rej">{% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <textarea name="comment" class="form-control mb-2" rows="2" placeholder="Що виправити?" required></textarea>
+      <button class="btn btn-danger">Повернути з коментарем</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% if task %}<p class="text-center mt-3"><a href="{% url 'workflow:task_detail' task.pk %}" class="small">Хронологія задачі</a></p>{% endif %}
+{% endblock %}

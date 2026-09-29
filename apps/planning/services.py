@@ -130,10 +130,13 @@ def approve_plan(task):
     """Registry hook: runs inside the approve transaction, before the cooking task is created."""
     from apps.consumption.services import freeze
 
+    from apps.orders.corrections import apply_pending
+
     plan = DailyPlan.objects.select_for_update().get(task=task)
     freeze(plan)
     plan.approved_at = timezone.now()
     plan.save(update_fields=["approved_at"])
+    apply_pending(plan)     # S7-01: corrections approved while the day was still being planned
 
 
 def force_planning(service_date, user):

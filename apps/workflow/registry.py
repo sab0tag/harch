@@ -38,6 +38,9 @@ class TaskDefinition:
     # «Прострочено» (badges, the home counter, notifications) only where the hospital keeps a real deadline;
     # elsewhere the deadline is a guide time only.
     overdue_alerts: bool = True
+    # Several tasks per date and department (created with services.create_task, not ensure_task);
+    # the type must also be listed in models.REPEATABLE_TYPES for the uniqueness constraint.
+    repeatable: bool = False
 
 
 def register(definition: TaskDefinition) -> TaskDefinition:

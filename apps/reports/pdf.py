@@ -11,7 +11,7 @@ def menu_rozkladka_context(plan):
     from apps.consumption.models import ConsumptionSnapshotLine
     from apps.consumption.services import slot_label, slot_order, snapshot_totals
 
-    lines = list(ConsumptionSnapshotLine.objects.filter(plan=plan).order_by("id"))
+    lines = list(ConsumptionSnapshotLine.objects.filter(plan=plan, correction__isnull=True).order_by("id"))  # the plan as approved
     order = slot_order()
     diets = OrderedDict()
     for e in plan.entries.select_related("diet", "menu").order_by("diet__sort_order"):

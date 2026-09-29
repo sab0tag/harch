@@ -19,7 +19,10 @@ class ConsumptionSnapshotLine(models.Model):
     dish_output_g = models.DecimalField(null=True, blank=True, **GRAMS)  # вихід порції на момент затвердження
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT)
     product_name = models.CharField(max_length=150)
-    portions = models.PositiveIntegerField()
+    portions = models.IntegerField()  # negative only on correction lines (discharge, transfer out)
+    # S7-01: set on the lines an approved order correction added after the plan ("додаткова вимога")
+    correction = models.ForeignKey("orders.OrderCorrection", null=True, blank=True, on_delete=models.PROTECT,
+                                   related_name="snapshot_lines")
     brutto_per_portion_g = models.DecimalField(**GRAMS)
     netto_per_portion_g = models.DecimalField(**GRAMS)
     brutto_total_g = models.DecimalField(**GRAMS)
