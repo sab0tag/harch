@@ -28,6 +28,18 @@
         <input type="hidden" name="next" value="{{ next }}">
         <button class="btn btn-success btn-lg w-100" type="submit">Увійти</button>
       </form>
+      {% if DEMO_MODE %}
+      <div class="mt-4 small">
+        <div class="fw-semibold mb-1">Навчальні входи · пароль <code>demo12345</code></div>
+        <table class="table table-sm mb-0">
+          <tr><td><code>nurse</code></td><td>старша медсестра (Терапевтичне)</td></tr>
+          <tr><td><code>dietician</code></td><td>дієтсестра</td></tr>
+          <tr><td><code>chef</code></td><td>завідувач виробництва</td></tr>
+          <tr><td><code>accountant</code></td><td>бухгалтер</td></tr>
+          <tr><td><code>admin</code></td><td>адміністратор</td></tr>
+        </table>
+      </div>
+      {% endif %}
     </div>
   </div>
 </main>

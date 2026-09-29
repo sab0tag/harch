@@ -5,7 +5,7 @@
       <i class="bi bi-list"></i>
     </button>
     <div class="me-auto" style="min-width: 0">
-      <div class="fw-semibold text-truncate">{{ HOSPITAL_NAME }}</div>
+      <div class="fw-semibold text-truncate">{% if DEMO_MODE %}<span class="badge text-bg-warning me-1">Навчання</span>{% endif %}{{ HOSPITAL_NAME }}</div>
       <div class="small text-secondary text-truncate">Сьогодні: {% now "l, j E Y" %}</div>
     </div>
     <div class="dropdown">

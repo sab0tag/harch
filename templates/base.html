@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>{% block title %}Харчоблок{% endblock %} · {{ HOSPITAL_NAME }}</title>
+  <title>{% if DEMO_MODE %}[Навчання] {% endif %}{% block title %}Харчоблок{% endblock %} · {{ HOSPITAL_NAME }}</title>
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{% if DEMO_MODE %}{% include "partials/demo_banner.html" %}{% endif %}
 {% block body %}
   {% include "partials/sidebar.html" %}
   <div class="harch-main min-vh-100 d-flex flex-column">
