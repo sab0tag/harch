@@ -29,6 +29,10 @@ class User(AbstractUser):
     )
     phone = models.CharField("Телефон", max_length=20, blank=True)
     telegram_chat_id = models.CharField("Telegram chat id", max_length=32, blank=True)
+    must_change_password = models.BooleanField(
+        "Змінити пароль при вході", default=False,
+        help_text="Тимчасовий пароль: після входу система попросить задати власний (S6-05).",
+    )
 
     objects = HarchUserManager()
 
