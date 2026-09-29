@@ -60,9 +60,12 @@ curl -I https://harch.example.com/healthz/     # 200, заголовок Strict-
 ## Деплой
 
 ```bash
-git pull && docker compose -f compose.prod.yml build web
-docker compose -f compose.prod.yml run --rm web python manage.py migrate
-docker compose -f compose.prod.yml up -d
+deploy/update.sh   # pull → build → migrate → up -d → проверка /healthz/full/
+# с ноутбука: ssh deploy@<сервер> /opt/harch/deploy/update.sh
+# то же вручную:
+# git pull && docker compose -f compose.prod.yml build web
+# docker compose -f compose.prod.yml run --rm web python manage.py migrate
+# docker compose -f compose.prod.yml up -d
 ```
 Позже — GitHub Actions: build → push в GHCR → ssh deploy.
 
