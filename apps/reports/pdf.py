@@ -31,7 +31,10 @@ def menu_rozkladka_context(plan):
     totals = snapshot_totals(plan)
     return {
         "plan": plan,
-        "hospital": settings.HOSPITAL_NAME,
+        "hospital": settings.HOSPITAL_FULL_NAME,
+        "edrpou": settings.HOSPITAL_EDRPOU,
+        "address": settings.HOSPITAL_ADDRESS,
+        "approver_title": settings.APPROVER_TITLE,
         "diets": list(diets.values()),
         "totals": totals,
         "total_brutto": sum((b for _, b, _ in totals), Decimal(0)),
