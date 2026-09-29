@@ -19,6 +19,11 @@ body { background: #f4f6f5; }
 .harch-sidebar .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
 .harch-sidebar .nav-link.active { background: var(--harch-accent); color: #fff; }
 .harch-sidebar .nav-link .bi { font-size: 1.1rem; }
+/* Phones: the slide-out panel is exactly the screen's height — the menu list scrolls inside it. */
+@media (max-width: 991.98px) {
+  .harch-sidebar nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+                       padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)) !important; }
+}
 
 @media (min-width: 992px) {
   .harch-sidebar {
