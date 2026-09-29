@@ -161,6 +161,7 @@ Sentry не получает персональных данных: без по�
 | `scheduler: stale` | `ps scheduler`; `logs --tail 50 scheduler`; `up -d scheduler`. Задачи-замовлення на завтра создать вручную: `exec web python manage.py generate_daily_tasks --days-ahead 1` (идемпотентно) |
 | `backup: stale/missing` | `logs --tail 50 backup`; `exec backup backup.sh` вручную; место на диске (`df -h`) и доступ к Storage Box |
 | `db: error` | `logs --tail 100 db`; место на диске; при необходимости — раздел «Восстановление из бэкапа» |
+| Сотрудник пишет «Вхід тимчасово заблоковано» | 5 неверных паролей подряд → 15 минут ожидания (S6-03). Снять сразу: Django admin → «Access attempts» → удалить запись, или `exec web python manage.py axes_reset_username <логин>`; забытый пароль — сменить в admin |
 | Sentry: новая ошибка | стек и URL; если ломает работу роли — исправить и задеплоить, иначе — тикет |
 
 ## Данные и приватность

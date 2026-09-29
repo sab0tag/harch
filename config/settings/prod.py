@@ -12,6 +12,9 @@ SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS]  # noqa: F405
+# Behind Caddy: the client address is the right-most X-Forwarded-For entry (Caddy sets it), not REMOTE_ADDR.
+AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_FORWARDED_FOR", "REMOTE_ADDR"]
+AXES_IPWARE_PROXY_ORDER = "right-most"
 
 # HSTS preload is a months-long commitment to the browser lists; not for a pilot domain.
 SILENCED_SYSTEM_CHECKS = ["security.W021"]

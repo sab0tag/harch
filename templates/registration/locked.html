@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Вхід тимчасово заблоковано{% endblock %}
+{% block body %}
+<main class="min-vh-100 d-flex align-items-center justify-content-center p-3">
+  <div class="card shadow-sm w-100" style="max-width: 400px">
+    <div class="card-body p-4 text-center">
+      <i class="bi bi-shield-lock fs-1 text-danger"></i>
+      <h1 class="h4 mt-2">Вхід тимчасово заблоковано</h1>
+      <p class="text-secondary">Було кілька невдалих спроб увійти під цим ім'ям. Спробуйте ще раз через 15 хвилин.</p>
+      <p class="small text-secondary mb-4">Забули пароль? Зверніться до адміністратора системи — він може зняти блокування і видати новий пароль.</p>
+      <a class="btn btn-outline-secondary w-100" href="{% url 'login' %}">До сторінки входу</a>
+    </div>
+  </div>
+</main>
+{% endblock %}
