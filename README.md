@@ -31,4 +31,4 @@ Python 3.12, PostgreSQL 16. У `.env` вкажи `DATABASE_URL` на свій Po
 
 ## Продакшн
 
-`compose.prod.yml` (gunicorn + Caddy з автоматичним HTTPS). Інструкція — `docs/06_deploy.md`.
+`compose.prod.yml` (gunicorn + Caddy з автоматичним HTTPS). Інструкція — `docs/06_deploy.md`. Щоденне керування сервером з ноутбука — `ops/harch` і `docs/08_ops.md`.

@@ -136,3 +136,32 @@ def test_anyone_can_change_their_password_from_the_menu(login):
     client = login(Role.DEPT_NURSE)
     assert 'href="/account/password/"' in client.get("/").content.decode()
     assert client.get("/account/password/").status_code == 200
+
+
+# ------------------------------------------------------------------ ops commands (ops/harch)
+def test_temp_password_unlocks_and_forces_a_change(client):
+    user = UserFactory(username="koval.m", role=Role.DIETICIAN, is_active=False)
+    for _ in range(5):
+        client.post("/login/", {"username": "koval.m", "password": "wrong"})
+    out = StringIO()
+    call_command("temp_password", "koval.m", stdout=out)
+    password = out.getvalue().split("тимчасовий пароль: ")[1].strip()
+    user.refresh_from_db()
+    assert user.is_active and user.must_change_password and user.check_password(password)
+    assert client.post("/login/", {"username": "koval.m", "password": password}).status_code == 302  # lock lifted
+
+
+def test_temp_password_for_unknown_login():
+    with pytest.raises(CommandError, match="немає користувача «nobody»"):
+        call_command("temp_password", "nobody")
+
+
+def test_list_users_shows_state():
+    UserFactory(username="melnyk.o", role=Role.CHEF, must_change_password=True)
+    UserFactory(username="gone", role=Role.CHEF, is_active=False)
+    out = StringIO()
+    call_command("list_users", stdout=out)
+    assert "melnyk.o" in out.getvalue() and "тимчасовий пароль" in out.getvalue() and "gone" not in out.getvalue()
+    out = StringIO()
+    call_command("list_users", "--all", stdout=out)
+    assert "gone" in out.getvalue() and "ВИМКНЕНО" in out.getvalue()

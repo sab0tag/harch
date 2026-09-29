@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+# harch — управление сервером Харчоблока с ноутбука (docs/08_ops.md).
+# Всё выполняется на сервере по SSH; секреты из .env не печатаются.
+#   harch help            — список команд
+# Настройки (необязательно): HARCH_HOST=deploy@95.216.210.228  HARCH_KEY=~/.ssh/google_compute_engine
+set -euo pipefail
+
+HOST=${HARCH_HOST:-deploy@95.216.210.228}
+KEY=${HARCH_KEY:-$HOME/.ssh/google_compute_engine}
+DIR=/opt/harch
+DC="docker compose -f compose.prod.yml"
+SITE=${HARCH_SITE:-https://beyondthesignal.to}
+
+ssh_opts=(-i "$KEY" -o ConnectTimeout=15)
+run() { ssh "${ssh_opts[@]}" -o BatchMode=yes "$HOST" "cd $DIR && $*"; }       # without a terminal
+run_tty() { ssh "${ssh_opts[@]}" -t "$HOST" "cd $DIR && $*"; }                 # interactive (shell, psql, logs -f)
+manage() { run "$DC exec -T web python manage.py $* 2>&1 | { grep -v '^AXES: ' || true; }"; }
+say() { printf '\033[1m%s\033[0m\n' "$*"; }
+die() { printf 'harch: %s\n' "$*" >&2; exit 1; }
+confirm() { read -r -p "$1 Введите «да»: " answer; [[ "$answer" == "да" ]] || die "отменено"; }
+check_login() { [[ "${1:-}" =~ ^[a-z0-9._@+-]+$ ]] || die "логин: латиница, цифры и . _ - (получено: «${1:-}»)"; }
+check_service() {
+  case "${1:-}" in web|scheduler|db|backup|caddy|demo-web|demo-scheduler|demo-db) ;; *)
+    die "сервис: web, scheduler, db, backup, caddy, demo-web, demo-scheduler, demo-db";; esac
+}
+
+usage() {
+  cat <<'EOF'
+harch <команда> — управление сервером Харчоблока (подробно: docs/08_ops.md)
+
+Состояние
+  status                      всё сразу: контейнеры, здоровье, бэкап, диск, память, версия
+  health                      /healthz/full/ как его видит внешний мир
+  logs [сервис] [строк]        последние строки логов (по умолчанию web, 100)
+  follow [сервис]             логи в реальном времени (выход — Ctrl+C)
+  version                     какой коммит на сервере и какой последний в main
+
+Обновление и перезапуск
+  update                      выкатить main: pull → сборка → миграции → перезапуск → проверка
+  restart [сервис]            перезапустить сервис (по умолчанию web)
+
+Бэкапы
+  backup                      сделать бэкап сейчас (и копию на Storage Box)
+  backups                     список копий: на сервере и на Storage Box
+  restore-check [файл]        проверить, что копия восстанавливается (во временную базу)
+
+Сотрудники
+  users [--all]               список (с --all — и выключенные)
+  import-users <файл> [--apply] [флаги]
+                              завести/обновить из Excel/CSV; без --apply — только проверка
+                              флаги: --deactivate-others --reset-passwords
+  temp-password <логин>       забыл пароль: временный пароль + снять блокировку
+  unlock <логин>              снять блокировку после 5 неверных паролей
+  deactivate <логин>          выключить (уволился); история остаётся
+
+Учебная копия
+  demo-reset                  вернуть demo.… к свежему учебному дню прямо сейчас
+
+Расписание и проверки
+  tasks                       создать задачи-замовлення на завтра (если планировщик пропустил)
+  deadlines                   проверить сроки и разослать «Прострочено» сейчас
+  monitoring                  проверка, которую делает мониторинг
+
+Настройки (.env на сервере)
+  env                         показать настройки (секреты скрыты)
+  env-set КЛЮЧ ЗНАЧЕНИЕ       изменить настройку и перезапустить сервисы (с копией .env)
+
+Для опытных
+  manage <аргументы>          любая команда manage.py (например: manage showmigrations)
+  shell                       Django shell на сервере
+  psql                        консоль базы данных
+  ssh                         зайти на сервер в /opt/harch
+EOF
+}
+
+cmd=${1:-help}; shift || true
+case "$cmd" in
+  help|-h|--help) usage ;;
+
+  status)
+    run "echo; git log --oneline -1 | sed 's/^/версия: /'; echo;
+         $DC ps --format 'table {{.Service}}\t{{.Status}}';
+         echo; printf 'health: '; curl -s $SITE/healthz/full/; echo;
+         printf 'последний бэкап: '; cat backups/.last_success 2>/dev/null || echo нет;
+         printf 'диск: '; df -h / | awk 'NR==2 {print \$3\" из \"\$2\" (\"\$5\")\"}';
+         printf 'память: '; free -m | awk 'NR==2 {print \$3\" МБ из \"\$2\" МБ\"}';
+         printf 'работает: '; uptime -p" ;;
+
+  health) curl -s "$SITE/healthz/full/" | python3 -m json.tool ;;
+
+  logs)
+    svc=${1:-web}; check_service "$svc"; lines=${2:-100}
+    [[ "$lines" =~ ^[0-9]+$ ]] || die "строк: число"
+    run "$DC logs --no-log-prefix --tail $lines $svc" ;;
+
+  follow) svc=${1:-web}; check_service "$svc"; run_tty "$DC logs -f --tail 20 $svc" ;;
+
+  version)
+    say "на сервере:"; run "git log --oneline -1"
+    say "в main на GitHub:"; run "git fetch -q && git log --oneline -1 origin/main" ;;
+
+  update) run "deploy/update.sh" ;;
+
+  restart)
+    svc=${1:-web}; check_service "$svc"
+    run "$DC restart $svc && sleep 5 && $DC ps $svc --format '{{.Service}} {{.State}} {{.Health}}'" ;;
+
+  backup) run "$DC exec -T backup backup.sh 2>&1 | { grep -v 'Config file' || true; }" ;;
+
+  backups)
+    say "на сервере (./backups, 14 дней):"; run "ls -lh backups/ | awk 'NR>1 {print \$5, \$6, \$7, \$8, \$9}'"
+    say "на Storage Box:"; run "$DC exec -T backup rclone -q ls offsite:harch-backups | sort -k2" ;;
+
+  restore-check)
+    file=${1:-}; [[ -z "$file" || "$file" =~ ^harch-[0-9_-]+\.sql\.gz$ ]] || die "файл вида harch-2026-10-01_0230.sql.gz"
+    run "$DC exec -T backup restore-check.sh $file" ;;
+
+  users) [[ "${1:-}" == "--all" ]] && manage "list_users --all" || manage "list_users" ;;
+
+  import-users)
+    file=${1:-}; [[ -f "$file" ]] || die "укажите файл: harch import-users сотрудники.xlsx"
+    shift; apply=""; flags=""
+    for a in "$@"; do case "$a" in
+      --apply) apply=1 ;; --deactivate-others|--reset-passwords) flags="$flags $a" ;; *) die "неизвестный флаг $a" ;; esac; done
+    ext=${file##*.}; remote="backups/import-users.$ext"
+    scp -q "${ssh_opts[@]}" "$file" "$HOST:$DIR/$remote"
+    trap 'run "rm -f $remote"' EXIT
+    if [[ -z "$apply" ]]; then
+      manage "create_pilot_users /backups/import-users.$ext --dry-run$flags"
+      echo; say "Это проверка. Если всё верно: harch import-users \"$file\" --apply$flags"
+    else
+      confirm "Записать пользователей в рабочую систему?"
+      manage "create_pilot_users /backups/import-users.$ext$flags"
+      echo; say "Временные пароли выше показаны один раз — раздайте их лично."
+    fi ;;
+
+  temp-password) check_login "${1:-}"; manage "temp_password $1" ;;
+  unlock) check_login "${1:-}"; manage "axes_reset_username $1" ;;
+  deactivate)
+    check_login "${1:-}"; confirm "Выключить $1? Войти он(а) больше не сможет."
+    manage "shell --no-imports -c \"from apps.accounts.models import User; n=User.objects.filter(username='$1').update(is_active=False); print('выключено' if n else 'нет такого логина')\"" ;;
+
+  demo-reset) run "$DC exec -T demo-web python manage.py reset_demo 2>&1 | { grep -v '^AXES: ' || true; }" ;;
+  tasks) manage "generate_daily_tasks --days-ahead 1" ;;
+  deadlines) manage "check_deadlines" ;;
+  monitoring) manage "monitoring_check" ;;
+
+  env)
+    # secret-looking names hidden entirely; passwords inside URLs (DATABASE_URL, EMAIL_URL) hidden too
+    run "grep -vE '^[[:space:]]*(#|$)' .env | sed -E -e 's/^([A-Z0-9_]*(SECRET|PASSWORD|PASS|TOKEN|DSN|API_KEY)[A-Z0-9_]*)=.+/\1=••• (скрыто)/' -e 's#(://[^:/@]+):[^@]+@#\1:•••@#'" ;;
+
+  env-set)
+    k=${1:-}; v=${2:-}
+    [[ "$k" =~ ^[A-Z][A-Z0-9_]*$ && -n "$v" ]] || die "harch env-set КЛЮЧ \"значение\""
+    [[ "$v" != *$'\n'* && "$v" != *"'"* ]] || die "значение без переносов строк и апострофов '"
+    confirm "Поставить $k на сервере и перезапустить сервисы?"
+    run "cp -p .env .env.bak-\$(date +%Y%m%d-%H%M%S) && grep -v '^$k=' .env > .env.new && printf '%s=%s\n' '$k' '$v' >> .env.new && mv .env.new .env && chmod 600 .env && $DC up -d && echo 'готово (прежний .env сохранён как .env.bak-…)'" ;;
+
+  manage) [[ $# -gt 0 ]] || die "harch manage <команда manage.py>"; run_tty "$DC exec web python manage.py $*" ;;
+  shell) run_tty "$DC exec web python manage.py shell" ;;
+  psql) run_tty "$DC exec db psql -U harch harch" ;;
+  ssh) ssh "${ssh_opts[@]}" -t "$HOST" "cd $DIR && exec \$SHELL -l" ;;
+
+  *) usage; die "нет команды «$cmd»" ;;
+esac
