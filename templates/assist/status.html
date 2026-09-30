@@ -15,7 +15,8 @@
         <dt class="col-6 fw-normal text-secondary">Ключ Anthropic</dt>
         <dd class="col-6">{% if st.key_configured %}<span class="badge text-bg-success">налаштовано</span>{% else %}<span class="badge text-bg-warning">не вказано</span>{% endif %}</dd>
         <dt class="col-6 fw-normal text-secondary">Основна модель</dt><dd class="col-6"><code>{{ st.model }}</code><div class="small text-secondary">фото карток, оцінка БЖУ продуктів</div></dd>
-        <dt class="col-6 fw-normal text-secondary">Легка модель</dt><dd class="col-6"><code>{{ st.model_light }}</code><div class="small text-secondary">{% if st.model_light == st.model %}не задана — все йде на основну{% else %}дублі, сполучуваність меню, чернетки карток{% endif %}</div></dd>
+        <dt class="col-6 fw-normal text-secondary">Легка модель</dt><dd class="col-6"><code>{{ st.model_light }}</code><div class="small text-secondary">{% if st.model_light == st.model %}не задана — все йде на основну{% else %}дублі, сполучуваність меню, чернетки карток, технології{% endif %}</div></dd>
+        <dt class="col-6 fw-normal text-secondary">Глибина міркувань</dt><dd class="col-6"><code>{{ st.effort }}</code><div class="small text-secondary">для основної моделі (AI_EFFORT); цифри з фото й таблиць — medium</div></dd>
         <dt class="col-6 fw-normal text-secondary">Запитів сьогодні</dt><dd class="col-6">{{ st.used_today }} / {{ st.daily_limit }}</dd>
         <dt class="col-6 fw-normal text-secondary">За місяць</dt><dd class="col-6">{{ st.month_calls }} викл. · {{ st.month_input_tokens|num }} вх. / {{ st.month_output_tokens|num }} вих. токенів</dd>
       </dl>
