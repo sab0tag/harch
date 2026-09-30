@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Перевірка 7-денного циклу{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">Перевірка: {{ filename }}</h1>
+<p class="text-secondary mb-3">Страв у файлі: {{ rows }}. Перегляньте тиждень по кожній дієті й застосуйте.</p>
+<form method="post" class="card card-body mb-3">{% csrf_token %}
+  <div class="form-check mb-2">
+    <input class="form-check-input" type="checkbox" name="deactivate_others" id="deactivate_others" checked>
+    <label class="form-check-label" for="deactivate_others">Вимкнути інші меню цих дієт (стартові згенеровані) — історія лишається</label>
+  </div>
+  <div class="d-flex gap-2"><button class="btn btn-success"><i class="bi bi-check2-circle me-1"></i>Застосувати</button>
+    <a href="{% url 'menus:cycle_import' %}" class="btn btn-outline-secondary">Скасувати</a></div>
+</form>
+{% for diet, e in week.items %}
+<div class="card mb-3">
+  <div class="card-header bg-white"><span class="fw-semibold">{{ diet.code }}</span> — {{ diet.name }}
+    {% if e.missing %}<span class="badge text-bg-warning ms-2">немає днів: {{ e.missing|join:", " }}</span>{% endif %}</div>
+  {% if e.cards_to_allow %}<div class="card-body py-2 small text-secondary">Картки, які буде дозволено для {{ diet.code }}: {% for d in e.cards_to_allow %}№{{ d.card_no }} {{ d.name }}{% if not forloop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+  <div class="table-responsive"><table class="table table-sm mb-0">
+    <tbody>{% for day, slots in e.days %}<tr><th class="text-nowrap" style="width: 9rem">{{ day }}</th><td>
+      {% for label, dishes in slots %}<div><span class="text-secondary">{{ label }}:</span> {% for d in dishes %}{{ d.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endfor %}
+    </td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endfor %}
+{% endblock %}

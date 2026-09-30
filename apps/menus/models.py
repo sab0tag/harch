@@ -5,6 +5,10 @@ from simple_history.models import HistoricalRecords
 from apps.catalog.models import Diet, Dish, MealSlot
 
 
+CYCLE_DAYS = [(1, "Понеділок"), (2, "Вівторок"), (3, "Середа"), (4, "Четвер"), (5, "П'ятниця"),
+              (6, "Субота"), (7, "Неділя")]
+
+
 class Menu(models.Model):
     """Меню на день для однієї дієти (інваріант: рівно одна дієта)."""
 
@@ -13,6 +17,8 @@ class Menu(models.Model):
     title = models.CharField("Назва", max_length=200, blank=True)
     is_active = models.BooleanField("Активне", default=True)
     verified = models.BooleanField("Перевірено", default=False)
+    # S7-04: the hospital's 7-day cycle — 1 = Monday … 7 = Sunday; the day plan picks it by weekday.
+    cycle_day = models.PositiveSmallIntegerField("День циклу", null=True, blank=True, choices=CYCLE_DAYS)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
@@ -21,6 +27,10 @@ class Menu(models.Model):
         verbose_name = "Меню"
         verbose_name_plural = "Меню"
         ordering = ["number"]
+        constraints = [
+            models.UniqueConstraint(fields=["diet", "cycle_day"], condition=models.Q(is_active=True, cycle_day__isnull=False),
+                                    name="menu_one_active_per_diet_cycle_day"),
+        ]
 
     def __str__(self):
         return f"Меню №{self.number} ({self.diet.code})"
