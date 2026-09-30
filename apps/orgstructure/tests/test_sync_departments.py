@@ -51,7 +51,10 @@ def test_switched_off_department_takes_its_nurses_and_open_orders_along(seeded):
     # the hospital's own departments are untouched; once they all close, the day's plan starts as usual
     live = Task.objects.filter(type=ORDER_SUBMISSION, service_date=TOMORROW, department__is_active=True)
     assert live.count() == 8 and set(live.values_list("status", flat=True)) == {TaskStatus.PENDING}
-    for task in live:
+    # the new department (Реабілітаційне) has no task yet: the plan waits for it too (the scheduler creates it)
+    for dept in Department.objects.filter(is_active=True):
+        wf.ensure_task(ORDER_SUBMISSION, TOMORROW, department=dept)
+    for task in Task.objects.filter(type=ORDER_SUBMISSION, service_date=TOMORROW, department__is_active=True):
         wf.close_by_system(task, "test", run_hook=True)
     assert Task.objects.filter(type=MENU_PLANNING, service_date=TOMORROW).exists()
     assert therapy.is_active

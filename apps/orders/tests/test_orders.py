@@ -182,7 +182,7 @@ def test_create_missing_tasks(client, world):
 def test_force_plan_uses_only_approved_orders(client, world):
     fill_all(client, world)
     wf.approve(Task.objects.get(department=world.depts["Терапевтичне"]), world.dietician)
-    with time_machine.travel(datetime(2026, 9, 30, 12, 30, tzinfo=ZoneInfo("Europe/Kyiv")), tick=True):  # after the deadline
+    with time_machine.travel(datetime(2026, 9, 30, 23, 0, tzinfo=ZoneInfo("Europe/Kyiv")), tick=True):  # after the deadline
         r = as_user(client, world.dietician).post("/orders/summary/", {"date": "2026-10-01", "action": "force_plan"})
     assert r.url == "/plan/2026-10-01/"
     from apps.planning.models import DailyPlan
