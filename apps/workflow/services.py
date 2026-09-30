@@ -311,10 +311,11 @@ def expire_stale_tasks(today=None, dry_run=False):
 
 # ------------------------------------------------------------------ inbox queries
 def todo_for(user):
-    """Tasks the user can work on as maker."""
+    """Tasks the user can work on as maker. The admin has no daily work of their own: nothing is queued
+    for them (they can still step in on the screens, e.g. to catch up a missed day)."""
     qs = Task.objects.open_for_maker().select_related("department")
     if user.role == Role.ADMIN:
-        return qs
+        return qs.none()
     qs = qs.filter(maker_role=user.role).filter(Q(maker__isnull=True) | Q(maker=user))
     qs = qs.exclude(type__in=_expiring_types(), service_date__lt=timezone.localdate())  # see day_is_over
     if user.role == Role.DEPT_NURSE:
