@@ -8,10 +8,10 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views import View
 
-from apps.orders.corrections import corrections_for
 from apps.accounts.access import RoleRequiredMixin
 from apps.catalog.models import Product
 from apps.core.navigation import PRICE_EDITORS, roles_for
+from apps.orders.corrections import corrections_for
 from apps.orders.views import parse_date
 from apps.planning.models import DailyPlan
 from apps.workflow import services as wf
@@ -28,6 +28,29 @@ def day_nav(day):
 def frozen_plan(day):
     plan = DailyPlan.objects.filter(service_date=day).select_related("task").first()
     return plan if plan and plan.is_frozen else None
+
+
+# ====================================================================== S7-02 store
+class StoreView(RoleRequiredMixin, View):
+    """What the store issues to the kitchen for a day, by meal, in kg — the approved plan plus the day's
+    approved corrections (form З-4а on screen). For the head of the food store."""
+
+    allowed_roles = roles_for("store")
+
+    def get(self, request, day=None):
+        from apps.reports.exports import menu_vymoha_data
+
+        day = parse_date(day) if day else timezone.localdate()
+        plan = frozen_plan(day)
+        data = menu_vymoha_data(plan) if plan else None
+        if data:
+            for row in data["rows"]:
+                row["cells"] = [row["by_slot"].get(value) for value, _ in data["slots"]]
+        return render(request, "consumption/store.html", {
+            "day": day, "plan": plan, "data": data,
+            "corrections": [c for c in corrections_for(day) if c.task and c.task.status == TaskStatus.APPROVED],
+            **day_nav(day),
+        })
 
 
 # ====================================================================== S4-01 kitchen

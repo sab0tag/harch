@@ -198,7 +198,12 @@ def test_menu_vymoha_refused_before_approval(client, world):
 
 def test_menu_vymoha_access(client, cooking_day):
     url = f"/reports/menu-vymoha/{DAY.isoformat()}.xlsx"
-    assert as_user(client, cooking_day.chef).get(url).status_code == 403
+    from apps.accounts.models import Role
+    from apps.accounts.tests.factories import UserFactory
+
+    # the chef signs «Продукти одержав (кухар)» and the store «видав (комірник)» (S7-02)
+    assert as_user(client, cooking_day.chef).get(url).status_code == 200
+    assert as_user(client, UserFactory(role=Role.STOREKEEPER)).get(url).status_code == 200
     assert as_user(client, cooking_day.nurse["Терапевтичне"]).get(url).status_code == 403
     assert as_user(client, cooking_day.dietician).get(url).status_code == 200
 
