@@ -28,7 +28,7 @@
     <li class="list-group-item">
       <div class="d-flex flex-wrap align-items-start gap-2">
         <div class="me-auto" style="min-width: 0">
-          <a href="{{ f.url }}" class="fw-medium">{{ f.title }}</a>{% if f.kind == 'menu_norm' %} · <a href="{% url 'menus:fit' f.obj_id %}" class="small">підігнати під норму</a>{% endif %}{% if f.source == 'ai' %} <span class="badge text-bg-info">ШІ</span>{% endif %}
+          <a href="{{ f.url }}" class="fw-medium">{{ f.title }}</a>{% if f.kind == 'menu_norm' %} · <a href="{% url 'menus:fit' f.obj_id %}" class="small">підігнати під норму</a>{% endif %}{% if f.kind == 'dish_no_technology' and ai_available %} · <a href="{% url 'catalog:technology_start' %}" class="small">запропонувати з ШІ</a>{% endif %}{% if f.source == 'ai' %} <span class="badge text-bg-info">ШІ</span>{% endif %}
           <div class="small">{{ f.message }}</div>
           {% if f.note %}<div class="small text-secondary">«{{ f.note }}» — {{ f.dismissed_by }}</div>{% endif %}
         </div>

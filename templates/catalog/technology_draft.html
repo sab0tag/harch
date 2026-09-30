@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Технології з ШІ{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:dish_list' %}">Картки-розкладки</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'catalog:technology_start' %}">Технології з ШІ</a></li>
+  <li class="breadcrumb-item active">{{ draft.created_at|date:"d.m.Y H:i" }}</li></ol></nav>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+  <h1 class="h3 mb-0 me-auto">Технології на перевірку</h1>
+  <span class="badge text-bg-info"><i class="bi bi-stars"></i> Запропоновано ШІ</span>
+  {% if draft.status != 'ready' %}<span class="badge text-bg-secondary">{{ draft.get_status_display }}</span>{% endif %}
+</div>
+<p class="text-secondary" style="max-width: 820px">Перевірте кожен текст: за потреби виправте прямо в полі. Позначте картки й натисніть «Прийняти позначені» —
+  текст запишеться в картку (з історією змін). Склад і грами ШІ не змінює.</p>
+
+<form method="post">{% csrf_token %}
+{% for r in rows %}
+<div class="card mb-2 {% if r.decision %}opacity-75{% endif %}"><div class="card-body">
+  <div class="d-flex flex-wrap align-items-start gap-2">
+    {% if not r.decision %}<input type="checkbox" class="form-check-input mt-1" name="pick_{{ r.dish.pk }}" value="1" id="pick_{{ r.dish.pk }}" aria-label="Позначити №{{ r.dish.card_no }}">{% endif %}
+    <label for="pick_{{ r.dish.pk }}" class="me-auto">
+      <a href="{% url 'catalog:dish_detail' r.dish.pk %}" class="fw-semibold">№{{ r.dish.card_no }} {{ r.dish.name }}</a>
+      <span class="small text-secondary">· {{ r.dish.category|default:"—" }} · вихід {{ r.dish.output_g|default:"—" }} г
+        {% for d in r.dish.diets.all %}<span class="badge rounded-pill text-bg-light border">{{ d.code }}</span>{% endfor %}</span>
+    </label>
+    {% if r.decision == 'accepted' %}<span class="badge text-bg-success">Прийнято</span>
+    {% elif r.decision == 'discarded' %}<span class="badge text-bg-secondary">Відхилено</span>
+    {% elif r.decision == 'skipped' %}<span class="badge text-bg-warning">Уже заповнено — не змінено</span>{% endif %}
+  </div>
+  <div class="small text-secondary mt-1">Склад: {% for i in r.dish.ingredients.all %}{{ i.product.name }} {{ i.netto_g|floatformat:"-1" }} г{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}</div>
+  {% for w in r.warnings %}<div class="small text-warning-emphasis mt-1"><i class="bi bi-exclamation-triangle"></i> {{ w }}</div>{% endfor %}
+  {% if r.decision %}
+  <div class="small mt-2" style="white-space: pre-line">{{ r.proposal }}</div>
+  {% else %}
+  <textarea name="text_{{ r.dish.pk }}" rows="4" class="form-control form-control-sm mt-2" aria-label="Технологія №{{ r.dish.card_no }}">{{ r.proposal }}</textarea>
+  {% endif %}
+</div></div>
+{% endfor %}
+{% if draft.status == 'ready' %}
+<div class="d-flex flex-wrap gap-2 mt-3">
+  <button name="action" value="accept" class="btn btn-success"><i class="bi bi-check2 me-1"></i>Прийняти позначені</button>
+  <button name="action" value="discard" class="btn btn-outline-secondary">Відхилити позначені</button>
+</div>
+{% endif %}
+</form>
+{% endblock %}

@@ -266,3 +266,59 @@ def estimate_products(user, names):
             "exists": existing.get(normalize(name), ""),
         })
     return {"products": rows, "categories": categories}
+
+
+# ============================================================ AI-10 technology for existing cards
+TECHNOLOGY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "cards": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "dish_id": {"type": "integer"},
+                    "technology": {"type": "string", "description": "3–6 речень українською"},
+                    "warnings": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": ["dish_id", "technology", "warnings"],
+            },
+        }
+    },
+    "required": ["cards"],
+}
+
+TECHNOLOGY_PROMPT = """You write the «технологія приготування» section for EXISTING technological cards
+(картки-розкладки) of a Ukrainian hospital kitchen (Наказ МОЗ №931, typical Ukrainian catering recipe collections).
+For each card you get its name, category, portion output, diets and ingredients with netto grams per portion.
+Write concise preparation steps in Ukrainian (3–6 sentences): cold processing, cooking method, portioning,
+serving temperature. Use ONLY the listed ingredients — never add others and never change quantities.
+Do not repeat the gram amounts. Respect the diets: ЩД/№1а — no frying, steamed or boiled, wiped or chopped
+as needed; №9 — no added sugar; НКД — lean, no frying; НБД — as the card says. If the card looks inconsistent
+(e.g. a porridge without water, output far from the ingredients), still write the technology and add a short
+warning in Ukrainian. Return one entry per given dish_id. Answer only with the tool."""
+
+
+def draft_technology(user, dishes):
+    """dishes: Dish objects with ingredients__product and diets prefetched. Returns {dish_id: {technology, warnings}}."""
+    blocks = []
+    for d in dishes:
+        ings = "; ".join(f"{i.product.name} {i.netto_g:g} г" for i in d.ingredients.all())
+        diets = ", ".join(f"{x.code} ({x.name})" for x in d.diets.all()) or "—"
+        blocks.append(f"dish_id: {d.pk}\nНазва: {d.name}\nКатегорія: {d.category or '—'}\n"
+                      f"Вихід: {f'{d.output_g:g} г' if d.output_g else '—'}\nДієти: {diets}\nСклад (нетто): {ings or '—'}")
+    data = client.extract(
+        user=user, feature="dish_technology", tool_name="write_technology", tool_schema=TECHNOLOGY_SCHEMA,
+        system_prompt=TECHNOLOGY_PROMPT, max_tokens=4000,
+        content_blocks=[{"type": "text", "text": "\n\n".join(blocks)}],
+        request_meta={"dishes": len(blocks)},
+    )
+    asked = {d.pk for d in dishes}
+    out = {}
+    for c in data.get("cards", []):
+        pid, text = c.get("dish_id"), str(c.get("technology", "")).strip()
+        if pid not in asked or pid in out or not text:      # unknown ids, repeats and blanks are dropped
+            continue
+        out[pid] = {"technology": text[:1500],
+                    "warnings": [str(w)[:300] for w in c.get("warnings", []) if str(w).strip()][:3]}
+    return out

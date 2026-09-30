@@ -215,3 +215,75 @@ class ProductSuggestView(RoleRequiredMixin, View):
         if draft.parent_id and draft.parent.status == AIDraft.Status.READY:
             return redirect("catalog:dish_draft", draft.parent_id)
         return redirect(reverse("catalog:product_list"))
+
+
+# ====================================================================== AI-10
+class TechnologyStartView(RoleRequiredMixin, View):
+    """Cards without «технологія»: ask the model for a batch, see batches waiting for a decision."""
+
+    allowed_roles = CATALOG_EDITORS
+
+    def get(self, request):
+        from . import technology
+
+        return render(request, "catalog/technology_start.html", {
+            "missing": Dish.objects.filter(is_active=True, technology="").count(),
+            "available": technology.candidates().count(),
+            "batch": technology.BATCH,
+            "drafts": AIDraft.objects.filter(kind=AIDraft.Kind.TECHNOLOGY).select_related("user")[:20],
+        })
+
+    def post(self, request):
+        from django.core.exceptions import ValidationError
+
+        from . import technology
+
+        try:
+            draft = technology.generate(request.user)
+        except (client.AIUnavailable, client.AIError, client.AILimitExceeded) as exc:
+            ai_error(request, exc)
+            return redirect("catalog:technology_start")
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+            return redirect("catalog:technology_start")
+        if draft is None:
+            messages.info(request, "Усі картки вже мають технологію або чекають рішення.")
+            return redirect("catalog:technology_start")
+        return redirect("catalog:technology_draft", draft.pk)
+
+
+class TechnologyDraftView(RoleRequiredMixin, View):
+    allowed_roles = CATALOG_EDITORS
+
+    def get(self, request, pk):
+        from . import technology
+
+        draft = get_object_or_404(AIDraft, pk=pk, kind=AIDraft.Kind.TECHNOLOGY)
+        return render(request, "catalog/technology_draft.html", {"draft": draft, "rows": technology.rows(draft)})
+
+    def post(self, request, pk):
+        from django.core.exceptions import ValidationError
+
+        from . import technology
+
+        draft = get_object_or_404(AIDraft, pk=pk, kind=AIDraft.Kind.TECHNOLOGY)
+        ids = [int(k) for k in draft.result.get("items", {})]
+        picked = {i for i in ids if request.POST.get(f"pick_{i}") == "1"}
+        if request.POST.get("action") == "accept":
+            accepted = {i: request.POST.get(f"text_{i}", "") for i in picked}
+            discarded = set()
+        else:
+            accepted, discarded = {}, picked
+        try:
+            written, skipped = technology.decide(draft, request.user, accepted, discarded)
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+            return redirect("catalog:technology_draft", draft.pk)
+        if written:
+            messages.success(request, f"Технологію записано в {len(written)} карт(ок). Картки позначено «Не перевірено».")
+        if skipped:
+            messages.warning(request, "Не змінено — технологію вже хтось заповнив: "
+                             + ", ".join(f"№{d.card_no}" for d in skipped) + ".")
+        if discarded:
+            messages.info(request, f"Відхилено: {len(discarded)}.")
+        return redirect("catalog:technology_draft", draft.pk)
