@@ -85,7 +85,7 @@ def test_dietician_gets_no_creation_buttons_for_a_past_day(client, world):
     assert Task.objects.filter(service_date=PAST).count() == 3              # admin: deliberate catch-up
 
 
-def test_nightly_expiry_closes_only_past_unfilled_orders(world, ther):
+def test_nightly_expiry_closes_only_past_open_orders(world, ther):
     surgery, endo = world.depts["Хірургічне"], world.depts["Ендокринологічне"]
     stale, _ = wf.ensure_task(ORDER_SUBMISSION, PAST, department=ther)
     submitted, _ = wf.ensure_task(ORDER_SUBMISSION, PAST, department=surgery)
@@ -102,7 +102,8 @@ def test_nightly_expiry_closes_only_past_unfilled_orders(world, ther):
     stale.refresh_from_db(), submitted.refresh_from_db(), today.refresh_from_db()
     assert stale.status == TaskStatus.CANCELLED
     assert stale.events.last().comment == "Дата минула — закрито автоматично"
-    assert submitted.status == TaskStatus.SUBMITTED and today.status == TaskStatus.PENDING
+    assert submitted.status == TaskStatus.CANCELLED and "не розглянуто" in submitted.events.last().comment
+    assert today.status == TaskStatus.PENDING
     assert not Notification.objects.exists()                                # quietly
     assert not Task.objects.filter(type=MENU_PLANNING, service_date=PAST).exists()  # no hook for a finished day
 

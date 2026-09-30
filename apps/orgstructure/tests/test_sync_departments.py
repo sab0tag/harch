@@ -10,7 +10,7 @@ from apps.accounts.tests.factories import UserFactory
 from apps.orgstructure.models import Department
 from apps.orgstructure.services import read_departments, sync_departments
 from apps.workflow import services as wf
-from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
+from apps.workflow.definitions import ORDER_SUBMISSION, all_orders_resolved
 from apps.workflow.models import Task, TaskStatus
 
 pytestmark = pytest.mark.django_db
@@ -56,7 +56,7 @@ def test_switched_off_department_takes_its_nurses_and_open_orders_along(seeded):
         wf.ensure_task(ORDER_SUBMISSION, TOMORROW, department=dept)
     for task in Task.objects.filter(type=ORDER_SUBMISSION, service_date=TOMORROW, department__is_active=True):
         wf.close_by_system(task, "test", run_hook=True)
-    assert Task.objects.filter(type=MENU_PLANNING, service_date=TOMORROW).exists()
+    assert all_orders_resolved(TOMORROW)          # the plan would start now (here no portions: none needed)
     assert therapy.is_active
 
 

@@ -2,6 +2,7 @@
 from decimal import Decimal
 
 import pytest
+from django.core.exceptions import ValidationError
 
 from apps.catalog.models import Diet, DishIngredient
 from apps.consumption.calc import PlanInput, compute_lines, totals_by_product
@@ -155,7 +156,8 @@ class TestApproval:
 
 
 def test_portions_follow_orders_only_while_plan_is_with_dietician(client, world):
-    """Forced early plan: later approvals update it until it is submitted, then show as drift."""
+    """Forced early plan: later approvals update it until it is submitted; after that a late order goes in
+    as «Пізнє замовлення», or, with a diet the plan lacks, waits until the chef returns the plan."""
     for name, code, n in (("Терапевтичне", "ОВД", 30), ("Хірургічне", "ЩД", 20), ("Ендокринологічне", "№9", 8)):
         submit_order(open_order(world.depts[name], DAY), world.nurse[name], {diet(code).pk: n})
     tasks = {t.department.name: t for t in Task.objects.filter(status=TaskStatus.SUBMITTED)}
@@ -170,10 +172,14 @@ def test_portions_follow_orders_only_while_plan_is_with_dietician(client, world)
     assert {e.diet.code: e.portions for e in plan.entries.all()} == {"ОВД": 30, "ЩД": 20}
 
     as_user(client, world.dietician).post(PLAN, {**menus_form(plan, {"ОВД": 1, "ЩД": 81}), "action": "submit"})
-    wf.approve(tasks["Ендокринологічне"], world.dietician)  # last order → would re-sync the plan
+    # Late, and the submitted plan has no №9: the approval says the chef can return the plan.
+    with pytest.raises(ValidationError, match="немає дієт: №9"):
+        wf.approve(tasks["Ендокринологічне"], world.dietician)
     assert {e.diet.code: e.portions for e in plan.entries.all()} == {"ОВД": 30, "ЩД": 20}  # chef sees what was submitted
-    html = as_user(client, world.chef).get(PLAN).content.decode()
-    assert "відрізняються від затверджених замовлень" in html and "№9: у плані 0, затверджено 8" in html
+    wf.reject(Task.objects.get(type=MENU_PLANNING), world.chef, "Додайте №9")
+    wf.approve(tasks["Ендокринологічне"], world.dietician)     # the plan is back with the dietician: as usual
+    as_user(client, world.dietician).get(PLAN)
+    assert {e.diet.code: e.portions for e in plan.entries.all()} == {"ОВД": 30, "ЩД": 20, "№9": 8}
 
 
 def test_access(client, approved_day):
