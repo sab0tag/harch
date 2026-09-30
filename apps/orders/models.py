@@ -62,6 +62,7 @@ class OrderCorrection(models.Model):
         DISCHARGE = "discharge", "Виписка"
         TRANSFER = "transfer", "Переведення з іншого відділення"
         DIET_CHANGE = "diet_change", "Зміна дієти / алергія"
+        LATE_ORDER = "late_order", "Пізнє замовлення"   # system-made: see corrections.take_late_order
 
     department = models.ForeignKey("orgstructure.Department", verbose_name="Відділення", on_delete=models.PROTECT,
                                    related_name="corrections")

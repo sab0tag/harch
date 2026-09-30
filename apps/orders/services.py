@@ -15,6 +15,15 @@ from apps.workflow.models import TaskStatus
 from .models import DailyOrder, DailyOrderLine
 
 
+OPEN_AHEAD_DAYS = 7    # a weekend's orders are handed in on Friday; a week covers any holiday stretch
+
+
+def opens_on(service_date):
+    """The first day an order for service_date can be opened. Browsing further ahead must not create tasks:
+    each lands in the nurse's list with a notification, for a day nobody is planning yet."""
+    return service_date - timedelta(days=OPEN_AHEAD_DAYS)
+
+
 def default_service_date():
     return timezone.localdate() + timedelta(days=1)
 
@@ -92,10 +101,16 @@ def validate_order_task(task) -> list[str]:
     return []
 
 
-def approved_portions(service_date):
-    """{diet_id: portions} over approved orders of the day — the input to the day plan."""
+def approved_portions(service_date, *, include_late=False):
+    """{diet_id: portions} over approved orders of the day — the input to the day plan.
+
+    A late order (approved after the plan left the dietician) goes into consumption as a correction
+    (corrections.take_late_order), so it is not part of the plan's base unless include_late."""
+    lines = DailyOrderLine.objects.filter(order__service_date=service_date, order__task__status=TaskStatus.APPROVED)
+    if not include_late:
+        lines = lines.filter(order__task__order_correction__isnull=True)
     rows = (
-        DailyOrderLine.objects.filter(order__service_date=service_date, order__task__status=TaskStatus.APPROVED)
+        lines
         .values("diet_id")
         .annotate(total=Sum("portions"))
     )

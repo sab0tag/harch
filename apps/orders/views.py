@@ -73,7 +73,7 @@ class OrderEditView(RoleRequiredMixin, View):
         department = get_object_or_404(Department, pk=dept_id)
         # A nurse opens (creates) orders only for today onwards; a past day is view-only for her.
         # An admin may still open a past day to catch it up (docs/08_ops.md).
-        if department.is_active and (
+        if department.is_active and services.opens_on(day) <= timezone.localdate() and (
                 user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and day >= timezone.localdate())):
             return services.open_order(department, day)
         order = DailyOrder.objects.filter(department=department, service_date=day).select_related("task").first()
@@ -92,6 +92,7 @@ class OrderEditView(RoleRequiredMixin, View):
                 "department": missing.department, "day": day, "task": task,
                 "task_closed": task is not None and task.status in CLOSED,
                 "day_over": day < timezone.localdate(),
+                "opens_on": services.opens_on(day) if services.opens_on(day) > timezone.localdate() else None,
                 "prev_day": day - timedelta(days=1), "next_day": day + timedelta(days=1),
             })
         return self.render(request, order)
@@ -164,7 +165,7 @@ class OrderSummaryView(RoleRequiredMixin, View):
         rows = services.summary(day, departments)
         diets = list(services.orderable_diets())
         totals = {d.pk: sum(r["portions"].get(d.pk, 0) for r in rows) for d in diets}
-        approved = services.approved_portions(day)
+        approved = services.approved_portions(day, include_late=True)
         counts = {s: 0 for s in ("missing", "open", "submitted", "approved", "cancelled")}
         for r in rows:
             t = r["task"]
@@ -204,6 +205,9 @@ class OrderSummaryView(RoleRequiredMixin, View):
         if action in ("create_tasks", "force_plan") and day < timezone.localdate() and request.user.role != Role.ADMIN:
             messages.error(request, "Дата минула: задачі й план на неї створює лише адміністратор.")
             return back
+        if action in ("create_tasks", "force_plan") and services.opens_on(day) > timezone.localdate():
+            messages.error(request, f"Замовлення на {day:%d.%m} відкриються {services.opens_on(day):%d.%m}.")
+            return back
         if action == "create_tasks":
             created = sum(
                 wf.ensure_task(ORDER_SUBMISSION, day, department=d)[1]
@@ -228,7 +232,11 @@ class OrderSummaryView(RoleRequiredMixin, View):
                 messages.error(request, f"Сформувати план без усіх замовлень можна після терміну подачі "
                                         f"({timezone.localtime(order_deadline(day)):%d.%m %H:%M}).")
                 return back
-            force_planning(day, request.user)
+            try:
+                force_planning(day, request.user)
+            except ValidationError as exc:
+                messages.error(request, exc.messages[0])
+                return back
             messages.success(request, "План меню сформовано з уже затверджених замовлень.")
             return redirect("planning:plan", day.isoformat())
         return back

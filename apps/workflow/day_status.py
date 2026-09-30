@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from apps.orgstructure.models import Department
 
-from .definitions import COOKING, MENU_PLANNING, ORDER_CORRECTION, ORDER_SUBMISSION, WRITE_OFF
+from .definitions import COOKING, MENU_PLANNING, ORDER_CORRECTION, ORDER_SUBMISSION, WRITE_OFF, all_orders_resolved
 from .models import Task, TaskStatus
 
 
@@ -58,11 +58,15 @@ def cards(anchor):
     done = sum(r["status"] in (TaskStatus.APPROVED, TaskStatus.CANCELLED) for r in order_rows)
     submitted = sum(r["status"] == TaskStatus.SUBMITTED for r in order_rows)
     corrections = correction_rows(anchor)
+    from apps.orders.services import approved_portions
+
+    no_portions = all_orders_resolved(tomorrow) and not approved_portions(tomorrow, include_late=True)
     return [
         {"key": "tomorrow", "day": tomorrow, "title": "Завтра — замовлення і план меню",
          "summary": f"Замовлень затверджено або закрито: {done} з {len(order_rows)}; на перевірці: {submitted}",
          "rows": order_rows + correction_rows(tomorrow) + [_row("План меню", _one(MENU_PLANNING, tomorrow),
-                                    "з'явиться, коли всі замовлення буде закрито")]},
+                                    "порцій немає — план не потрібен" if no_portions
+                                    else "з'явиться, коли всі замовлення буде закрито")]},
         {"key": "today", "day": anchor, "title": "Сьогодні — коригування і кухня",
          "summary": f"Коригувань: {len(corrections)}",
          "rows": corrections + [_row("Факт кухні", _one(COOKING, anchor),

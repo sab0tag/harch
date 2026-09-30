@@ -20,8 +20,8 @@ from apps.accounts.models import Role
 from apps.catalog.models import Diet, MealSlot
 from apps.workflow import notify as n
 from apps.workflow import services as wf
-from apps.workflow.definitions import COOKING, ORDER_CORRECTION, ORDER_SUBMISSION
-from apps.workflow.models import Task, TaskStatus
+from apps.workflow.definitions import COOKING, MENU_PLANNING, ORDER_CORRECTION, ORDER_SUBMISSION
+from apps.workflow.models import OPEN_FOR_MAKER, Task, TaskStatus
 
 from .models import DailyOrder, OrderCorrection, OrderCorrectionLine
 from .services import approved_portions, portions_by_diet
@@ -64,6 +64,7 @@ def department_portions(department, day, exclude=None):
     result = portions_by_diet(order) if order else {}
     lines = OrderCorrectionLine.objects.filter(department=department, correction__service_date=day,
                                                correction__task__status=TaskStatus.APPROVED)
+    lines = lines.exclude(correction__reason=OrderCorrection.Reason.LATE_ORDER)   # the order itself counts above
     if exclude is not None:
         lines = lines.exclude(correction=exclude)
     for diet_id, total in lines.values("diet_id").annotate(total=Sum("delta")).values_list("diet_id", "total"):
@@ -249,6 +250,45 @@ def apply_pending(plan):
                                              task__status=TaskStatus.APPROVED).order_by("pk")
     for correction in pending:
         add_extra_lines(correction, plan)
+
+
+def take_late_order(task):
+    """An order approved after the day's plan has left the dietician (with the chef, or approved) can no longer
+    enter the plan. Its portions go into consumption like a correction — «Пізнє замовлення», from breakfast:
+    now if the plan is frozen, else at the freeze (apply_pending). If the chef returns the plan instead,
+    approved_portions leaves the order out of the plan's base, so nothing is counted twice.
+
+    Returns True when the order was taken this way (then no plan is to be opened for it)."""
+    from apps.planning.models import DailyPlan
+
+    plan_task = Task.objects.filter(type=MENU_PLANNING, service_date=task.service_date).first()
+    if task.status != TaskStatus.APPROVED or plan_task is None or plan_task.status in OPEN_FOR_MAKER:
+        return False
+    order = DailyOrder.objects.select_related("department").get(task=task)
+    portions = {d: p for d, p in portions_by_diet(order).items() if p}
+    if not portions:
+        return True     # «пацієнтів немає»: nothing to add
+    day = f"{task.service_date:%d.%m}"
+    cooking = Task.objects.filter(type=COOKING, service_date=task.service_date).first()
+    if cooking is not None and cooking.status in (TaskStatus.SUBMITTED, TaskStatus.APPROVED):
+        raise ValidationError(f"Факт кухні за {day} уже подано — пізнє замовлення до розходу не додати.")
+    plan = DailyPlan.objects.get(service_date=task.service_date)
+    planned = set(plan.entries.filter(menu__isnull=False).values_list("diet_id", flat=True))
+    missing = [d.code for d in Diet.objects.filter(pk__in=set(portions) - planned).order_by("sort_order", "code")]
+    if missing:
+        hint = ("Узгодьте з шеф-кухарем окремо." if plan.is_frozen
+                else "Шеф-кухар може повернути план — тоді замовлення увійде до нього.")
+        raise ValidationError(f"План меню на {day} уже в шеф-кухаря, і в ньому немає дієт: {', '.join(missing)}. {hint}")
+    correction = OrderCorrection.objects.create(
+        department=order.department, service_date=task.service_date, task=task, from_meal=SLOTS[0],
+        reason=OrderCorrection.Reason.LATE_ORDER, created_by=task.resolved_by,
+        note="Замовлення затверджено після того, як план меню передано шеф-кухарю.")
+    OrderCorrectionLine.objects.bulk_create([
+        OrderCorrectionLine(correction=correction, department=order.department, diet_id=d, delta=p)
+        for d, p in portions.items()])
+    if plan.is_frozen:
+        add_extra_lines(correction, plan)
+    return True
 
 
 def corrections_for(day, department=None):
