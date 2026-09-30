@@ -45,19 +45,23 @@ def orders(day):
     return rows
 
 
+def correction_rows(day):
+    return [_row(f"Коригування · {t.department.name if t.department else '—'}", t)
+            for t in Task.objects.filter(type=ORDER_CORRECTION, service_date=day)
+            .exclude(status=TaskStatus.CANCELLED).select_related("department", "submitted_by", "resolved_by")
+            .order_by("created_at")]
+
+
 def cards(anchor):
     tomorrow, yesterday = anchor + timedelta(days=1), anchor - timedelta(days=1)
     order_rows = orders(tomorrow)
     done = sum(r["status"] in (TaskStatus.APPROVED, TaskStatus.CANCELLED) for r in order_rows)
     submitted = sum(r["status"] == TaskStatus.SUBMITTED for r in order_rows)
-    corrections = [_row(t.department.name if t.department else "—", t)
-                   for t in Task.objects.filter(type=ORDER_CORRECTION, service_date=anchor)
-                   .exclude(status=TaskStatus.CANCELLED).select_related("department", "submitted_by", "resolved_by")
-                   .order_by("created_at")]
+    corrections = correction_rows(anchor)
     return [
         {"key": "tomorrow", "day": tomorrow, "title": "Завтра — замовлення і план меню",
          "summary": f"Замовлень затверджено або закрито: {done} з {len(order_rows)}; на перевірці: {submitted}",
-         "rows": order_rows + [_row("План меню", _one(MENU_PLANNING, tomorrow),
+         "rows": order_rows + correction_rows(tomorrow) + [_row("План меню", _one(MENU_PLANNING, tomorrow),
                                     "з'явиться, коли всі замовлення буде закрито")]},
         {"key": "today", "day": anchor, "title": "Сьогодні — коригування і кухня",
          "summary": f"Коригувань: {len(corrections)}",

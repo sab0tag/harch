@@ -72,7 +72,9 @@ def department_portions(department, day, exclude=None):
 
 
 def can_create(user, department):
-    return user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and user.department_id == department.pk)
+    """Only the department's head nurse: she knows who was admitted, discharged or transferred.
+    The admin sees corrections (the order page, «Стан дня») but does not submit them."""
+    return user.role == Role.DEPT_NURSE and user.department_id == department.pk
 
 
 @transaction.atomic

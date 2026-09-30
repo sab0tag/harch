@@ -160,3 +160,27 @@ def test_the_nurse_screens(client, cooking_day):
     assert c.task.status == TaskStatus.SUBMITTED and c.from_meal == "dinner"
     summary = as_user(client, w.dietician).get(f"/orders/summary/?date={DAY.isoformat()}").content.decode()
     assert "Коригування на 01.10" in summary and f"/tasks/{c.task.pk}/approve/" in summary
+
+
+def test_the_admin_sees_corrections_but_does_not_submit_them(client, cooking_day):
+    from django.core.exceptions import PermissionDenied
+
+    w = cooking_day
+    correct(w, "Терапевтичне", {"ОВД": 1})
+    page = as_user(client, w.admin).get(f"/orders/{w.depts['Терапевтичне'].pk}/{DAY.isoformat()}/").content.decode()
+    assert "Нове коригування" not in page and "Надходження" in page         # the list is there, the button is not
+    assert "зміни лише коригуванням нижче" in page
+    with pytest.raises(PermissionDenied):
+        corrections.open_correction(w.depts["Терапевтичне"], DAY, w.admin)
+    r = as_user(client, w.admin).post(f"/orders/{w.depts['Терапевтичне'].pk}/{DAY.isoformat()}/corrections/new/", follow=True)
+    assert OrderCorrection.objects.count() == 1 and "старша медсестра" in r.content.decode()
+
+
+def test_day_status_lists_tomorrows_corrections(client, cooking_day):
+    from datetime import timedelta
+
+    w = cooking_day
+    correct(w, "Хірургічне", {"ЩД": 2}, approve=False)
+    r = as_user(client, w.admin).get(f"/tasks/day/?date={(DAY - timedelta(days=1)).isoformat()}")
+    tomorrow = r.context["cards"][0]
+    assert any(row["what"] == "Коригування · Хірургічне" and row["status"] == "submitted" for row in tomorrow["rows"])
