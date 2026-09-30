@@ -67,7 +67,13 @@ def all_orders_resolved(service_date) -> bool:
 
 
 def _after_order_approved(task):
-    if all_orders_resolved(task.service_date):
+    from apps.orders.corrections import take_late_order
+    from apps.orders.services import approved_portions
+
+    if take_late_order(task):       # the plan has already left the dietician: in as «Пізнє замовлення»
+        return
+    # All in, but no portions at all (every department «пацієнтів немає»): there is nothing to plan.
+    if all_orders_resolved(task.service_date) and approved_portions(task.service_date):
         from apps.planning.services import open_plan, sync_portions
 
         from .services import ensure_task

@@ -10,6 +10,9 @@
 <div class="card card-body text-center">
   {% if task_closed %}
     <p class="mb-2">Задачу закрито ({{ task.get_status_display|lower }}), але документа замовлення на цю дату немає — порції не подавались.</p>
+  {% elif opens_on %}
+    <p class="mb-2">Ще рано: замовлення на цю дату відкриється {{ opens_on|date:"d.m" }}.</p>
+    <p class="text-secondary small mb-3">Замовлення відкриваються не раніше ніж за тиждень до дати.</p>
   {% elif day_over %}
     <p class="mb-2">Замовлення на цю дату не подавалось.</p>
     <p class="text-secondary small mb-3">Дата минула — внести його заднім числом може лише адміністратор.</p>

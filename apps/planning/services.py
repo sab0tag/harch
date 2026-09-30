@@ -147,6 +147,8 @@ def force_planning(service_date, user):
     """Dietician starts the plan before every order is resolved (e.g. after the deadline)."""
     if not user.has_role("dietician"):
         raise PermissionDenied
+    if not approved_portions(service_date):
+        raise ValidationError("Немає затверджених замовлень з порціями — план не потрібен.")
     task, _ = wf.ensure_task(MENU_PLANNING, service_date)
     plan = open_plan(service_date)
     sync_portions(plan)

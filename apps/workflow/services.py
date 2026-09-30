@@ -287,12 +287,14 @@ def notify_overdue(now=None):
     return notified
 
 
-def close_by_system(task, comment, *, run_hook=False):
+def close_by_system(task, comment, *, run_hook=False, also_submitted=False):
     """Close an open task without a person: cancelled, with the reason in its history, no notifications.
-    run_hook: also run the type's on_cancelled (e.g. the day's last open order closing starts the plan)."""
+    run_hook: also run the type's on_cancelled (e.g. the day's last open order closing starts the plan).
+    also_submitted: close one still waiting for review too (a past day's order nobody approved)."""
+    closable = (*OPEN_FOR_MAKER, TaskStatus.SUBMITTED) if also_submitted else OPEN_FOR_MAKER
     with transaction.atomic():
         task = _locked(task)
-        if task.status not in OPEN_FOR_MAKER:
+        if task.status not in closable:
             return task
         prev = task.status
         task.status = TaskStatus.CANCELLED
@@ -307,13 +309,18 @@ def close_by_system(task, comment, *, run_hook=False):
 def expire_stale_tasks(today=None, dry_run=False):
     """Close what is left open of past days' expires_with_day tasks (nightly, deploy/crontab).
 
-    No hook: a finished day must not start its menu planning now. Returns the tasks (to be) closed."""
+    Submitted ones too: approving yesterday's order the next morning would open a plan for a day already
+    cooked. No hook: a finished day must not start its menu planning now. Returns the tasks (to be) closed.
+    (An admin catching up a past day does it within the day: open, submit, and the dietician approves.)"""
     today = today or timezone.localdate()
-    stale = list(Task.objects.open_for_maker().filter(type__in=_expiring_types(), service_date__lt=today)
+    open_ = Q(status__in=OPEN_FOR_MAKER) | Q(status=TaskStatus.SUBMITTED)
+    stale = list(Task.objects.filter(open_, type__in=_expiring_types(), service_date__lt=today)
                  .select_related("department").order_by("service_date", "department__name"))
     if not dry_run:
         for task in stale:
-            close_by_system(task, "Дата минула — закрито автоматично")
+            reason = ("Дата минула, не розглянуто — закрито автоматично" if task.status == TaskStatus.SUBMITTED
+                      else "Дата минула — закрито автоматично")
+            close_by_system(task, reason, also_submitted=True)
     return stale
 
 
