@@ -1,0 +1,55 @@
+{% load harch %}<!doctype html>
+<html lang="uk"><head><meta charset="utf-8">
+<title>Бракеражний журнал {{ plan.service_date|date:"d.m.Y" }}</title>
+<style>
+  @page { size: A4 landscape; margin: 10mm 10mm 12mm; @bottom-right { content: "с. " counter(page) " / " counter(pages); font-size: 8pt; color: #666; } }
+  body { font-family: "DejaVu Sans", sans-serif; font-size: 8.5pt; color: #111; }
+  .muted { color: #555; font-size: 8pt; }
+  h1 { font-size: 12.5pt; text-align: center; margin: 2mm 0 1mm; }
+  .sub { text-align: center; margin-bottom: 3mm; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
+  th, td { border: 0.4pt solid #888; padding: 1.2mm 1.4mm; vertical-align: top; }
+  th { background: #eef2ef; font-weight: bold; font-size: 7.8pt; }
+  .num { text-align: right; white-space: nowrap; }
+  .slot td { background: #f6f6f6; font-weight: bold; }
+  .blank { height: 7mm; }
+  tr { page-break-inside: avoid; }
+  .signs td { border: none; padding: 3mm 0 0; }
+</style></head>
+<body>
+<div class="muted">{{ hospital }}</div>
+<h1>ЖУРНАЛ БРАКЕРАЖУ ГОТОВОЇ ПРОДУКЦІЇ</h1>
+<div class="sub">за {{ plan.service_date|date:"d.m.Y" }} ({{ plan.service_date|date:"l" }})</div>
+
+<table>
+  <thead><tr>
+    <th style="width: 6mm">№</th><th style="width: 52mm">Найменування страви</th><th style="width: 14mm">Картка №</th>
+    <th style="width: 22mm">Дієти</th><th class="num" style="width: 15mm">Вихід порції, г</th>
+    <th class="num" style="width: 13mm">Порцій</th><th class="num" style="width: 15mm">Ккал на порцію</th>
+    <th style="width: 18mm">Час виготовлення</th><th>Органолептична оцінка, ступінь готовності</th>
+    <th style="width: 20mm">Дозвіл до видачі (час)</th><th style="width: 26mm">Підписи</th>
+  </tr></thead>
+  <tbody>
+  {% for s in slots %}
+    <tr class="slot"><td colspan="11">{{ s.label }}</td></tr>
+    {% for d in s.dishes %}
+    <tr class="blank"><td>{{ d.n }}</td><td>{{ d.name }}</td><td>{{ d.card_no }}</td><td>{{ d.diets }}</td>
+      <td class="num">{{ d.output_g|num:0 }}</td><td class="num">{{ d.portions }}</td><td class="num">{{ d.kcal|default:"" }}</td>
+      <td></td><td></td><td></td><td></td></tr>
+    {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+
+<table style="width: 55%">
+  <thead><tr><th>Калорійність раціону за дієтами</th><th>Меню №</th><th class="num">Осіб</th><th class="num">Ккал на 1 особу</th></tr></thead>
+  <tbody>{% for d in diets %}<tr><td>{{ d.code }} — {{ d.name }}</td><td>{{ d.menu }}</td><td class="num">{{ d.portions }}</td><td class="num">{{ d.kcal_pp|num:0 }}</td></tr>{% endfor %}</tbody>
+</table>
+
+<table class="signs">
+  <tr><td style="width: 33%">Шеф-кухар (завідувач виробництва) ____________</td>
+      <td style="width: 33%">Дієтсестра / лікар-дієтолог ____________</td>
+      <td>Черговий лікар ____________</td></tr>
+</table>
+<div class="muted">Сформовано системою «Харчоблок» з затвердженого плану і коригувань відділень.</div>
+</body></html>
