@@ -82,6 +82,16 @@ def test_maker_cannot_approve_own_submission(hospital):
     wf.approve(task, hospital.dietician)
 
 
+def test_admin_has_no_queue_of_their_own(hospital, client):
+    """Order, plan, kitchen and write-off tasks belong to their roles; the admin's «Мені виконати» is empty."""
+    task = orders(hospital)[0]
+    assert task in wf.todo_for(hospital.nurses[0])
+    assert not wf.todo_for(hospital.admin).exists()
+    assert wf.can(hospital.admin, task, "submit")          # can still step in on the screens
+    client.force_login(hospital.admin)
+    assert client.get("/").context["todo_count"] == 0
+
+
 def test_admin_never_approves_or_returns(hospital):
     """The hospital: the dietician approves orders; the admin sees and cancels, but is not a checker."""
     task = submit(orders(hospital)[0], hospital.nurses[0])
