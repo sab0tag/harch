@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 
 from apps.accounts.models import Role
 
-A, D, C, N, B = Role.ADMIN, Role.DIETICIAN, Role.CHEF, Role.DEPT_NURSE, Role.ACCOUNTANT
-ALL = (A, D, C, N, B)
+A, D, C, N, B, S = Role.ADMIN, Role.DIETICIAN, Role.CHEF, Role.DEPT_NURSE, Role.ACCOUNTANT, Role.STOREKEEPER
+ALL = (A, D, C, N, B, S)
 
 # Who may change reference data (admin always passes has_role).
 CATALOG_EDITORS = (D,)
@@ -45,6 +45,7 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
         NavItem("orders", "Замовлення", "clipboard-plus", (A, D, N), url_name="orders:entry"),
         NavItem("plan", "План меню на день", "calendar-week", (A, D, C, B), url_name="planning:today"),
         NavItem("kitchen", "Сьогодні на кухні", "fire", (A, D, C), url_name="consumption:kitchen"),
+        NavItem("store", "Видача зі складу", "box-arrow-right", (A, D, C, S), url_name="consumption:store"),
         NavItem("consumption", "Розхід продуктів", "box-seam", (A, D, C, B), url_name="consumption:report"),
         NavItem("write-off", "Списання", "receipt", (A, D, B), url_name="consumption:write_off"),
         NavItem("reports", "Звіти", "bar-chart", (A, D, B), url_name="reports:index"),
@@ -52,7 +53,7 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
     NavGroup("Довідники", (
         NavItem("dishes", "Картки-розкладки", "journal-text", (A, D, C, B), url_name="catalog:dish_list"),
         NavItem("menus", "Меню", "list-ol", (A, D, C), url_name="menus:list"),
-        NavItem("products", "Продукти", "basket", (A, D, C, B), url_name="catalog:product_list"),
+        NavItem("products", "Продукти", "basket", (A, D, C, B, S), url_name="catalog:product_list"),
         NavItem("diets", "Дієти", "heart-pulse", (A, D, C), url_name="catalog:diet_list"),
         NavItem("departments", "Відділення", "hospital", (A, D), url_name="orgstructure:department_list"),
         NavItem("audit_ref", "Перевірка довідника", "clipboard-check", (A, D), url_name="catalog:audit"),

@@ -14,15 +14,16 @@ HELP = ["Інструкція"]
 
 # Written out by hand from docs/04_ui.md on purpose — not derived from NAV_GROUPS.
 EXPECTED = {
-    Role.ADMIN: MAIN + ["Замовлення", "План меню на день", "Сьогодні на кухні", "Розхід продуктів",
+    Role.ADMIN: MAIN + ["Замовлення", "План меню на день", "Сьогодні на кухні", "Видача зі складу", "Розхід продуктів",
                         "Списання", "Звіти", *REF_ALL, "Користувачі та ролі", "Журнал подій", "ШІ-помічник", *HELP],
-    Role.DIETICIAN: MAIN + ["Замовлення", "План меню на день", "Сьогодні на кухні", "Розхід продуктів",
+    Role.DIETICIAN: MAIN + ["Замовлення", "План меню на день", "Сьогодні на кухні", "Видача зі складу", "Розхід продуктів",
                             "Списання", "Звіти", *REF_ALL, *HELP],
-    Role.CHEF: MAIN + ["План меню на день", "Сьогодні на кухні", "Розхід продуктів",
+    Role.CHEF: MAIN + ["План меню на день", "Сьогодні на кухні", "Видача зі складу", "Розхід продуктів",
                        "Картки-розкладки", "Меню", "Продукти", "Дієти", *HELP],
     Role.DEPT_NURSE: MAIN + ["Замовлення", *HELP],
     Role.ACCOUNTANT: MAIN + ["План меню на день", "Розхід продуктів", "Списання", "Звіти",
                              "Картки-розкладки", "Продукти", *HELP],
+    Role.STOREKEEPER: MAIN + ["Видача зі складу", "Продукти", *HELP],
 }
 
 
@@ -131,7 +132,9 @@ def test_create_demo_users_is_idempotent(settings):
     call_command("create_demo_users")
     from apps.orgstructure.models import Department
 
-    # 5 role users + a head nurse per active department (here only Терапевтичне), no duplicates on a rerun
-    assert User.objects.count() == 5 + Department.objects.filter(is_active=True).count()
+    from apps.core.management.commands.create_demo_users import DEMO
+
+    # a user per role + a head nurse per active department (here only Терапевтичне), no duplicates on a rerun
+    assert User.objects.count() == len(DEMO) + Department.objects.filter(is_active=True).count()
     assert User.objects.get(username="nurse").department is not None
     assert User.objects.get(username="nurse-therapy").department.name == "Терапевтичне"

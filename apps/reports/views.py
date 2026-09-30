@@ -54,9 +54,9 @@ class BrakerazhPdfView(RoleRequiredMixin, View):
 
 
 class MenuVymohaView(RoleRequiredMixin, View):
-    """Меню-вимога (typical form З-4а) for a day, XLSX. Accounting document: reports roles."""
+    """Меню-вимога (typical form З-4а) for a day, XLSX. Accounting document; the store issues by it too."""
 
-    allowed_roles = roles_for("reports")
+    allowed_roles = tuple(dict.fromkeys(roles_for("reports") + roles_for("store")))
 
     def get(self, request, day):
         plan = DailyPlan.objects.filter(service_date=parse_date(day)).first()

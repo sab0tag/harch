@@ -30,6 +30,8 @@ ROLE_ALIASES = {
     Role.CHEF: ("завідувач виробництва", "шеф-кухар", "шеф", "кухар"),
     Role.DEPT_NURSE: ("старша медсестра", "старша медична сестра", "медсестра"),
     Role.ACCOUNTANT: ("бухгалтер",),
+    Role.STOREKEEPER: ("завідувач складу", "завідувач складу продуктів", "зав. складу", "завскладом", "комірник",
+                       "кладовщик", "кладовщица"),
 }
 
 # Official Ukrainian romanization (КМУ №55, 2010): є ї й ю я are written differently at the start of a word.

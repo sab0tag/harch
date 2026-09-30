@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from apps.accounts.models import Role
 
 from . import health
-from .navigation import PLACEHOLDERS
+from .navigation import PLACEHOLDERS, roles_for
 
 
 def robots_txt(request):
@@ -35,6 +35,7 @@ def home(request):
         "todo_count": wf.todo_for(request.user).count(),
         "review_count": wf.review_for(request.user).count(),
         "overdue_count": wf.todo_for(request.user).overdue().count(),
+        "sees_store": request.user.has_role(*roles_for("store")),
     })
 
 

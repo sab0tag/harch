@@ -14,6 +14,7 @@ DEMO = [
     ("chef", "Галина", "Шеф", Role.CHEF),
     ("nurse", "Марія", "Медсестра", Role.DEPT_NURSE),
     ("accountant", "Ірина", "Бухгалтер", Role.ACCOUNTANT),
+    ("storekeeper", "Тетяна", "Склад", Role.STOREKEEPER),
 ]
 # Department → login suffix, as on the pilot server; other departments get a transliterated name.
 NURSE_LOGINS = {

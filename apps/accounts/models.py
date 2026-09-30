@@ -9,6 +9,7 @@ class Role(models.TextChoices):
     CHEF = "chef", "Завідувач виробництва"
     DEPT_NURSE = "dept_nurse", "Старша медсестра відділення"
     ACCOUNTANT = "accountant", "Бухгалтер"
+    STOREKEEPER = "storekeeper", "Завідувач складу"
 
 
 class HarchUserManager(UserManager):
