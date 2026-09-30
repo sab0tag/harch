@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.conf import settings
 from django.utils import timezone
 
 from apps.accounts.models import Role
@@ -44,7 +45,7 @@ def is_checker(user, task):
     """Approving and returning is the checker role's job only (the hospital: the dietician, the chef for
     the plan). An admin sees everything, cancels and catches up missed days, but does not approve."""
     if user.role == Role.ADMIN:
-        return False
+        return settings.ADMIN_CAN_APPROVE       # the pilot safety net, marked in the history
     if task.checker_id:
         return user.pk == task.checker_id
     return _role_matches(user, task.checker_role, task)
@@ -202,11 +203,18 @@ def approve(task, user, comment=""):
         prev = task.status
         task.status, task.resolved_at, task.resolved_by = TaskStatus.APPROVED, timezone.now(), user
         task.save(update_fields=["status", "resolved_at", "resolved_by"])
-        comment = _substitution_mark(task, user, comment)
+        comment = _admin_mark(user, "Затверджено", _substitution_mark(task, user, comment))
         _event(task, TaskEvent.Kind.APPROVED, user, prev, comment)
         n.notify([task.submitted_by], task, f"Затверджено: {task}", comment)
         task.definition.on_approved(task)
     return task
+
+
+def _admin_mark(user, verb, comment):
+    """ADMIN_CAN_APPROVE: an admin's decision says so in the history."""
+    if user.role != Role.ADMIN:
+        return comment
+    return f"{verb} адміністратором (підстраховка). {comment}".strip()
 
 
 def _substitution_mark(task, user, comment):
@@ -233,7 +241,7 @@ def reject(task, user, comment):
         task.status = TaskStatus.REJECTED
         task.reject_count += 1
         task.save(update_fields=["status", "reject_count"])
-        _event(task, TaskEvent.Kind.REJECTED, user, prev, comment.strip())
+        _event(task, TaskEvent.Kind.REJECTED, user, prev, _admin_mark(user, "Повернуто", comment.strip()))
         n.notify([task.submitted_by], task, f"Повернуто на доопрацювання: {task}", comment.strip())
     return task
 
@@ -327,7 +335,7 @@ def review_for(user):
     """Submitted tasks the user may approve/reject (never their own submission)."""
     qs = Task.objects.filter(status=TaskStatus.SUBMITTED).exclude(submitted_by=user).select_related("department")
     if user.role == Role.ADMIN:
-        return qs.none()     # an admin never approves (is_checker)
+        return qs if settings.ADMIN_CAN_APPROVE else qs.none()     # see is_checker
     qs = qs.filter(checker_role=user.role).filter(Q(checker__isnull=True) | Q(checker=user))
     if user.role == Role.DEPT_NURSE:
         qs = qs.filter(department_id=user.department_id)
