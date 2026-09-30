@@ -2,6 +2,7 @@
 {% block title %}Журнал подій{% endblock %}
 {% block content %}
 <h1 class="h3 mb-3">Журнал подій</h1>
+{% include "workflow/_audit_tabs.html" with tab="tasks" %}
 <form method="get" class="mb-3" style="max-width: 320px">
   <select name="kind" class="form-select" onchange="this.form.submit()">
     <option value="">Усі події</option>

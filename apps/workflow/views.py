@@ -127,6 +127,14 @@ class AuditView(RoleRequiredMixin, View):
     allowed_roles = roles_for("audit")
 
     def get(self, request):
+        if request.GET.get("tab") == "signins":
+            from apps.accounts import signins
+
+            flagged, who = request.GET.get("flagged") == "1", request.GET.get("who", "").strip()
+            return render(request, "workflow/audit_signins.html", {
+                "rows": signins.rows(only_flagged=flagged, username=who), "flagged": flagged, "who": who,
+                "networks_set": bool(signins.networks()),
+            })
         qs = TaskEvent.objects.select_related("task__department", "actor").order_by("-created_at", "-id")
         kind = request.GET.get("kind", "")
         if kind:

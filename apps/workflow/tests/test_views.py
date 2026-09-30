@@ -93,7 +93,7 @@ def test_audit_admin_only(client, hospital, order):
 
 def test_sidebar_marks_only_audit_active_on_audit_page(client, hospital):
     html = as_user(client, hospital.admin).get("/tasks/audit/").content.decode()
-    assert html.count('class="nav-link active"') == 1
+    assert html.count('aria-current="page"') == 1          # one sidebar item (the page's own tabs aside)
     assert 'active" href="/tasks/audit/"' in html
 
 
