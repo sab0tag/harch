@@ -37,7 +37,11 @@ def is_editable_by(plan, user):
 
 
 def suggest_menu(diet, service_date):
-    """Rotation: the menu after the one used most recently for this diet; else the first."""
+    """The diet's 7-day cycle menu for that weekday (S7-04); without a cycle — rotation: the menu after
+    the one used most recently for this diet, else the first."""
+    cycle = Menu.objects.filter(diet=diet, is_active=True, cycle_day__isnull=False)
+    if cycle.exists():
+        return cycle.filter(cycle_day=service_date.isoweekday()).first()
     menus = list(Menu.objects.filter(diet=diet, is_active=True).order_by("number"))
     if not menus:
         return None

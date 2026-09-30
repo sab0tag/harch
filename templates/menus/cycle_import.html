@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}7-денний цикл меню{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+  <h1 class="h3 mb-0 me-auto"><i class="bi bi-calendar-week me-2"></i>7-денний цикл меню</h1>
+  <a href="{% url 'menus:list' %}" class="btn btn-outline-secondary">До меню</a>
+</div>
+<p class="text-secondary mb-3">Меню на кожну дієту й кожен день тижня. План дня підставляє меню свого дня сам — дієтсестрі лишається перевірити.</p>
+
+{% for e in errors %}{% if forloop.first %}<div class="alert alert-danger"><div class="fw-semibold mb-1">Нічого не змінено. Виправте файл:</div><ul class="mb-0">{% endif %}
+  <li>{{ e }}</li>{% if forloop.last %}</ul></div>{% endif %}{% endfor %}
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card card-body h-100">
+      <h2 class="h6">1. Шаблон</h2>
+      <p class="small text-secondary">Рядок на кожну страву: дієта, день, прийом їжі, страва — номер картки або точна назва. На аркуші «Картки» — усі страви з номерами. Порожні рядки пропускаються.</p>
+      <a href="{% url 'menus:cycle_template' %}" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Завантажити шаблон (Excel)</a>
+      <h2 class="h6 mt-4">2. Заповнений файл</h2>
+      <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-2">{% csrf_token %}
+        <input type="file" name="file" accept=".xlsx" class="form-control" required>
+        <button class="btn btn-primary"><i class="bi bi-upload me-1"></i>Перевірити</button>
+      </form>
+      <p class="small text-secondary mt-2 mb-0">Спершу покажемо тиждень по кожній дієті — застосуєте після перегляду.</p>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100"><div class="card-header bg-white fw-semibold">Зараз у циклі</div>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Дієта</th>{% for d, name in days %}<th class="text-center">{{ name }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for diet, by_day in status %}<tr><td class="fw-semibold">{{ diet.code }}</td>
+          {% for d, name in days %}<td class="text-center">{% for k, m in by_day.items %}{% if k == d %}<a href="{% url 'menus:detail' m.number %}">№{{ m.number }}</a>{% endif %}{% endfor %}</td>{% endfor %}</tr>
+        {% endfor %}</tbody>
+      </table></div>
+      <div class="card-body small text-secondary py-2">Порожньо — для дієти ще немає циклу: план підставляє меню по черзі, як раніше.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
