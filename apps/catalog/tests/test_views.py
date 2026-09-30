@@ -15,7 +15,7 @@ R = Role
     "url,allowed",
     [
         ("/catalog/dishes/", {R.ADMIN, R.DIETICIAN, R.CHEF, R.ACCOUNTANT}),
-        ("/catalog/products/", {R.ADMIN, R.DIETICIAN, R.CHEF, R.ACCOUNTANT}),
+        ("/catalog/products/", {R.ADMIN, R.DIETICIAN, R.CHEF, R.ACCOUNTANT, R.STOREKEEPER}),
         ("/catalog/diets/", {R.ADMIN, R.DIETICIAN, R.CHEF}),
         ("/org/departments/", {R.ADMIN, R.DIETICIAN}),
         ("/catalog/dishes/new/", {R.ADMIN, R.DIETICIAN}),
