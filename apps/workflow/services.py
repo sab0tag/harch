@@ -41,7 +41,11 @@ def is_maker(user, task):
 
 
 def is_checker(user, task):
-    if task.checker_id and user.role != Role.ADMIN:
+    """Approving and returning is the checker role's job only (the hospital: the dietician, the chef for
+    the plan). An admin sees everything, cancels and catches up missed days, but does not approve."""
+    if user.role == Role.ADMIN:
+        return False
+    if task.checker_id:
         return user.pk == task.checker_id
     return _role_matches(user, task.checker_role, task)
 
@@ -307,7 +311,7 @@ def review_for(user):
     """Submitted tasks the user may approve/reject (never their own submission)."""
     qs = Task.objects.filter(status=TaskStatus.SUBMITTED).exclude(submitted_by=user).select_related("department")
     if user.role == Role.ADMIN:
-        return qs
+        return qs.none()     # an admin never approves (is_checker)
     qs = qs.filter(checker_role=user.role).filter(Q(checker__isnull=True) | Q(checker=user))
     if user.role == Role.DEPT_NURSE:
         qs = qs.filter(department_id=user.department_id)

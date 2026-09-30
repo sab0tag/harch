@@ -172,9 +172,9 @@ class OrderSummaryView(RoleRequiredMixin, View):
                 TaskStatus.SUBMITTED: "submitted", TaskStatus.APPROVED: "approved", TaskStatus.CANCELLED: "cancelled",
             }.get(t.status, "open")
             r["state"] = key
-            r["own"] = key == "submitted" and t.submitted_by_id == request.user.pk  # maker ≠ checker
+            r["can_review"] = key == "submitted" and wf.can(request.user, t, "approve")  # checker, never own
             counts[key] += 1
-        counts["approvable"] = counts["submitted"] - sum(r["own"] for r in rows)
+        counts["approvable"] = sum(r["can_review"] for r in rows)
         plan_task = Task.objects.filter(type=MENU_PLANNING, service_date=day).first()
         day_corrections = list(corrections.corrections_for(day))
         for c in day_corrections:

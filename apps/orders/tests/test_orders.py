@@ -139,14 +139,18 @@ def test_summary_matrix_and_approve_all(client, world):
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()
 
 
-def test_summary_disables_review_of_own_submission(client, world):
+def test_order_the_admin_submitted_is_approved_by_the_dietician(client, world):
     fill_all(client, world)
     Task.objects.filter(department=world.depts["Хірургічне"]).update(submitted_by=world.admin)
+    r = as_user(client, world.dietician).get("/orders/summary/?date=2026-10-01")
+    assert r.context["counts"]["approvable"] == 3
+
+
+def test_admin_sees_the_summary_without_approve_buttons(client, world):
+    fill_all(client, world)
     r = as_user(client, world.admin).get("/orders/summary/?date=2026-10-01")
-    own = {row["department"].name for row in r.context["rows"] if row["own"]}
-    assert own == {"Хірургічне"}
-    assert r.context["counts"]["approvable"] == 2
-    assert "Подано вами" in r.content.decode()
+    assert r.context["counts"]["submitted"] == 3 and r.context["counts"]["approvable"] == 0
+    assert "/approve/" not in r.content.decode()
 
 
 def test_inline_reject_from_summary_returns_to_summary(client, world):

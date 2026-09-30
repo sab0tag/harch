@@ -45,11 +45,7 @@
         <td class="text-end fw-semibold">{% if r.order %}{{ r.order.total_portions }}{% endif %}</td>
         <td class="text-nowrap">{% if r.task %}<span class="badge badge-status-{{ r.task.status }}">{{ r.task.get_status_display }}</span>{% if r.order.no_patients %} <span class="small text-secondary">0 пацієнтів</span>{% endif %}{% else %}<span class="small text-secondary">немає задачі</span>{% endif %}</td>
         <td class="text-end text-nowrap">
-          {% if r.own %}
-            <span class="d-inline-block" tabindex="0" title="Подано вами — затвердити може лише інший користувач">
-              <button class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-check2"></i></button>
-              <button class="btn btn-sm btn-outline-secondary" disabled><i class="bi bi-arrow-return-left"></i></button></span>
-          {% elif r.task and r.task.status == 'submitted' %}
+          {% if r.can_review %}
             <form method="post" action="{% url 'workflow:task_action' r.task.pk 'approve' %}" class="d-inline">{% csrf_token %}
               <input type="hidden" name="next" value="{{ request.get_full_path }}">
               <button class="btn btn-sm btn-success" title="Затвердити"><i class="bi bi-check2"></i></button></form>
@@ -57,7 +53,7 @@
           {% endif %}
         </td>
       </tr>
-      {% if r.task and r.task.status == 'submitted' and not r.own %}
+      {% if r.can_review %}
       <tr class="collapse" id="rej-{{ r.task.pk }}"><td colspan="{{ diets|length|add:4 }}">
         <form method="post" action="{% url 'workflow:task_action' r.task.pk 'reject' %}" class="d-flex gap-2">{% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
