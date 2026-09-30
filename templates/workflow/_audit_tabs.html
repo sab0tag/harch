@@ -1,0 +1,4 @@
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><a class="nav-link{% if tab == 'tasks' %} active{% endif %}" href="{% url 'workflow:audit' %}">Переходи задач</a></li>
+  <li class="nav-item"><a class="nav-link{% if tab == 'signins' %} active{% endif %}" href="{% url 'workflow:audit' %}?tab=signins">Входи в систему</a></li>
+</ul>

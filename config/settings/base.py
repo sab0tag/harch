@@ -114,6 +114,10 @@ AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_TEMPLATE = "registration/locked.html"
+# Sign-in log (Журнал подій → Входи в систему): failed attempts one by one too, not just the counter.
+AXES_ENABLE_ACCESS_FAILURE_LOG = True
+# Hospital public address(es), CIDR, comma-separated: sign-ins from elsewhere are flagged. Empty = no flag.
+HOSPITAL_NETWORKS = env.list("HOSPITAL_NETWORKS", default=[])
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

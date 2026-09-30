@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Входи в систему{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Журнал подій</h1>
+{% include "workflow/_audit_tabs.html" with tab="signins" %}
+<form method="get" class="d-flex flex-wrap gap-2 align-items-center mb-3">
+  <input type="hidden" name="tab" value="signins">
+  <input type="search" name="who" value="{{ who }}" class="form-control" style="max-width: 220px" placeholder="Логін">
+  <div class="form-check ms-1"><input class="form-check-input" type="checkbox" name="flagged" value="1" id="flagged"{% if flagged %} checked{% endif %} onchange="this.form.submit()">
+    <label class="form-check-label" for="flagged">Лише нові адреси, поза лікарнею, блокування</label></div>
+  <button class="btn btn-outline-secondary">Показати</button>
+</form>
+<p class="small text-secondary">Входи й невдалі спроби за 90 днів. «Нова адреса» — з цієї IP-адреси ця людина раніше не входила.
+  {% if not networks_set %}Позначка «поза мережею лікарні» з'явиться, коли в налаштуваннях буде вказано адресу лікарні (<code>HOSPITAL_NETWORKS</code>).{% endif %}</p>
+<div class="card"><div class="table-responsive">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Час</th><th>Хто</th><th>Результат</th><th>Адреса</th><th>Пристрій</th><th>Вихід</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td class="text-nowrap small">{{ r.time|date:"d.m.Y H:i" }}</td>
+        <td>{% if r.user %}{{ r.user.get_full_name|default:r.username }} <span class="small text-secondary">{{ r.username }} · {{ r.user.get_role_display }}</span>{% else %}<span class="text-secondary">{{ r.username|default:"—" }}</span> <span class="small text-secondary">немає такого логіна</span>{% endif %}</td>
+        <td>{% if r.kind == 'ok' %}<span class="badge text-bg-success">вхід</span>{% elif r.kind == 'locked' %}<span class="badge text-bg-danger">заблоковано</span>{% else %}<span class="badge text-bg-warning">невірний пароль</span>{% endif %}</td>
+        <td class="text-nowrap"><code>{{ r.ip|default:"—" }}</code>{% if r.new_address %} <span class="badge border border-primary text-primary">нова адреса</span>{% endif %}{% if r.outside %} <span class="badge border border-danger text-danger">поза мережею лікарні</span>{% endif %}</td>
+        <td class="small text-nowrap">{{ r.device }}</td>
+        <td class="small text-nowrap">{{ r.logout|date:"d.m H:i"|default:"" }}</td>
+      </tr>
+    {% empty %}<tr><td colspan="6" class="text-center text-secondary py-4">Записів немає.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}
