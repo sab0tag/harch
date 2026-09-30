@@ -21,8 +21,9 @@ env = environ.Env(
     ORDER_DEADLINE=(str, "16:00"),
     NOTIFY_EMAIL=(bool, False),
     AI_ENABLED=(bool, False),
-    ANTHROPIC_MODEL=(str, "claude-sonnet-5"),
+    ANTHROPIC_MODEL=(str, "claude-opus-5-5"),
     ANTHROPIC_MODEL_LIGHT=(str, ""),
+    AI_EFFORT=(str, "low"),
     AI_DAILY_REQUEST_LIMIT=(int, 200),
     AI_TIMEOUT_SECONDS=(int, 90),
     HEALTH_SCHEDULER_MAX_AGE_MINUTES=(int, 45),
@@ -164,6 +165,8 @@ ANTHROPIC_MODEL = env("ANTHROPIC_MODEL")
 ANTHROPIC_MODEL_LIGHT = env("ANTHROPIC_MODEL_LIGHT")  # cheaper model for text-only features; empty = main model
 AI_DAILY_REQUEST_LIMIT = env("AI_DAILY_REQUEST_LIMIT")
 AI_TIMEOUT_SECONDS = env("AI_TIMEOUT_SECONDS")
+# Thinking depth on models that take it (Opus/Sonnet): low | medium | high. Per-feature overrides in client.py.
+AI_EFFORT = env("AI_EFFORT") if env("AI_EFFORT") in ("low", "medium", "high", "xhigh", "max") else "low"
 EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
 vars().update(EMAIL_CONFIG)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="harch@localhost")

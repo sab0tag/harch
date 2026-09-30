@@ -122,6 +122,7 @@ def test_ai_buttons_flag_in_templates(login, ai_on):
 # ------------------------------------------------------------------ AI-10 model per feature
 @pytest.mark.parametrize("feature,model", [
     ("reference_duplicates", "claude-haiku-4-5"), ("menu_review", "claude-haiku-4-5"), ("dish_draft", "claude-haiku-4-5"),
+    ("dish_technology", "claude-haiku-4-5"),
     ("product_estimate", "claude-sonnet-5"), ("card_import", "claude-sonnet-5"), ("healthcheck", "claude-sonnet-5"),
 ])
 def test_light_features_go_to_the_light_model(ai_on, settings, feature, model):
@@ -168,3 +169,101 @@ def test_status_page_shows_both_models(login, settings):
     settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT = "claude-sonnet-5", "claude-haiku-4-5"
     html = login(Role.ADMIN).get("/ai/").content.decode()
     assert "claude-sonnet-5" in html and "claude-haiku-4-5" in html and "Легка модель" in html
+
+
+# ------------------------------------------------------------------ request shape (token economy)
+from types import SimpleNamespace as NS  # noqa: E402
+
+from apps.assist.features import DUPLICATES_SCHEMA, TECHNOLOGY_SCHEMA  # noqa: E402
+
+
+def _req(model, feature="menu_review", schema=None, max_tokens=1000):
+    return client.build_request(model=model, feature=feature, system="s", content=[{"type": "text", "text": "x"}],
+                                schema=schema or client.PING_SCHEMA, max_tokens=max_tokens)
+
+
+def test_opus_uses_structured_output_low_effort_and_no_forced_tool(settings):
+    settings.AI_EFFORT = "low"
+    req = _req("claude-opus-5-5")
+    assert "tools" not in req and "tool_choice" not in req           # Opus 5.5 rejects forced tool_choice
+    assert "thinking" not in req                                     # can't be disabled there; effort is the lever
+    assert req["output_config"]["effort"] == "low"
+    assert req["output_config"]["format"]["type"] == "json_schema"
+    assert req["max_tokens"] == 1000 + client.THINKING_HEADROOM
+
+
+def test_numbers_off_photos_and_tables_get_medium_effort(settings):
+    settings.AI_EFFORT = "low"
+    assert _req("claude-opus-5-5", feature="product_estimate")["output_config"]["effort"] == "medium"
+    assert _req("claude-opus-5-5", feature="card_import")["output_config"]["effort"] == "medium"
+
+
+def test_haiku_gets_no_effort_and_no_thinking_headroom():
+    req = _req("claude-haiku-4-5")
+    assert "effort" not in req["output_config"] and "thinking" not in req
+    assert req["max_tokens"] == 1000 and "format" in req["output_config"]
+
+
+def _objects(schema):
+    if isinstance(schema, dict):
+        if schema.get("type") == "object":
+            yield schema
+        for v in schema.values():
+            yield from _objects(v)
+    elif isinstance(schema, list):
+        for v in schema:
+            yield from _objects(v)
+
+
+@pytest.mark.parametrize("schema", [DUPLICATES_SCHEMA, TECHNOLOGY_SCHEMA])
+def test_schemas_are_made_strict(schema):
+    strict = client.strict_schema(schema)
+    assert all(o.get("additionalProperties") is False for o in _objects(strict))
+    assert "minItems" not in str(strict)                           # unsupported by structured outputs
+    assert "additionalProperties" not in str(schema)               # the original is left untouched
+
+
+def test_nullable_types_become_anyof():
+    s = client.strict_schema({"type": "object", "properties": {"g": {"type": ["number", "null"], "description": "d"}}})
+    assert s["properties"]["g"] == {"anyOf": [{"type": "number", "description": "d"}, {"type": "null"}]}
+
+
+def _msg(text=None, stop="end_turn", blocks=None):
+    content = blocks if blocks is not None else [NS(type="thinking", thinking=""), NS(type="text", text=text)]
+    return NS(stop_reason=stop, content=content, usage=NS(input_tokens=120, output_tokens=30))
+
+
+def test_parse_reads_json_after_thinking_blocks():
+    reply = client.parse_response(_msg('{"ok": true}'))
+    assert reply.data == {"ok": True} and (reply.input_tokens, reply.output_tokens) == (120, 30)
+
+
+@pytest.mark.parametrize("msg,words", [
+    (_msg("{}", stop="max_tokens"), "обрізано"),
+    (_msg("{}", stop="refusal"), "відмовилась"),
+    (_msg("not json"), "структуровану"),
+    (_msg(blocks=[]), "структуровану"),
+])
+def test_parse_turns_bad_endings_into_readable_errors(msg, words):
+    with pytest.raises(client.AIError, match=words):
+        client.parse_response(msg)
+
+
+def test_transport_sends_the_built_request(ai_on, settings, monkeypatch):
+    """The real transport, with the SDK client faked: what goes over the wire is build_request's output."""
+    import anthropic
+
+    sent = {}
+
+    class FakeMessages:
+        def create(self, **kw):
+            sent.update(kw)
+            return _msg('{"ok": true}')
+
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: NS(messages=FakeMessages()))
+    settings.ANTHROPIC_MODEL, settings.ANTHROPIC_MODEL_LIGHT, settings.AI_EFFORT = "claude-opus-5-5", "", "low"
+    monkeypatch.setattr(client, "_transport", client._anthropic_transport)
+    assert client.extract(user=None, feature="dish_technology", system_prompt="s",
+                          content_blocks=[{"type": "text", "text": "x"}], tool_schema=client.PING_SCHEMA) == {"ok": True}
+    assert sent["model"] == "claude-opus-5-5" and sent["output_config"]["effort"] == "low"
+    assert "tools" not in sent and "tool_choice" not in sent
