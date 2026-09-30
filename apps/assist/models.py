@@ -38,6 +38,7 @@ class AIDraft(models.Model):
     class Kind(models.TextChoices):
         DISH = "dish", "Чернетка картки"
         PRODUCTS = "products", "Пропозиція продуктів"
+        TECHNOLOGY = "technology", "Технології карток"
 
     class Status(models.TextChoices):
         READY = "ready", "Чекає рішення"

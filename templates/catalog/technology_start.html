@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Технології з ШІ{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'catalog:dish_list' %}">Картки-розкладки</a></li><li class="breadcrumb-item active">Технології з ШІ</li></ol></nav>
+<h1 class="h3 mb-1">Технології з ШІ</h1>
+<p class="text-secondary" style="max-width: 820px">ШІ пропонує текст «Технологія приготування» для карток, де його немає, — лише зі складу картки, з урахуванням дієт.
+  У картки нічого не записується, поки ви не приймете пропозицію. Прийняті картки позначаються «Не перевірено».</p>
+
+<div class="card mb-3"><div class="card-body d-flex flex-wrap align-items-center gap-3">
+  <div><div class="small text-secondary">Карток без технології</div><div class="h4 mb-0">{{ missing }}</div></div>
+  <div><div class="small text-secondary">Ще не запропоновано</div><div class="h4 mb-0">{{ available }}</div></div>
+  <form method="post" class="ms-auto">{% csrf_token %}
+    {% if ai_available %}
+    <button class="btn btn-info" {% if not available %}disabled{% endif %}><i class="bi bi-stars me-1"></i>Запропонувати для {{ batch }} карток</button>
+    <div class="small text-secondary mt-1">Один запит до ШІ, до 30 секунд.</div>
+    {% else %}<span class="text-secondary small">ШІ вимкнено (сторінка «ШІ-помічник»).</span>{% endif %}
+  </form>
+</div></div>
+
+<div class="card"><div class="table-responsive">
+  <table class="table align-middle mb-0">
+    <thead class="table-light"><tr><th>Пропозиція</th><th>Хто запросив</th><th class="text-end">Карток</th><th>Стан</th></tr></thead>
+    <tbody>
+    {% for d in drafts %}
+      <tr>
+        <td><a href="{% url 'catalog:technology_draft' d.pk %}">{{ d.created_at|date:"d.m.Y H:i" }}</a></td>
+        <td>{{ d.user|default:"система" }}</td>
+        <td class="text-end">{{ d.result.items|length }}</td>
+        <td>{% if d.status == 'ready' %}<span class="badge text-bg-warning">{{ d.get_status_display }}</span>{% else %}<span class="badge text-bg-secondary">{{ d.get_status_display }}</span>{% endif %}</td>
+      </tr>
+    {% empty %}<tr><td colspan="4" class="text-center text-secondary py-4">Пропозицій ще не було.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div></div>
+{% endblock %}
