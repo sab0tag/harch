@@ -201,3 +201,39 @@ def test_menu_vymoha_access(client, cooking_day):
     assert as_user(client, cooking_day.chef).get(url).status_code == 403
     assert as_user(client, cooking_day.nurse["Терапевтичне"]).get(url).status_code == 403
     assert as_user(client, cooking_day.dietician).get(url).status_code == 200
+
+
+# ------------------------------------------------------------------ S7-03 бракеражний журнал
+def test_brakerazh_pdf_for_the_kitchen(client, cooking_day):
+    r = as_user(client, cooking_day.chef).get(f"/reports/brakerazh/{DAY.isoformat()}.pdf")
+    assert r["Content-Type"] == "application/pdf" and r.content[:4] == b"%PDF"
+
+
+def test_brakerazh_lists_every_cooked_dish_with_corrections(cooking_day):
+    from apps.consumption.services import kitchen_board
+    from apps.orders import corrections
+    from apps.reports.pdf import brakerazh_context
+    from apps.workflow import services as wf
+
+    w = cooking_day
+    ctx = brakerazh_context(w.plan)
+    dishes = [d for s in ctx["slots"] for d in s["dishes"]]
+    board = [d for s in kitchen_board(w.plan) for d in s["dishes"]]
+    assert len(dishes) == len(board) and all(d["kcal"] is not None for d in dishes)
+    assert [d["n"] for d in dishes] == list(range(1, len(dishes) + 1))
+    before = {(s["label"], d["card_no"]): d["portions"] for s in ctx["slots"] for d in s["dishes"] if "ОВД" in d["diets"]}
+    c = corrections.open_correction(w.depts["Терапевтичне"], DAY, w.nurse["Терапевтичне"])
+    corrections.submit_correction(c, w.nurse["Терапевтичне"], {diet("ОВД").pk: 3}, from_meal="breakfast",
+                                  reason="admission")
+    wf.approve(c.task, w.dietician)
+    after = {(s["label"], d["card_no"]): d["portions"] for s in brakerazh_context(w.plan)["slots"] for d in s["dishes"]}
+    diff = {k: (v, after.get(k)) for k, v in before.items() if after.get(k) != v + 3}
+    assert not diff, diff   # the commission sees what was cooked
+
+
+def test_brakerazh_access_and_before_approval(client, world, cooking_day):
+    url = f"/reports/brakerazh/{DAY.isoformat()}.pdf"
+    assert as_user(client, cooking_day.nurse["Терапевтичне"]).get(url).status_code == 403
+    assert as_user(client, cooking_day.accountant).get(url).status_code == 403
+    r = as_user(client, cooking_day.chef).get("/reports/brakerazh/2026-10-02.pdf")
+    assert r.status_code == 302 and "/kitchen/" in r.url

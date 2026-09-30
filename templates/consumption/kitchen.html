@@ -4,7 +4,8 @@
 {% include "consumption/_day_header.html" with url_name="consumption:kitchen_day" heading="Кухня" day=plan.service_date %}
 <p class="text-secondary mb-3">Порцій: <strong>{{ portions_total }}</strong> ·
   {% for e in entries %}{{ e.diet.code }} — меню №{{ e.menu.number }}, {{ e.portions }}{% if not forloop.last %}; {% endif %}{% endfor %}
-  · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка</a></p>
+  · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка</a>
+  · <a href="{% url 'reports:brakerazh_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-clipboard-check"></i> бракеражний журнал</a></p>
 
 {% if corrections %}
 <div class="card border-warning mb-3">

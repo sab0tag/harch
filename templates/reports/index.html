@@ -11,6 +11,13 @@
       <button class="btn btn-primary">Відкрити</button></form>
   </div></div></div>
   <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
+    <h2 class="h6"><i class="bi bi-clipboard-check me-1"></i>Бракеражний журнал (PDF)</h2>
+    <p class="small text-secondary">Страви дня з виходом, порціями й калорійністю; колонки для оцінки і підписів комісії.</p>
+    <form class="d-flex gap-2" onsubmit="window.open('{% url 'reports:index' %}brakerazh/' + this.day.value + '.pdf'); return false;">
+      <input type="date" name="day" value="{{ today.isoformat }}" class="form-control" aria-label="Дата" required>
+      <button class="btn btn-primary">Відкрити</button></form>
+  </div></div></div>
+  <div class="col-md-6 col-xl-4"><div class="card h-100"><div class="card-body">
     <h2 class="h6"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Меню-вимога, форма З-4а (XLSX)</h2>
     <p class="small text-secondary">Видача продуктів на день: закладка за прийомами їжі, видано, ціна, сума. Лише для затвердженого плану.</p>
     <form class="d-flex gap-2" onsubmit="location.href='{% url 'reports:index' %}menu-vymoha/' + this.day.value + '.xlsx'; return false;">

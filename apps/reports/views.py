@@ -38,6 +38,21 @@ class MenuPdfView(RoleRequiredMixin, View):
         return menu_rozkladka_pdf(plan)
 
 
+class BrakerazhPdfView(RoleRequiredMixin, View):
+    """S7-03: journal of finished-dish quality control — printed in the kitchen, so kitchen roles."""
+
+    allowed_roles = roles_for("kitchen")
+
+    def get(self, request, day):
+        plan = DailyPlan.objects.filter(service_date=parse_date(day)).first()
+        if plan is None or not plan.is_frozen:
+            messages.error(request, "Бракеражний журнал формується лише для затвердженого плану.")
+            return redirect("consumption:kitchen_day", parse_date(day).isoformat())
+        from .pdf import brakerazh_pdf
+
+        return brakerazh_pdf(plan)
+
+
 class MenuVymohaView(RoleRequiredMixin, View):
     """Меню-вимога (typical form З-4а) for a day, XLSX. Accounting document: reports roles."""
 

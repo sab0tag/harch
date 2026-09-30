@@ -50,3 +50,45 @@ def menu_rozkladka_pdf(plan):
     resp = HttpResponse(pdf, content_type="application/pdf")
     resp["Content-Disposition"] = f'inline; filename="menu-rozkladka_{plan.service_date.isoformat()}.pdf"'
     return resp
+
+
+# ---------------------------------------------------------------- S7-03 бракеражний журнал
+def brakerazh_context(plan):
+    """Journal of finished-dish quality control for a day: every dish the kitchen cooks (corrections
+    included — that is what was cooked), its portion output and kcal, with empty columns for the commission."""
+    from apps.consumption.models import ConsumptionSnapshotLine
+    from apps.consumption.services import kitchen_board
+
+    kcal = {}          # (slot, card) -> kcal of one portion, from the approved plan's lines
+    per_combo = {}
+    for l in ConsumptionSnapshotLine.objects.filter(plan=plan, correction__isnull=True):
+        key = (l.meal_slot, l.dish_card_no, l.diet_code, l.menu_number)
+        total, portions = per_combo.get(key, (Decimal(0), l.portions))
+        per_combo[key] = (total + l.kcal_total, portions)
+    for (slot, card, _, _), (total, portions) in per_combo.items():
+        if portions:
+            kcal.setdefault((slot, card), (total / portions).quantize(Decimal("1")))
+    slots = []
+    n = 0
+    for s in kitchen_board(plan):
+        dishes = []
+        for d in s["dishes"]:
+            if d["portions"] <= 0:
+                continue
+            n += 1
+            dishes.append({"n": n, "card_no": d["card_no"], "name": d["name"], "output_g": d["output_g"],
+                           "diets": ", ".join(sorted(d["by_diet"])), "portions": d["portions"],
+                           "kcal": kcal.get((s["slot"], d["card_no"]))})
+        if dishes:
+            slots.append({"label": s["label"], "dishes": dishes})
+    return {"plan": plan, "hospital": settings.HOSPITAL_FULL_NAME, "slots": slots,
+            "diets": menu_rozkladka_context(plan)["diets"]}
+
+
+def brakerazh_pdf(plan):
+    from weasyprint import HTML
+
+    html = render_to_string("reports/brakerazh.html", brakerazh_context(plan))
+    resp = HttpResponse(HTML(string=html).write_pdf(), content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="brakerazh_{plan.service_date.isoformat()}.pdf"'
+    return resp
