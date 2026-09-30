@@ -1,6 +1,8 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
+from apps.accounts.views import SignInView
+
 from . import views
 
 urlpatterns = [
@@ -13,10 +15,6 @@ urlpatterns = [
     path("robots.txt", views.robots_txt, name="robots_txt"),
     path("healthz/", views.healthz, name="healthz"),
     path("healthz/full/", views.healthz_full, name="healthz_full"),
-    path(
-        "login/",
-        auth_views.LoginView.as_view(template_name="registration/login.html", redirect_authenticated_user=True),
-        name="login",
-    ),
+    path("login/", SignInView.as_view(), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 ]

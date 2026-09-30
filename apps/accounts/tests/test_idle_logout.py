@@ -57,3 +57,21 @@ def test_polling_after_timeout_sends_the_page_to_login(login):
 def test_session_ends_with_the_browser_and_after_a_shift(settings):
     assert settings.SESSION_EXPIRE_AT_BROWSER_CLOSE is True
     assert settings.SESSION_COOKIE_AGE == 12 * 60 * 60
+
+
+# ------------------------------------------------------------------ a lost session seen by the bell
+def test_bell_without_a_session_sends_the_whole_tab_to_login(client):
+    r = client.get(BADGE, HTTP_HX_REQUEST="true", HTTP_HX_CURRENT_URL="https://x.test/orders/summary/?date=2026-10-01")
+    assert r.status_code == 204                            # not the login page swapped into the bell
+    assert r["HX-Redirect"] == "/login/?next=/orders/summary/%3Fdate%3D2026-10-01"
+    assert client.get(BADGE).status_code == 302            # an ordinary (non-htmx) request: the usual redirect
+
+
+def test_login_never_lands_on_the_bell(client, django_user_model):
+    django_user_model.objects.create_user("olena", password="Kvitka-Sumy-2026", role=Role.DIETICIAN)
+    r = client.post("/login/?next=/tasks/notifications/count/",
+                    {"username": "olena", "password": "Kvitka-Sumy-2026", "next": "/tasks/notifications/count/"})
+    assert r.status_code == 302 and r.url == "/"
+    client.logout()
+    r = client.post("/login/", {"username": "olena", "password": "Kvitka-Sumy-2026", "next": "/orders/summary/"})
+    assert r.url == "/orders/summary/"                     # a real page still comes back

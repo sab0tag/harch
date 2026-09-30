@@ -77,3 +77,25 @@ class ForcePasswordChangeMiddleware:
             return request.path in {reverse(name) for name in self.ALLOWED}
         except NoReverseMatch:  # a URLconf without these pages (some tests)
             return True
+
+
+class HtmxLoginRedirectMiddleware:
+    """A background htmx request (the notification bell) that finds the sign-in gone gets a redirect to
+    the login page; htmx would swap that whole page into the bell. Send the whole tab to login instead,
+    coming back to the page the person was on."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.headers.get("HX-Request") != "true" or response.status_code not in (301, 302):
+            return response
+        login = resolve_url(settings.LOGIN_URL)
+        if not urlsplit(response.get("Location", "")).path == login:
+            return response
+        current = urlsplit(request.headers.get("HX-Current-URL", ""))
+        back = current.path + (f"?{current.query}" if current.query else "") if current.path else "/"
+        redirect_all = HttpResponse(status=204)
+        redirect_all["HX-Redirect"] = f"{login}?next={quote(back)}"
+        return redirect_all
