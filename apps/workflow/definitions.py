@@ -53,11 +53,17 @@ def day_orders(task):
 
 
 def all_orders_resolved(service_date) -> bool:
-    """Called under the lock_group lock, so two last approvals can't both miss each other."""
-    statuses = list(
-        Task.objects.filter(type=ORDER_SUBMISSION, service_date=service_date).values_list("status", flat=True)
-    )
-    return bool(statuses) and all(s in CLOSED for s in statuses)
+    """Every active department has its order for the day, and all are approved or closed.
+
+    Only the orders that exist would not do: one order opened early (days ahead, before the others'
+    tasks exist) and approved would start the plan with one department of nine. Called under the
+    lock_group lock, so two last approvals can't both miss each other."""
+    from apps.orgstructure.models import Department
+
+    statuses = dict(Task.objects.filter(type=ORDER_SUBMISSION, service_date=service_date)
+                    .values_list("department_id", "status"))
+    active = set(Department.objects.filter(is_active=True).values_list("pk", flat=True))
+    return bool(active) and all(statuses.get(d) in CLOSED for d in active)
 
 
 def _after_order_approved(task):
