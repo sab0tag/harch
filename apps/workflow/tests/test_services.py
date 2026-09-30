@@ -82,6 +82,17 @@ def test_maker_cannot_approve_own_submission(hospital):
     wf.approve(task, hospital.dietician)
 
 
+def test_admin_never_approves_or_returns(hospital):
+    """The hospital: the dietician approves orders; the admin sees and cancels, but is not a checker."""
+    task = submit(orders(hospital)[0], hospital.nurses[0])
+    assert wf.can(hospital.admin, task, "view")
+    assert not wf.can(hospital.admin, task, "approve") and not wf.can(hospital.admin, task, "reject")
+    with pytest.raises(PermissionDenied):
+        wf.approve(task, hospital.admin)
+    assert not wf.review_for(hospital.admin).exists()
+    assert task in wf.review_for(hospital.dietician)
+
+
 def test_view_permission(hospital):
     task = orders(hospital)[0]
     assert wf.can(hospital.nurses[0], task, "view")
