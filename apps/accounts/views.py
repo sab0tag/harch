@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.views import PasswordChangeView
+from django.contrib.auth.views import LoginView, PasswordChangeView
 from django.urls import reverse_lazy
 
 
@@ -17,3 +17,15 @@ class ChangePasswordView(PasswordChangeView):
             user.save(update_fields=["must_change_password"])
         messages.success(self.request, "Пароль змінено.")
         return response
+
+
+class SignInView(LoginView):
+    """Login that never returns to a background endpoint (the bell's count or list): someone who signs in
+    after a lost session lands on a page, not on a bare number."""
+
+    template_name = "registration/login.html"
+    redirect_authenticated_user = True
+
+    def get_redirect_url(self):
+        url = super().get_redirect_url()
+        return "" if url.startswith("/tasks/notifications/") else url
