@@ -56,7 +56,8 @@ class Svg:
 def swimlanes():
     W, LW = 1240, 150
     lanes = [("sys", "Система", "планувальник"), ("nurse", "Старша медсестра", "кожне відділення"), ("diet", "Дієтсестра", "перевіряє все"),
-             ("chef", "Шеф-кухар", "завідувач виробництва"), ("acc", "Бухгалтер", ""), ("admin", "Адміністратор", "")]
+             ("chef", "Шеф-кухар", "завідувач виробництва"), ("store", "Завідувач складу", "видає продукти"),
+             ("acc", "Бухгалтер", ""), ("admin", "Адміністратор", "")]
     top, LH = 64, 104
     H = top + LH * len(lanes) + 18
     s = Svg("sw", W, H, "Контур дня: замовлення від усіх відділень, план меню, кухня і списання — хто подає, хто затверджує, куди повертається")
@@ -90,11 +91,13 @@ def swimlanes():
     # chef
     s.box(LW + 450, c("chef"), 150, bh, ["Перевірити", "план меню"], "check")
     s.box(LW + 640, c("chef"), 190, bh, ["Готувати · внести факт", "→ «Подати дієтсестрі»"])
+    # store
+    s.box(LW + 640, c("store"), 190, bh, ["Видача продуктів", "план + коригування"])
     # accountant
     s.box(LW + 880, c("acc"), 180, bh, ["Ціни · «Подати", "на звірку»"])
     # admin
     s.box(LW + 10, c("admin"), bw, bh, ["Скасувати замовлення", "(лише з причиною)"], "admin")
-    s.box(LW + 420, c("admin"), 330, bh, ["Користувачі і ролі · журнал подій · ШІ-помічник", "бачить усе, власну подачу не затверджує"], "admin")
+    s.box(LW + 420, c("admin"), 330, bh, ["Користувачі і ролі · журнал подій · ШІ-помічник", "бачить усе, нічого не затверджує"], "admin")
     mid = lambda k: y[k] + LH / 2
     # forward flow
     s.path(f"M{LW + 98} {c('sys') + bh} V{c('nurse')}", "sys", "нова задача", LW + 104, c("sys") + bh + 20, "start")
@@ -102,13 +105,14 @@ def swimlanes():
     s.path(f"M{LW + 390} {mid('diet') - 10} H{LW + 415} V{c('sys') + bh}", "fwd", "затвердила", LW + 409, mid("nurse") + 30, "end")
     s.path(f"M{LW + 475} {c('sys') + bh} V{c('diet')}", "sys")
     s.path(f"M{LW + 525} {c('diet') + bh} V{c('chef')}", "fwd", "подала", LW + 531, c("diet") + bh + 20, "start")
-    s.path(f"M{LW + 600} {mid('chef') - 12} H{LW + 620} V{y['sys'] + 30} H{LW + 640}", "fwd", "затвердив", LW + 625, mid("chef") - 30, "start")
-    s.path(f"M{LW + 735} {c('sys') + bh} V{c('chef')}", "sys")
+    s.path(f"M{LW + 600} {mid('chef') - 12} H{LW + 620} V{y['sys'] + 30} H{LW + 640}", "fwd", "затвердив", LW + 614, mid("chef") - 32, "end")
+    s.path(f"M{LW + 684} {c('sys') + bh} V{c('chef')}", "sys")   # left of the dietician's «факт кухні» box
     s.path(f"M{LW + 765} {c('chef')} V{c('diet') + bh}", "fwd", "подав", LW + 771, c("chef") - 12, "start")
     s.path(f"M{LW + 840} {mid('diet') - 10} H{LW + 855} V{y['sys'] + 30} H{LW + 870}", "fwd", "затвердила", LW + 845, y["sys"] + 22, "end")
     s.path(f"M{LW + 930} {c('sys') + bh} V{c('acc')}", "sys")
     s.path(f"M{LW + 990} {c('acc')} V{c('diet') + bh}", "fwd", "подав", LW + 996, c("acc") - 12, "start")
     s.path(f"M{LW + 1040} {mid('diet') - 10} H{LW + 1047} V{c('sys') + bh}", "fwd", "затвердила", LW + 1041, c("sys") + bh + 36, "end")
+    s.path(f"M{LW + 720} {c('store')} V{c('chef') + bh}", "sys", "видає продукти", LW + 726, c("store") - 12, "start")
     # returns
     s.path(f"M{LW + 250} {c('diet')} V{mid('nurse') + 14} H{LW + 10 + bw}", "back", "повернула з коментарем", LW + 208, c("diet") - 10, "middle")
     s.path(f"M{LW + 470} {c('chef')} V{c('diet') + bh}", "back", "повернув", LW + 464, c("chef") - 12, "end")
@@ -116,6 +120,26 @@ def swimlanes():
     s.path(f"M{LW + 910} {c('diet') + bh} V{c('acc')}", "back", "повернула", LW + 904, c("diet") + bh + 20, "end")
     # admin cancel closes an order too
     s.path(f"M{LW + 10 + bw} {mid('admin')} H{LW + 405} V{c('sys') + bh + 4}", "sys", "скасоване = закрите", LW + 204, mid("admin") - 8, "start", dashed=True)
+    return s.render()
+
+
+# ---------------------------------------------------------------- 1b. corrections during the day (S7-01)
+def corrections_flow():
+    W, H = 980, 270
+    s = Svg("cr", W, H, "Коригування протягом дня: медсестра подає ± порції, дієтсестра затверджує, додаткова вимога йде на кухню, склад і в списання")
+    s.box(20, 40, 220, 58, ["«Нове коригування»", "± порції з обіду / вечері"], "entry")
+    s.path("M240 69 H265", "fwd", "подала", 252, 60)
+    s.diamond(360, 69, 190, 60, ["Дієтсестра", "перевіряє"])
+    s.box(500, 40, 200, 58, ["«Додаткова вимога»", "рядки розходу дня"], "sys")
+    s.path("M455 69 H500", "fwd", "✓", 477, 60)
+    for i, text in enumerate(["Кухня: порції страв +", "Склад: видача +", "Списання і З-4а +"]):
+        y = 8 + i * 52
+        s.box(770, y, 190, 44, [text], "done")
+        s.path(f"M700 69 H735 V{y + 22} H770", "sys")
+    s.path("M360 99 V150 H130 V98", "back", "✗ повернула з коментарем", 245, 166)
+    s.box(500, 185, 200, 58, ["Звідки перевели: −N", "медсестрам — сповіщення"], "sys")
+    s.path("M600 98 V185", "sys", "якщо переведення", 608, 150, "start", dashed=True)
+    s.box(20, 200, 330, 50, ["План ще не затверджено?", "додасться, щойно шеф затвердить план"], "state")
     return s.render()
 
 
@@ -260,7 +284,7 @@ def build():
                             ("Ціни за кг", "вручну або «Завантажити з Excel»"), ("«Подати на звірку»", "ціни фіксуються")],
                            "Дієтсестра", ["Затверджено", "день закрито"], 2)
     html = TEMPLATE
-    for k, v in {"%%SWIM%%": swimlanes(), "%%LIFE%%": lifecycle(), "%%NURSE%%": nurse, "%%DIET%%": dietician_flow(),
+    for k, v in {"%%SWIM%%": swimlanes(), "%%CORR%%": corrections_flow(), "%%LIFE%%": lifecycle(), "%%NURSE%%": nurse, "%%DIET%%": dietician_flow(),
                  "%%CHEF%%": chef_flow(), "%%ACC%%": accountant}.items():
         html = html.replace(k, v)
     return html
@@ -273,7 +297,7 @@ def as_django_template(html):
     html = (html.replace(fonts, "<link rel=\"stylesheet\" href=\"{% static 'vendor/fonts/kontur-fonts.css' %}\">\n")
             .replace("beyondthesignal.to/login", "{{ request.get_host }}/login")
             .replace("<header>\n", "<header>\n    <a class=\"back\" href=\"{% url 'help' %}\">← Інструкції</a>\n", 1)
-            .replace(footer, "<footer>{{ hospital }} · схема відповідає роботі системи на 29.09.2026. "
+            .replace(footer, "<footer>{{ hospital }} · схема відповідає роботі системи на 30.09.2026. "
                              "Строки подачі — налаштування за замовчуванням.</footer>")
             .replace("</style>", ".back{justify-self:start;font:500 14px var(--body);color:var(--go);text-decoration:none}\n"
                                  ".back:hover{text-decoration:underline}\n</style>"))
