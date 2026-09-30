@@ -157,3 +157,32 @@ def test_command_proposes_in_batches(seeded, ai_on):
 def test_command_refuses_without_ai(seeded):
     with pytest.raises(CommandError):
         call_command("draft_technology", stdout=open("/dev/null", "w"))
+
+
+# ------------------------------------------------------------------ the proposal inside the card
+def test_the_card_offers_its_proposal_and_saving_settles_it(client, seeded, ai_on, login):
+    c = login(Role.DIETICIAN)
+    with ai.use_transport(fake_model()):
+        draft = technology.generate(c.user)
+    dish = Dish.objects.get(pk=draft.input["dish_ids"][0])
+    detail = c.get(f"/catalog/dishes/{dish.pk}/").content.decode()
+    assert "пропозиція ШІ" in detail
+    form = c.get(f"/catalog/dishes/{dish.pk}/edit/")
+    html = form.content.decode()
+    assert "Вставити в поле" in html and f"Технологія для {dish.pk}." in html
+    data = {k: v for k, v in form.context["form"].initial.items() if v is not None}
+    data.update({"card_no": dish.card_no, "name": dish.name, "category": dish.category, "output_g": dish.output_g,
+                 "diets": [d.pk for d in dish.diets.all()], "technology": "Своїми словами: варити 20 хв.",
+                 "source": dish.source, "is_active": "on"})
+    assert c.post(f"/catalog/dishes/{dish.pk}/edit/", data).status_code == 302
+    dish.refresh_from_db()
+    draft.refresh_from_db()
+    assert dish.technology == "Своїми словами: варити 20 хв."            # the person's text, not the AI's
+    assert draft.result["decisions"][str(dish.pk)] == "accepted"          # no longer waits on the AI page
+    assert "Вставити в поле" not in c.get(f"/catalog/dishes/{dish.pk}/edit/").content.decode()
+
+
+def test_no_proposal_block_without_a_proposal(client, seeded, login):
+    c = login(Role.DIETICIAN)
+    dish = Dish.objects.filter(is_active=True).first()
+    assert "Вставити в поле" not in c.get(f"/catalog/dishes/{dish.pk}/edit/").content.decode()

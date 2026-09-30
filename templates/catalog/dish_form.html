@@ -17,6 +17,22 @@
     <div class="col-12"><label class="form-label">{{ form.diets.label }}</label>
       <div class="d-flex flex-wrap gap-3">{% for cb in form.diets %}<div class="form-check">{{ cb.tag }}<label class="form-check-label" for="{{ cb.id_for_label }}">{{ cb.choice_label }}</label></div>{% endfor %}</div>
       {% for e in form.diets.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+    {% if ai_technology %}
+    <div class="col-12"><div class="alert alert-info mb-0">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-1"><span class="fw-semibold me-auto"><i class="bi bi-stars me-1"></i>Пропозиція ШІ — технологія приготування</span>
+        <button type="button" class="btn btn-sm btn-info" id="ai-tech-insert"><i class="bi bi-box-arrow-in-down me-1"></i>Вставити в поле</button></div>
+      <div id="ai-tech-text" style="white-space: pre-line">{{ ai_technology.text }}</div>
+      {% for w in ai_technology.warnings %}<div class="small text-danger mt-1"><i class="bi bi-exclamation-triangle me-1"></i>{{ w }}</div>{% endfor %}
+      <div class="small text-secondary mt-1">Вставте, перевірте й виправте за потреби, потім «Зберегти». Без збереження в картку нічого не записується.</div>
+    </div></div>
+    <script>
+      document.getElementById("ai-tech-insert").addEventListener("click", () => {
+        const field = document.getElementById("{{ form.technology.id_for_label }}");
+        field.value = document.getElementById("ai-tech-text").textContent.trim();
+        field.focus();
+      });
+    </script>
+    {% endif %}
     <div class="col-12">{% include "partials/field.html" with field=form.technology %}</div>
     <div class="col-12">{% include "partials/field.html" with field=form.source %}</div>
     <div class="col-12 form-check ms-2">{{ form.is_active }} <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label></div>

@@ -14,6 +14,7 @@ from apps.accounts.access import RoleRequiredMixin
 from apps.core.navigation import CATALOG_EDITORS, PRICE_EDITORS, roles_for
 
 from .forms import DishForm, IngredientForm, ProductForm, ProductPriceForm
+from . import technology
 from .models import Diet, Dish, DishIngredient, Product
 from .nutrition import dish_nutrition, ingredient_nutrition, with_dish_nutrition
 
@@ -76,6 +77,7 @@ def _dish_context(dish, user):
     )[:25]
     return {
         "dish": dish,
+        "ai_technology": technology.pending_for(dish) if editable else None,
         "rows": rows,
         "totals": dish_nutrition(dish).rounded(),
         "can_edit": editable,
@@ -109,12 +111,14 @@ class DishEditView(RoleRequiredMixin, View):
         if not form.is_valid():
             return self.render(request, form, dish)
         dish = form.save()
+        technology.settle_in_card(dish)
         messages.success(request, "Картку збережено.")
         return redirect("catalog:dish_detail", pk=dish.pk)
 
     def render(self, request, form, dish):
         categories = Dish.objects.order_by("category").values_list("category", flat=True).distinct()
-        return render(request, "catalog/dish_form.html", {"form": form, "dish": dish, "categories": categories})
+        return render(request, "catalog/dish_form.html", {"form": form, "dish": dish, "categories": categories,
+                                                          "ai_technology": technology.pending_for(dish)})
 
 
 @method_decorator(require_POST, name="dispatch")
