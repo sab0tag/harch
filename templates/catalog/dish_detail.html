@@ -31,6 +31,10 @@
 
 {% include "catalog/_ingredients_card.html" %}
 
+{% if ai_technology %}
+<div class="alert alert-info d-flex flex-wrap align-items-center gap-2 mb-4"><span class="me-auto"><i class="bi bi-stars me-1"></i>Технології ще немає — є <b>пропозиція ШІ</b>.</span>
+  <a href="{% url 'catalog:dish_edit' dish.pk %}" class="btn btn-sm btn-info">Переглянути й вставити</a></div>
+{% endif %}
 {% if dish.technology or dish.source %}
 <div class="card mb-4"><div class="card-body">
   {% if dish.technology %}<h2 class="h6">Технологія приготування</h2><p style="white-space: pre-line">{{ dish.technology }}</p>{% endif %}

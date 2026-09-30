@@ -88,3 +88,33 @@ def decide(draft, user, accepted: dict, discarded: set):
     draft.created_ids = sorted({*draft.created_ids, *(d.pk for d in written)})
     draft.save(update_fields=["result", "status", "created_ids", "updated_at"])
     return written, skipped
+
+
+# ---------------------------------------------------------------- in the card itself
+def pending_for(dish):
+    """The undecided AI proposal for this card, if any: {"draft", "text", "warnings"}."""
+    if dish is None or dish.technology.strip():
+        return None
+    key = str(dish.pk)
+    for draft in AIDraft.objects.filter(kind=AIDraft.Kind.TECHNOLOGY, status=AIDraft.Status.READY).order_by("-pk"):
+        item = draft.result.get("items", {}).get(key)
+        if item and key not in draft.result.get("decisions", {}):
+            return {"draft": draft, "text": item["technology"], "warnings": item.get("warnings", [])}
+    return None
+
+
+@transaction.atomic
+def settle_in_card(dish):
+    """The card was saved with a technology while an AI proposal waited: the person decided in the card
+    itself (took the text, edited it or wrote their own) — the proposal no longer waits on the AI page."""
+    if not dish.technology.strip():
+        return
+    key = str(dish.pk)
+    for draft in AIDraft.objects.select_for_update().filter(kind=AIDraft.Kind.TECHNOLOGY, status=AIDraft.Status.READY):
+        items, decisions = draft.result.get("items", {}), draft.result.setdefault("decisions", {})
+        if key in items and key not in decisions:
+            decisions[key] = "accepted"
+            if len(decisions) >= len(items):
+                draft.status = AIDraft.Status.ACCEPTED
+            draft.created_ids = sorted({*draft.created_ids, dish.pk})
+            draft.save(update_fields=["result", "status", "created_ids", "updated_at"])
