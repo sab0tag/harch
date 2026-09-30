@@ -30,6 +30,13 @@ class User(AbstractUser):
     )
     phone = models.CharField("Телефон", max_length=20, blank=True)
     telegram_chat_id = models.CharField("Telegram chat id", max_length=32, blank=True)
+    # S7-06: a second login of the same person for substitution (the chef covering the dietician) points
+    # to the person's main login; approvals across the two are allowed but marked in the history.
+    main_login = models.ForeignKey(
+        "self", verbose_name="Основний вхід (та сама людина)", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="extra_logins",
+        help_text="Для другого входу заміщення: шеф-кухар, що заміщує дієтсестру, має окремий вхід з роллю дієтсестри.",
+    )
     must_change_password = models.BooleanField(
         "Змінити пароль при вході", default=False,
         help_text="Тимчасовий пароль: після входу система попросить задати власний (S6-05).",
@@ -53,6 +60,13 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.username
+
+    def is_same_person(self, other) -> bool:
+        """Two logins of one person (main + substitution login), or the same login."""
+        if other is None:
+            return False
+        mine, theirs = self.main_login_id or self.pk, other.main_login_id or other.pk
+        return mine == theirs
 
     def has_role(self, *roles) -> bool:
         """True if user has one of `roles`. Admin role passes every check."""

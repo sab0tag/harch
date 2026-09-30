@@ -248,3 +248,25 @@ def test_parallel_last_two_order_approvals_create_one_plan(hospital):
     errors = _in_threads(lambda: wf.approve(t2, hospital.dietician), lambda: wf.approve(t3, hospital.dietician2))
     assert errors == []
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).count() == 1
+
+
+# ----------------------------------------------------------------- S7-06 substitution
+def test_substitution_login_may_approve_but_the_history_says_so(hospital):
+    """The chef covers the dietician with a second login; approving her own order-review is marked."""
+    from apps.accounts.models import Role
+    from apps.accounts.tests.factories import UserFactory
+
+    chef = hospital.chef
+    as_dietician = UserFactory(role=Role.DIETICIAN, main_login=chef, first_name=chef.first_name, last_name=chef.last_name)
+    assert chef.is_same_person(as_dietician) and as_dietician.is_same_person(chef)
+    assert not hospital.dietician.is_same_person(chef)
+    task = submit(orders(hospital)[0], hospital.nurses[0])
+    wf.approve(task, as_dietician)                         # an ordinary approval: no mark
+    assert "Заміщення" not in task.events.get(kind="approved").comment
+    other = orders(hospital)[1]                              # recorded as submitted by her main login
+    other.status, other.submitted_by = S.SUBMITTED, chef
+    other.save()
+    wf.approve(other, as_dietician)                          # the same person, other login: allowed, marked
+    event = other.events.get(kind="approved")
+    assert event.comment.startswith("Заміщення: затвердила та сама особа")
+    assert Notification.objects.filter(user=hospital.admin, title__startswith="Заміщення").exists()

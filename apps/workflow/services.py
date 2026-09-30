@@ -202,10 +202,25 @@ def approve(task, user, comment=""):
         prev = task.status
         task.status, task.resolved_at, task.resolved_by = TaskStatus.APPROVED, timezone.now(), user
         task.save(update_fields=["status", "resolved_at", "resolved_by"])
+        comment = _substitution_mark(task, user, comment)
         _event(task, TaskEvent.Kind.APPROVED, user, prev, comment)
         n.notify([task.submitted_by], task, f"Затверджено: {task}", comment)
         task.definition.on_approved(task)
     return task
+
+
+def _substitution_mark(task, user, comment):
+    """S7-06: approving what the same person submitted under their other login (substitution) is
+    allowed — the logins differ — but it is written into the history and the admins are told."""
+    submitter = task.submitted_by
+    if submitter is None or submitter.pk == user.pk or not user.is_same_person(submitter):
+        return comment
+    from django.contrib.auth import get_user_model
+
+    mark = f"Заміщення: затвердила та сама особа, що й подала (вхід «{submitter.username}»)."
+    admins = get_user_model().objects.filter(role=Role.ADMIN, is_active=True)
+    n.notify(admins, task, f"Заміщення: {task} затверджено тією ж особою", mark)
+    return f"{mark} {comment}".strip()
 
 
 def reject(task, user, comment):

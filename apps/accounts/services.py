@@ -22,6 +22,7 @@ HEADERS = {
     "role": ("роль", "посада", "role"),
     "department": ("відділення", "отделение", "department"),
     "phone": ("телефон", "phone"),
+    "main": ("основний вхід", "основний логін", "main_login"),
 }
 
 ROLE_ALIASES = {
@@ -142,10 +143,14 @@ def import_users(rows, *, reset_passwords=False, deactivate_others=False, dry_ru
             continue
         taken.add(login)
         planned.append({"login": login, "last_name": parts[0], "first_name": " ".join(parts[1:]),
-                        "role": role, "department": department, "phone": row.get("phone", "")})
+                        "role": role, "department": department, "phone": row.get("phone", ""),
+                        "main": row.get("main", "").strip().lower(), "line": row["line"]})
     logins = [p["login"] for p in planned]
     for dup in sorted({x for x in logins if logins.count(x) > 1}):
         result.errors.append(f"логін «{dup}» повторюється у таблиці")
+    for p in planned:          # S7-06: a substitution login names the person's main login
+        if p["main"] and p["main"] not in taken:
+            result.errors.append(f"рядок {p['line']}: основний вхід «{p['main']}» не знайдено")
     if result.errors:
         return result
 
@@ -173,6 +178,10 @@ def import_users(rows, *, reset_passwords=False, deactivate_others=False, dry_ru
             bucket.append({"login": p["login"], "name": f"{p['last_name']} {p['first_name']}",
                            "role": Role(p["role"]).label, "department": p["department"].name if p["department"] else "",
                            "password": password or ""})
+        if not dry_run:        # second pass: the main login may be further down the table
+            for p in planned:
+                if p["main"]:
+                    User.objects.filter(username=p["login"]).update(main_login=User.objects.get(username=p["main"]))
         if deactivate_others:
             others = User.objects.filter(is_active=True, is_superuser=False).exclude(username__in=logins)
             result.deactivated = sorted(others.values_list("username", flat=True))

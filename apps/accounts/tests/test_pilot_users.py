@@ -165,3 +165,16 @@ def test_list_users_shows_state():
     out = StringIO()
     call_command("list_users", "--all", stdout=out)
     assert "gone" in out.getvalue() and "ВИМКНЕНО" in out.getvalue()
+
+
+def test_substitution_login_links_to_the_main_one_in_any_order(tmp_path):
+    """S7-06: the chef's second login as dietician names her main login — even above it in the table."""
+    path = write_csv(tmp_path, "логін;ПІБ;роль;відділення;основний вхід\n"
+                               "petrenko.l.diet;Петренко Лариса;Дієтсестра;;petrenko.l\n"
+                               "petrenko.l;Петренко Лариса;Шеф-кухар;;\n")
+    run(path)
+    sub, main = User.objects.get(username="petrenko.l.diet"), User.objects.get(username="petrenko.l")
+    assert sub.main_login == main and sub.role == Role.DIETICIAN and main.is_same_person(sub)
+    bad = write_csv(tmp_path, "логін;ПІБ;роль;відділення;основний вхід\nx.y;Ікс Ігрек;Дієтсестра;;nobody\n")
+    with pytest.raises(CommandError, match="основний вхід «nobody» не знайдено"):
+        run(bad)
