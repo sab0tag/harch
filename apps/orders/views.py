@@ -14,7 +14,7 @@ from apps.accounts.models import Role
 from apps.core.navigation import roles_for
 from apps.orgstructure.models import Department
 from apps.workflow import services as wf
-from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION
+from apps.workflow.definitions import MENU_PLANNING, ORDER_SUBMISSION, order_deadline
 from apps.workflow.models import CLOSED, Task, TaskStatus
 
 from . import corrections, services
@@ -182,6 +182,9 @@ class OrderSummaryView(RoleRequiredMixin, View):
         return render(request, "orders/summary.html", {
             "corrections": day_corrections,
             "day_over": day < timezone.localdate() and request.user.role != Role.ADMIN,
+            # a plan from only the approved orders makes sense once the others are late, not before
+            "can_force_plan": timezone.now() >= order_deadline(day),
+            "order_deadline": order_deadline(day),
             "day": day,
             "rows": rows,
             "diets": diets,
@@ -221,6 +224,10 @@ class OrderSummaryView(RoleRequiredMixin, View):
         elif action == "force_plan":
             from apps.planning.services import force_planning
 
+            if timezone.now() < order_deadline(day):
+                messages.error(request, f"Сформувати план без усіх замовлень можна після терміну подачі "
+                                        f"({timezone.localtime(order_deadline(day)):%d.%m %H:%M}).")
+                return back
             force_planning(day, request.user)
             messages.success(request, "План меню сформовано з уже затверджених замовлень.")
             return redirect("planning:plan", day.isoformat())

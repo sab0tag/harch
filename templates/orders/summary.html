@@ -27,6 +27,8 @@
   {% endif %}
   {% if plan_task %}
     <a href="{% url 'planning:plan' day.isoformat %}" class="btn btn-primary"><i class="bi bi-calendar-week me-1"></i>План меню</a>
+  {% elif counts.approved and not day_over and not can_force_plan %}
+  <span class="small text-secondary align-self-center">План відкриється, коли всі відділення подадуть і отримають затвердження; без решти — після {{ order_deadline|date:"d.m H:i" }}.</span>
   {% elif counts.approved and not day_over %}
   <form method="post" onsubmit="return confirm('Сформувати план лише з затверджених замовлень? Незатверджені відділення не ввійдуть у план.')">{% csrf_token %}
     <input type="hidden" name="date" value="{{ day.isoformat }}">

@@ -1,5 +1,9 @@
 """S3-01 / S3-02: department orders and the dietician's summary."""
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import pytest
+import time_machine
 
 from apps.catalog.models import Diet
 from apps.orders.models import DailyOrder
@@ -178,7 +182,8 @@ def test_create_missing_tasks(client, world):
 def test_force_plan_uses_only_approved_orders(client, world):
     fill_all(client, world)
     wf.approve(Task.objects.get(department=world.depts["Терапевтичне"]), world.dietician)
-    r = as_user(client, world.dietician).post("/orders/summary/", {"date": "2026-10-01", "action": "force_plan"})
+    with time_machine.travel(datetime(2026, 9, 30, 23, 0, tzinfo=ZoneInfo("Europe/Kyiv")), tick=True):  # after the deadline
+        r = as_user(client, world.dietician).post("/orders/summary/", {"date": "2026-10-01", "action": "force_plan"})
     assert r.url == "/plan/2026-10-01/"
     from apps.planning.models import DailyPlan
 
@@ -204,3 +209,26 @@ def test_dietician_day_arrows_reach_a_day_without_order(client, world):
     assert c.post("/orders/{}/2026-10-02/".format(ther.pk), {"action": "submit"}).status_code == 404
     # The other department's nurse still cannot see it.
     assert as_user(client, world.nurse["Хірургічне"]).get("/orders/{}/2026-10-02/".format(ther.pk)).status_code == 404
+
+
+def test_one_early_order_does_not_open_the_plan(client, world):
+    """An order opened days ahead and approved while the others' tasks don't exist yet: no plan."""
+    ther = world.depts["Терапевтичне"]
+    post_order(as_user(client, world.nurse["Терапевтичне"]), ther, ОВД="10")
+    wf.approve(Task.objects.get(department=ther), world.dietician)
+    assert not Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()
+    for name in ("Хірургічне", "Ендокринологічне"):
+        post_order(as_user(client, world.nurse[name]), world.depts[name], ОВД="3")
+        wf.approve(Task.objects.get(department=world.depts[name]), world.dietician)
+    assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()   # every department is in
+
+
+def test_forced_plan_only_after_the_order_deadline(client, world):
+    ther = world.depts["Терапевтичне"]
+    post_order(as_user(client, world.nurse["Терапевтичне"]), ther, ОВД="10")
+    wf.approve(Task.objects.get(department=ther), world.dietician)
+    diet_client = as_user(client, world.dietician)
+    html = diet_client.get("/orders/summary/?date=2026-10-01").content.decode()
+    assert "Сформувати план зараз" not in html and "План відкриється" in html
+    diet_client.post("/orders/summary/", {"date": "2026-10-01", "action": "force_plan"})
+    assert not Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()
