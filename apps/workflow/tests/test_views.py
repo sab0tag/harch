@@ -183,3 +183,41 @@ class TestTabOrder:
         assert "прострочено" in html                                   # in the deadline column
         # One mark per screen width: the status badge is for phones only, where the deadline column is hidden.
         assert 'd-md-none"><i class="bi bi-alarm"></i> Прострочено' in html
+
+
+# ------------------------------------------------------------------ «Стан дня» and the admin safety net
+def test_day_status_shows_where_tomorrow_stands(client, hospital):
+    from datetime import timedelta
+
+    from apps.workflow import services as wf
+    from apps.workflow.definitions import ORDER_SUBMISSION
+    from apps.workflow.tests.conftest import DAY, submit
+
+    tasks = [wf.ensure_task(ORDER_SUBMISSION, DAY, department=d)[0] for d in hospital.depts]
+    submit(tasks[0], hospital.nurses[0])
+    wf.reject(tasks[0], hospital.dietician, "Додайте 2 порції №9")
+    r = as_user(client, hospital.admin).get(f"/tasks/day/?date={(DAY - timedelta(days=1)).isoformat()}")
+    html = r.content.decode()
+    tomorrow = r.context["cards"][0]
+    assert tomorrow["day"] == DAY and "Додайте 2 порції №9" in html
+    assert any(row["status"] == "rejected" for row in tomorrow["rows"])
+    assert tomorrow["rows"][-1]["what"] == "План меню"
+    assert as_user(client, hospital.dietician).get("/tasks/day/").status_code == 403
+
+
+def test_admin_safety_net_is_off_by_default_and_marked_when_on(hospital, settings):
+    from django.core.exceptions import PermissionDenied
+
+    from apps.workflow import services as wf
+    from apps.workflow.definitions import ORDER_SUBMISSION
+    from apps.workflow.tests.conftest import DAY, submit
+
+    task = wf.ensure_task(ORDER_SUBMISSION, DAY, department=hospital.depts[0])[0]
+    submit(task, hospital.nurses[0])
+    settings.ADMIN_CAN_APPROVE = False
+    with pytest.raises(PermissionDenied):
+        wf.approve(task, hospital.admin)
+    settings.ADMIN_CAN_APPROVE = True
+    assert task in wf.review_for(hospital.admin)
+    wf.approve(task, hospital.admin)
+    assert task.events.get(kind="approved").comment.startswith("Затверджено адміністратором (підстраховка)")

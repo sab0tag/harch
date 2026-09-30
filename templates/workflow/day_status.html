@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Стан дня{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+  <a class="btn btn-outline-secondary" href="?date={{ prev_day.isoformat }}" title="Попередній день">‹</a>
+  <h1 class="h3 mb-0">Стан дня · {{ anchor|date:"d.m.Y, l" }}</h1>
+  <a class="btn btn-outline-secondary" href="?date={{ next_day.isoformat }}" title="Наступний день">›</a>
+  {% if anchor != today %}<a class="btn btn-link" href="?">сьогодні</a>{% endif %}
+</div>
+<p class="text-secondary mb-3">Де зараз кожен документ і де щось зупинилось. Лише перегляд: «Відкрити» веде до документа, де можна допомогти.</p>
+<div class="row g-3">
+{% for c in cards %}
+  <div class="col-xl-4">
+    <div class="card h-100">
+      <div class="card-header bg-white"><div class="fw-semibold">{{ c.title }}</div>
+        <div class="small text-secondary">{{ c.day|date:"d.m, l" }}{% if c.summary %} · {{ c.summary }}{% endif %}</div></div>
+      <ul class="list-group list-group-flush">
+      {% for r in c.rows %}
+        <li class="list-group-item">
+          <div class="d-flex align-items-center gap-2">
+            <span class="me-auto fw-medium text-truncate" style="min-width: 0" title="{{ r.what }}">{{ r.what }}</span>
+            <span class="d-flex align-items-center gap-1 flex-shrink-0">
+              {% if r.status %}<span class="badge badge-status-{{ r.status }}">{{ r.status_label }}</span>{% if r.overdue %}<span class="badge border border-danger text-danger bg-white" title="Прострочено"><i class="bi bi-alarm"></i></span>{% endif %}{% endif %}
+              {% if r.url %}<a href="{{ r.url }}" class="btn btn-sm btn-outline-primary ms-1">Відкрити</a>{% endif %}
+            </span>
+          </div>
+          {% if not r.status %}<div class="small text-secondary">{{ r.missing }}</div>{% endif %}
+          {% if r.who %}<div class="small text-secondary">{{ r.who }}{% if r.when %} · {{ r.when|date:"d.m H:i" }}{% endif %}</div>{% endif %}
+          {% if r.note %}<div class="small text-danger" style="white-space: pre-line">{{ r.note }}</div>{% endif %}
+        </li>
+      {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

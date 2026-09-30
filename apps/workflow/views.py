@@ -123,6 +123,26 @@ class TaskActionView(RoleRequiredMixin, View):
         return redirect("workflow:task_detail", pk=pk)
 
 
+class DayStatusView(RoleRequiredMixin, View):
+    """«Стан дня»: where tomorrow's orders, today's kitchen and yesterday's write-off stand (admin)."""
+
+    allowed_roles = roles_for("day")
+
+    def get(self, request):
+        from datetime import date as date_cls, timedelta
+
+        from .day_status import cards
+
+        try:
+            anchor = date_cls.fromisoformat(request.GET.get("date", ""))
+        except ValueError:
+            anchor = timezone.localdate()
+        return render(request, "workflow/day_status.html", {
+            "anchor": anchor, "cards": cards(anchor), "today": timezone.localdate(),
+            "prev_day": anchor - timedelta(days=1), "next_day": anchor + timedelta(days=1),
+        })
+
+
 class AuditView(RoleRequiredMixin, View):
     allowed_roles = roles_for("audit")
 

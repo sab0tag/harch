@@ -12,6 +12,7 @@ env = environ.Env(
     HOSPITAL_NAME=(str, "Лікарня (пілот)"),
     DEMO_MODE=(bool, False),
     SESSION_IDLE_MINUTES=(int, 60),
+    ADMIN_CAN_APPROVE=(bool, False),
     CORRECTION_LUNCH_CUTOFF=(str, "14:00"),
     HOSPITAL_FULL_NAME=(str, ""),
     HOSPITAL_EDRPOU=(str, ""),
@@ -146,6 +147,8 @@ LOGOUT_REDIRECT_URL = "login"
 # S6-02: shared department computers. Sign-in ends after SESSION_IDLE_MINUTES without activity
 # (apps/accounts/middleware.py), when the browser closes, and in any case after a 12-hour shift.
 SESSION_IDLE_MINUTES = env("SESSION_IDLE_MINUTES")
+# Pilot safety net: the admin may approve/return when nobody else can; marked in the history. Off by default.
+ADMIN_CAN_APPROVE = env("ADMIN_CAN_APPROVE")
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 12 * 60 * 60
 
