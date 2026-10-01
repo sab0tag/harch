@@ -7,6 +7,8 @@
   <a class="btn btn-outline-secondary" href="{% url 'planning:plan' next_day.isoformat %}">›</a>
   {% if task %}<span class="badge badge-status-{{ task.status }} fs-6 ms-md-2">{{ task.get_status_display }}</span>{% endif %}
   {% if plan.is_frozen %}<span class="badge text-bg-dark fs-6"><i class="bi bi-lock"></i> Розхід зафіксовано</span>{% endif %}
+  {% if plan.signed_at %}<span class="badge text-bg-success fs-6"><i class="bi bi-pen"></i> Підписано {{ plan.signed_at|date:"d.m H:i" }}</span>
+  {% elif can_sign %}<form method="post" action="{% url 'planning:sign' %}" class="d-inline">{% csrf_token %}<input type="hidden" name="plan" value="{{ plan.pk }}"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="btn btn-success btn-sm"><i class="bi bi-pen me-1"></i>Підписати меню-розкладку</button></form>{% endif %}
 </div>
 <p class="text-secondary">Порцій за затвердженими замовленнями: <strong>{{ portions_total }}</strong>
   {% if user.role == 'dietician' or user.role == 'admin' %} · <a href="{% url 'orders:summary' %}?date={{ plan.service_date.isoformat }}">замовлення</a>{% endif %}

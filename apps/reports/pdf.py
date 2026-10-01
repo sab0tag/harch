@@ -35,6 +35,7 @@ def menu_rozkladka_context(plan):
         "edrpou": settings.HOSPITAL_EDRPOU,
         "address": settings.HOSPITAL_ADDRESS,
         "approver_title": settings.APPROVER_TITLE,
+        "signed_at": plan.signed_at,
         "diets": list(diets.values()),
         "totals": totals,
         "total_brutto": sum((b for _, b, _ in totals), Decimal(0)),

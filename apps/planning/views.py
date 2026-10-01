@@ -112,6 +112,7 @@ class PlanView(RoleRequiredMixin, View):
             "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,
             "can_review": task is not None and wf.can(request.user, task, "approve"),
             "drift": services.portions_drift(plan),
+            "can_sign": services.can_sign(request.user, plan),
             "prev_day": plan.service_date - timedelta(days=1),
             "next_day": plan.service_date + timedelta(days=1),
         })
@@ -138,3 +139,28 @@ class PlanPreviewView(RoleRequiredMixin, View):
         return render(request, "planning/_consumption.html", {
             "consumption": rows, "consumption_total": sum((b for _, b, _ in rows), Decimal(0)), "frozen": False,
         })
+
+
+class SignView(RoleRequiredMixin, View):
+    """«На підпис»: the head doctor signs approved menu-rozkladkas in the system instead of on paper."""
+
+    allowed_roles = roles_for("sign")
+
+    def get(self, request):
+        plans = services.to_sign()
+        for p in plans:
+            p.can_sign = services.can_sign(request.user, p)
+        return render(request, "planning/sign.html", {"plans": plans, "waiting": sum(p.signed_at is None for p in plans)})
+
+    def post(self, request):
+        from django.contrib import messages
+        from django.core.exceptions import PermissionDenied
+        from django.shortcuts import get_object_or_404, redirect
+
+        plan = get_object_or_404(DailyPlan, pk=request.POST.get("plan"))
+        try:
+            services.sign_plan(plan, request.user)
+            messages.success(request, f"Меню-розкладку на {plan.service_date:%d.%m} підписано.")
+        except PermissionDenied as exc:
+            messages.error(request, str(exc))
+        return redirect(request.POST.get("next") or "planning:sign")

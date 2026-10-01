@@ -11,6 +11,29 @@
     <a class="btn btn-outline-primary" href="{% url 'reports:menu_vymoha' day.isoformat %}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Меню-вимога З-4а (Excel)</a>
     <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Друк</button>
   </div>
+  <div class="card mb-3 d-print-none">
+    <div class="card-header bg-white fw-semibold"><i class="bi bi-box-arrow-right me-1"></i>Видача кухні</div>
+    <ul class="list-group list-group-flush">
+    {% for r in issues %}
+      <li class="list-group-item">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span class="me-auto">{{ r.what }}</span>
+          {% if r.issue %}
+            <span class="badge text-bg-success"><i class="bi bi-check2"></i> Видано {{ r.issue.issued_at|date:"d.m H:i" }}</span>
+            <span class="small text-secondary">{{ r.issue.issued_by }}</span>
+            {% if can_issue %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="undo">{% if r.correction %}<input type="hidden" name="correction" value="{{ r.correction.pk }}">{% endif %}
+              <button class="btn btn-sm btn-link text-secondary p-0">зняти позначку</button></form>{% endif %}
+          {% elif can_issue %}
+            <form method="post" class="d-flex flex-wrap gap-2">{% csrf_token %}{% if r.correction %}<input type="hidden" name="correction" value="{{ r.correction.pk }}">{% endif %}
+              <input name="note" class="form-control form-control-sm" style="width: 16rem" placeholder="Якщо видано не все — що саме" aria-label="Примітка до видачі: {{ r.what }}">
+              <button class="btn btn-sm btn-success"><i class="bi bi-check2 me-1"></i>Видано</button></form>
+          {% else %}<span class="badge text-bg-secondary">Ще не видано</span>{% endif %}
+        </div>
+        {% if r.issue.note %}<div class="small text-secondary mt-1">{{ r.issue.note }}</div>{% endif %}
+      </li>
+    {% endfor %}
+    </ul>
+  </div>
   {% if corrections %}
   <div class="card border-warning mb-3">
     <div class="card-header bg-white fw-semibold"><i class="bi bi-plus-slash-minus me-1"></i>Коригування відділень — уже враховані нижче</div>

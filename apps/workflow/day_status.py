@@ -52,6 +52,20 @@ def correction_rows(day):
             .order_by("created_at")]
 
 
+def store_row(day):
+    from apps.consumption.models import StoreIssue
+    from apps.planning.models import DailyPlan
+
+    plan = DailyPlan.objects.filter(service_date=day, approved_at__isnull=False).first()
+    url = reverse("consumption:store_day", args=[day.isoformat()])
+    issue = StoreIssue.objects.filter(plan=plan, correction__isnull=True).select_related("issued_by").first() if plan else None
+    if issue is None:
+        return {"what": "Видача зі складу", "status": None, "url": url if plan else "",
+                "missing": "ще не видано" if plan else "з'явиться після затвердження плану"}
+    return {"what": "Видача зі складу", "status": "approved", "status_label": "Видано", "who": issue.issued_by,
+            "when": issue.issued_at, "note": "", "overdue": False, "url": url}
+
+
 def cards(anchor):
     tomorrow, yesterday = anchor + timedelta(days=1), anchor - timedelta(days=1)
     order_rows = orders(tomorrow)
@@ -69,7 +83,7 @@ def cards(anchor):
                                     else "з'явиться, коли всі замовлення буде закрито")]},
         {"key": "today", "day": anchor, "title": "Сьогодні — коригування і кухня",
          "summary": f"Коригувань: {len(corrections)}",
-         "rows": corrections + [_row("Факт кухні", _one(COOKING, anchor),
+         "rows": corrections + [store_row(anchor), _row("Факт кухні", _one(COOKING, anchor),
                                      "з'явиться після затвердження плану")]},
         {"key": "yesterday", "day": yesterday, "title": "Вчора — списання",
          "summary": "",

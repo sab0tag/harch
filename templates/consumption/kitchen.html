@@ -7,6 +7,8 @@
   · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка</a>
   · <a href="{% url 'reports:brakerazh_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-clipboard-check"></i> бракеражний журнал</a></p>
 
+<p class="small mb-3"><i class="bi bi-box-arrow-right me-1"></i>Склад:
+  {% for r in store_issues %}{{ r.what|lower }} — {% if r.issue %}<span class="text-success">видано {{ r.issue.issued_at|date:"H:i" }}</span>{% if r.issue.note %} ({{ r.issue.note }}){% endif %}{% else %}<span class="text-secondary">ще не видано</span>{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</p>
 {% if open_corrections %}
 <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i>Відділення мають незавершені коригування на цей день: {{ open_corrections }}. Після подачі факту їх буде закрито — якщо можна, дочекайтеся рішення дієтсестри.</div>
 {% endif %}

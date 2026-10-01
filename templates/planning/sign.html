@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}На підпис{% endblock %}
+{% block content %}
+<h1 class="h3 mb-1">На підпис</h1>
+<p class="text-secondary mb-3">Меню-розкладки, затверджені шеф-кухарем. «Підписати» ставить на друкованій формі «Затверджено в системі» з датою й часом — замість підпису від руки.{% if waiting %} Чекають: <b>{{ waiting }}</b>.{% endif %}</p>
+<div class="card"><ul class="list-group list-group-flush">
+{% for p in plans %}
+  <li class="list-group-item d-flex flex-wrap align-items-center gap-2">
+    <span class="me-auto"><span class="fw-semibold">Меню-розкладка на {{ p.service_date|date:"d.m.Y, l" }}</span>
+      <span class="small text-secondary d-block">затверджено {{ p.approved_at|date:"d.m H:i" }}{% if p.signed_at %} · підписано {{ p.signed_at|date:"d.m H:i" }}{% endif %}</span></span>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'reports:menu_pdf' p.service_date.isoformat %}" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Переглянути</a>
+    <a class="btn btn-sm btn-outline-secondary" href="{% url 'planning:plan' p.service_date.isoformat %}">План</a>
+    {% if p.can_sign %}<form method="post">{% csrf_token %}<input type="hidden" name="plan" value="{{ p.pk }}"><button class="btn btn-sm btn-success"><i class="bi bi-pen me-1"></i>Підписати</button></form>
+    {% elif p.signed_at %}<span class="badge text-bg-success"><i class="bi bi-check2"></i> Підписано</span>
+    {% else %}<span class="badge text-bg-warning">Чекає підпису</span>{% endif %}
+  </li>
+{% empty %}
+  <li class="list-group-item text-secondary">Затверджених меню-розкладок за останні два тижні немає.</li>
+{% endfor %}
+</ul></div>
+{% endblock %}
