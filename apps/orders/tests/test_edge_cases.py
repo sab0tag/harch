@@ -178,3 +178,16 @@ def test_untouched_past_plan_is_closed_after_three_days(client, world, forced_pl
         wf.expire_stale_tasks()
     task = plan_task()
     assert task.status == TaskStatus.CANCELLED and "план не чіпали 3 дні" in task.events.last().comment
+
+
+def test_late_order_reason_is_not_offered_to_the_nurse(client, world, forced_plan):
+    from apps.orders.corrections import open_correction, save_correction
+
+    wf.approve(plan_task(), world.chef)
+    nurse = world.nurse["Терапевтичне"]
+    correction = open_correction(world.depts["Терапевтичне"], DAY, nurse)
+    html = as_user(client, nurse).get(f"/orders/corrections/{correction.pk}/").content.decode()
+    assert "Надходження" in html and "Пізнє замовлення" not in html
+    with pytest.raises(ValidationError, match="Оберіть причину"):
+        save_correction(correction, nurse, {Diet.objects.get(code="ОВД").pk: 1}, from_meal="dinner",
+                        reason=OrderCorrection.Reason.LATE_ORDER)
