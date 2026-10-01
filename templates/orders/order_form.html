@@ -20,6 +20,13 @@
 {% if editable %}
 <form method="post" class="card card-body" style="max-width: 560px; margin: 0 auto">{% csrf_token %}
   {% if task.deadline %}<p class="small text-secondary">Подати до {{ task.deadline|date:"d.m H:i" }}</p>{% endif %}
+  {% if copy_from %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <button type="button" class="btn btn-outline-secondary btn-sm" id="copy-prev"><i class="bi bi-copy me-1"></i>Як {{ copy_from.day|date:"d.m" }}</button>
+    <span class="small text-secondary">{{ copy_from.summary }} — з коригуваннями того дня; перевірте перед поданням</span>
+  </div>
+  {{ copy_from|json_script:"copy-prev-data" }}
+  {% endif %}
   {% for row in rows %}
     <div class="d-flex align-items-center gap-3 py-2 border-bottom">
       <label for="diet_{{ row.diet.pk }}" class="flex-grow-1">
@@ -61,6 +68,13 @@
     };
     box.addEventListener("change", apply);
     if (box.checked) apply();
+    // «Як 30.09»: fill the fields from the last approved day (nothing is saved until «Подати»/«Зберегти»).
+    const copy = document.getElementById("copy-prev");
+    if (copy) copy.addEventListener("click", () => {
+      const src = JSON.parse(document.getElementById("copy-prev-data").textContent);
+      if (box.checked !== src.no_patients) { box.checked = src.no_patients; box.dispatchEvent(new Event("change")); }
+      if (!src.no_patients) for (const field of fields) field.value = src.portions[field.name.slice(5)] ?? "";
+    });
   })();
 </script>
 {% else %}
