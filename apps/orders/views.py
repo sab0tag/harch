@@ -330,7 +330,7 @@ class CorrectionView(RoleRequiredMixin, View):
             "editable": corrections.is_editable_by(correction, request.user),
             "meals": [(m, corrections.SLOT_LABELS[m]) for m in meals],
             "closed_reason": why,
-            "reasons": OrderCorrection.Reason.choices,
+            "reasons": corrections.REASONS_FOR_NURSE,
             "departments": Department.objects.filter(is_active=True).exclude(pk=dept.pk),
             "posted": posted,
             "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,

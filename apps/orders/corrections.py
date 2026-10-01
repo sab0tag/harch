@@ -30,6 +30,11 @@ SLOTS = [value for value, _ in MealSlot.choices]          # in serving order
 SLOT_LABELS = dict(MealSlot.choices)
 
 
+# «Пізнє замовлення» is the system's own (take_late_order), never picked on the form.
+REASONS_FOR_NURSE = [(v, label) for v, label in OrderCorrection.Reason.choices
+                     if v != OrderCorrection.Reason.LATE_ORDER]
+
+
 def _cutoff():
     h, m = (int(x) for x in settings.CORRECTION_LUNCH_CUTOFF.split(":"))
     return time(h, m)
@@ -107,7 +112,7 @@ def save_correction(correction, user, deltas, *, from_meal, reason, transfer_fro
         raise ValidationError(why)
     if from_meal not in meals:
         raise ValidationError("З цього прийому їжі вже пізно. Можна: " + ", ".join(SLOT_LABELS[m].lower() for m in meals) + ".")
-    if reason not in OrderCorrection.Reason.values:
+    if reason not in dict(REASONS_FOR_NURSE):
         raise ValidationError("Оберіть причину.")
     deltas = {d: v for d, v in deltas.items() if v}
     if not deltas:
