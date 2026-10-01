@@ -205,6 +205,9 @@ def menu_vymoha_data(plan):
     else:
         facts = {a.product_id: a for a in ActualConsumption.objects.filter(plan=plan)}
         prices = dict(Product.objects.filter(pk__in=set(products) | set(facts)).values_list("pk", "price_per_kg"))
+        from apps.consumption.services import day_prices
+
+        prices.update(day_prices(plan))
         issued = {}
         for pid in set(products) | set(facts):
             a = facts.get(pid)

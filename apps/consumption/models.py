@@ -85,6 +85,22 @@ class WriteOff(models.Model):
         return f"Списання {self.plan.service_date:%d.%m.%Y}"
 
 
+class WriteOffPrice(models.Model):
+    """A price the accountant set in one day's write-off: it holds for that day only and leaves the catalog
+    (and every other day) alone. Frozen into WriteOffLine on submission like any price."""
+
+    write_off = models.ForeignKey(WriteOff, related_name="prices", on_delete=models.CASCADE)
+    product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT)
+    price_per_kg = models.DecimalField("ціна, грн/кг", max_digits=10, decimal_places=2)
+    set_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    set_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Ціна дня у списанні"
+        verbose_name_plural = "Ціни дня у списаннях"
+        constraints = [models.UniqueConstraint(fields=["write_off", "product"], name="write_off_price_once")]
+
+
 class WriteOffLine(models.Model):
     write_off = models.ForeignKey(WriteOff, related_name="lines", on_delete=models.CASCADE)
     product = models.ForeignKey("catalog.Product", on_delete=models.PROTECT)

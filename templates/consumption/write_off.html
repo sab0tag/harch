@@ -39,7 +39,7 @@
         <td>{{ r.product_name }}{% if r.reason %}<div class="small text-secondary">{{ r.reason }}</div>{% endif %}</td>
         <td class="text-end d-none d-sm-table-cell text-secondary">{{ r.planned_brutto_g|kg }}</td>
         <td class="text-end fw-semibold">{{ r.quantity_g|kg }}</td>
-        <td class="text-end">{% if can_edit_prices and r.price_per_kg is not None %}<input name="price_{{ r.product_id }}" value="{{ r.price_per_kg }}" inputmode="decimal" class="form-control form-control-sm text-end ms-auto" style="width: 6.5rem" aria-label="Ціна за кг: {{ r.product_name }}">{% else %}{{ r.price_per_kg|money }}{% endif %}</td>
+        <td class="text-end">{% if can_edit_prices and r.price_per_kg is not None %}<input name="price_{{ r.product_id }}" value="{{ r.price_per_kg }}" inputmode="decimal" class="form-control form-control-sm text-end ms-auto" style="width: 6.5rem" aria-label="Ціна за кг: {{ r.product_name }}">{% else %}{{ r.price_per_kg|money }}{% endif %}{% if r.day_price %}<div class="small text-warning-emphasis" title="Ціну змінено лише для цього дня; у довіднику — інша">ціна дня</div>{% endif %}</td>
         <td class="text-end" data-cost>{{ r.cost|money }}</td>
       </tr>
     {% endfor %}
@@ -47,6 +47,7 @@
     <tfoot><tr class="border-top border-dark"><th>Разом</th><th class="d-none d-sm-table-cell"></th><th></th><th></th><th class="text-end" data-total data-value="{{ total|stringformat:'s' }}">{{ total|money }}</th></tr></tfoot>
   </table>
   </div>
+  {% if can_edit_prices %}<div class="card-body border-top small text-secondary py-2">Ціна, змінена тут, діє лише для списання за цей день — довідник і інші дні не змінюються. Ціни в довіднику — «Продукти» або імпорт з Excel; продукт без ціни отримує введену ціну й у довіднику.</div>{% endif %}
   {% if editable %}
   <div class="card-body border-top">
     <label class="form-label small" for="comment">Коментар для дієтсестри (необов'язково)</label>
