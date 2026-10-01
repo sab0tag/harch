@@ -30,7 +30,7 @@
 
 <div class="row g-3">
   <div class="col-xl-7">
-    <form method="post" id="plan-form">{% csrf_token %}
+    <form method="post" id="plan-form" action="{% url 'planning:plan' plan.service_date.isoformat %}">{% csrf_token %}
     {% for b in blocks %}
       <div class="card mb-3">
         <div class="card-body">
