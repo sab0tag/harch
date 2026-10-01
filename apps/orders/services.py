@@ -136,3 +136,21 @@ def summary(service_date, departments):
             portions=portions_by_diet(order) if order else {},
         ))
     return rows
+
+
+def previous_portions(department, service_date):
+    """What the department had at the end of its last approved day before `service_date`: the order plus that
+    day's approved corrections — a starting point the nurse checks, not a submission. None if nothing yet."""
+    from .corrections import department_portions
+
+    prev = (DailyOrder.objects.filter(department=department, service_date__lt=service_date,
+                                      task__status=TaskStatus.APPROVED).order_by("-service_date").first())
+    if prev is None:
+        return None
+    allowed = set(orderable_diets().values_list("pk", flat=True))
+    portions = {d: n for d, n in department_portions(department, prev.service_date).items() if n > 0 and d in allowed}
+    codes = dict(Diet.objects.filter(pk__in=portions).values_list("pk", "code"))
+    return {"day": prev.service_date, "portions": {str(d): n for d, n in portions.items()},
+            "no_patients": not portions,
+            "summary": ", ".join(f"{codes[d]} {n}" for d, n in sorted(portions.items(), key=lambda x: codes[x[0]]))
+                       or "пацієнтів не було"}

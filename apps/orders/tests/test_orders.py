@@ -232,3 +232,22 @@ def test_forced_plan_only_after_the_order_deadline(client, world):
     assert "Сформувати план зараз" not in html and "План відкриється" in html
     diet_client.post("/orders/summary/", {"date": "2026-10-01", "action": "force_plan"})
     assert not Task.objects.filter(type=MENU_PLANNING, service_date=DAY).exists()
+
+
+def test_copy_from_the_last_approved_day_with_its_corrections(client, world):
+    """«Як 30.09»: the nurse starts from yesterday's end-of-day portions (order + approved corrections)."""
+    from datetime import date
+
+    from apps.orders.services import open_order, previous_portions, submit_order
+
+    ther = world.depts["Терапевтичне"]
+    nurse = world.nurse["Терапевтичне"]
+    assert previous_portions(ther, DAY) is None
+    prev = open_order(ther, date(2026, 9, 30))
+    submit_order(prev, nurse, {diet("ОВД").pk: 12, diet("№9").pk: 2})
+    wf.approve(prev.task, world.dietician)
+    src = previous_portions(ther, DAY)
+    assert src["day"] == date(2026, 9, 30) and src["portions"] == {str(diet("ОВД").pk): 12, str(diet("№9").pk): 2}
+    html = as_user(client, nurse).get(URL.format(ther.pk)).content.decode()
+    assert "Як 30.09" in html and "ОВД 12, №9 2" in html and 'id="copy-prev-data"' in html
+    assert not DailyOrder.objects.get(department=ther, service_date=DAY).lines.exists()   # nothing copied by itself
