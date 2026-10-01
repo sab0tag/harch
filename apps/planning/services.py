@@ -174,9 +174,9 @@ def default_plan_date():
     return tomorrow if plan_task(tomorrow) is not None else timezone.localdate()
 
 
-# ---------------------------------------------------------------- the head doctor's signature
+# ---------------------------------------------------------------- the director's signature
 def can_sign(user, plan):
-    """Only the head doctor signs — personally; an admin cannot stand in for a signature."""
+    """Only the director signs — personally; an admin cannot stand in for a signature."""
     from apps.accounts.models import Role
 
     return user.role == Role.DIRECTOR and plan.is_frozen and plan.signed_at is None
@@ -186,9 +186,14 @@ def can_sign(user, plan):
 def sign_plan(plan, user):
     plan = DailyPlan.objects.select_for_update().get(pk=plan.pk)
     if not can_sign(user, plan):
-        raise PermissionDenied("Підписати меню-розкладку може лише головний лікар, і лише затверджену.")
+        raise PermissionDenied("Підписати меню-розкладку може лише директор, і лише затверджену.")
     plan.signed_at, plan.signed_by = timezone.now(), user
     plan.save(update_fields=["signed_at", "signed_by"])
+    if plan.task is not None:   # in the plan task's history, the audit log and the director's «Історія»
+        from apps.workflow.models import TaskEvent
+
+        TaskEvent.objects.create(task=plan.task, kind=TaskEvent.Kind.SIGNED, actor=user, from_status=plan.task.status,
+                                 to_status=plan.task.status, comment="Меню-розкладку підписано директором у системі")
     return plan
 
 
@@ -200,7 +205,7 @@ def to_sign(days_back=14):
 
 
 def notify_directors(plan):
-    """A plan is approved: its menu-rozkladka waits for the head doctor's signature."""
+    """A plan is approved: its menu-rozkladka waits for the director's signature."""
     from django.contrib.auth import get_user_model
 
     from apps.accounts.models import Role

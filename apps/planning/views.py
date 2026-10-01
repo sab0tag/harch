@@ -142,7 +142,7 @@ class PlanPreviewView(RoleRequiredMixin, View):
 
 
 class SignView(RoleRequiredMixin, View):
-    """«На підпис»: the head doctor signs approved menu-rozkladkas in the system instead of on paper."""
+    """«На підпис»: the director signs approved menu-rozkladkas in the system instead of on paper."""
 
     allowed_roles = roles_for("sign")
 
