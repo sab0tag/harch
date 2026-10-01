@@ -113,6 +113,8 @@ class PlanView(RoleRequiredMixin, View):
             "can_review": task is not None and wf.can(request.user, task, "approve"),
             "drift": services.portions_drift(plan),
             "can_sign": services.can_sign(request.user, plan),
+            "can_see_menus": request.user.has_role(*roles_for("menus")),
+            "can_see_kitchen": request.user.has_role(*roles_for("kitchen")),
             "prev_day": plan.service_date - timedelta(days=1),
             "next_day": plan.service_date + timedelta(days=1),
         })

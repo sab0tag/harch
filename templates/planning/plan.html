@@ -13,7 +13,7 @@
 <p class="text-secondary">Порцій за затвердженими замовленнями: <strong>{{ portions_total }}</strong>
   {% if user.role == 'dietician' or user.role == 'admin' %} · <a href="{% url 'orders:summary' %}?date={{ plan.service_date.isoformat }}">замовлення</a>{% endif %}
   {% if plan.is_frozen %} · <a href="{% url 'reports:menu_pdf' plan.service_date.isoformat %}" target="_blank"><i class="bi bi-printer"></i> меню-розкладка PDF</a>
-    {% if user.role != 'accountant' %} · <a href="{% url 'consumption:kitchen_day' plan.service_date.isoformat %}">на кухню</a>{% endif %}{% endif %}</p>
+    {% if can_see_kitchen %} · <a href="{% url 'consumption:kitchen_day' plan.service_date.isoformat %}">на кухню</a>{% endif %}{% endif %}</p>
 
 {% if drift %}
 <div class="alert alert-warning">
@@ -47,12 +47,12 @@
               {% for m in b.options %}<option value="{{ m.pk }}"{% if m.pk == b.entry.menu_id %} selected{% endif %}>Меню №{{ m.number }} · {{ m.n_kcal|num:0 }} ккал{% if not m.verified %} · не перевірено{% endif %}</option>{% endfor %}
             </select>
           {% else %}
-            <div>{% if b.entry.menu %}<a href="{% url 'menus:detail' b.entry.menu.number %}">Меню №{{ b.entry.menu.number }}</a>{% else %}<span class="text-danger">меню не обрано</span>{% endif %}</div>
+            <div>{% if b.entry.menu %}{% if can_see_menus %}<a href="{% url 'menus:detail' b.entry.menu.number %}">Меню №{{ b.entry.menu.number }}</a>{% else %}Меню №{{ b.entry.menu.number }}{% endif %}{% else %}<span class="text-danger">меню не обрано</span>{% endif %}</div>
           {% endif %}
           {% if b.norms %}
           <div class="d-flex flex-wrap gap-3 small mt-2">
             {% for r in b.norms %}<span>{{ r.label }}: {% include "menus/_norm_cell.html" %}</span>{% endfor %}
-            <span class="text-secondary">на 1 пацієнта · <a href="{% url 'menus:detail' b.chosen.number %}">склад меню</a></span>
+            <span class="text-secondary">на 1 пацієнта{% if can_see_menus %} · <a href="{% url 'menus:detail' b.chosen.number %}">склад меню</a>{% endif %}</span>
           </div>
           {% endif %}
         </div>
