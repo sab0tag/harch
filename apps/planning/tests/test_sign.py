@@ -107,3 +107,22 @@ def test_document_readers_open_its_task_history_and_see_only_their_links(client,
     client.force_login(w.chef)
     html = client.get(f"/plan/{DAY.isoformat()}/").content.decode()
     assert "/menus/" in html and "/kitchen/" in html
+
+
+def test_previous_stage_link_only_when_it_can_be_opened(client, cooking_day):
+    from apps.consumption.services import ensure_actuals
+    from apps.core.testing import on_the_day
+    from apps.workflow import services as wf
+    from apps.workflow.models import Task
+
+    w = cooking_day
+    ensure_actuals(w.plan)
+    with on_the_day():
+        wf.submit(w.cooking, w.chef)
+    wf.approve(w.cooking, w.dietician)
+    write_off = Task.objects.get(type="write_off", service_date=DAY)
+    client.force_login(w.accountant)
+    html = client.get(f"/tasks/{write_off.pk}/").content.decode()
+    assert "Попередній етап" in html and f"/tasks/{w.cooking.pk}/" not in html     # the kitchen is not hers
+    client.force_login(w.dietician)
+    assert f"/tasks/{w.cooking.pk}/" in client.get(f"/tasks/{write_off.pk}/").content.decode()
