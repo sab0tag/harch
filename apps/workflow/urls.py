@@ -7,6 +7,7 @@ app_name = "workflow"
 urlpatterns = [
     path("", views.MyTasksView.as_view(), name="my_tasks"),
     path("<int:pk>/", views.TaskDetailView.as_view(), name="task_detail"),
+    path("<int:pk>/comment/", views.TaskCommentView.as_view(), name="task_comment"),
     path("<int:pk>/<str:action>/", views.TaskActionView.as_view(), name="task_action"),
     path("audit/", views.AuditView.as_view(), name="audit"),
     path("day/", views.DayStatusView.as_view(), name="day_status"),
