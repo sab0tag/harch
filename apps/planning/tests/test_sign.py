@@ -62,3 +62,18 @@ def test_sign_page_is_for_director_and_admin_only(client, director, world):
     client.force_login(director)
     assert client.get("/plan/sign/").status_code == 200
     assert client.get("/orders/summary/").status_code == 403          # no orders for the head doctor
+
+
+def test_sign_list_latest_unsigned_first(world):
+    from datetime import date
+
+    from django.utils import timezone
+
+    from apps.planning.models import DailyPlan
+    from apps.planning.services import to_sign
+
+    now = timezone.now()
+    for d in (date(2026, 9, 27), date(2026, 9, 29), date(2026, 9, 28)):
+        DailyPlan.objects.create(service_date=d, approved_at=now)
+    DailyPlan.objects.filter(service_date=date(2026, 9, 29)).update(signed_at=now)
+    assert [p.service_date.day for p in to_sign()] == [28, 27, 29]

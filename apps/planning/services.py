@@ -193,10 +193,10 @@ def sign_plan(plan, user):
 
 
 def to_sign(days_back=14):
-    """Approved plans of the last two weeks and ahead, unsigned first."""
+    """Approved plans of the last two weeks and ahead: unsigned first, the latest day on top."""
     since = timezone.localdate() - timedelta(days=days_back)
     plans = list(DailyPlan.objects.filter(approved_at__isnull=False, service_date__gte=since).select_related("signed_by"))
-    return sorted(plans, key=lambda p: (p.signed_at is not None, p.service_date if p.signed_at is None else -p.service_date.toordinal()))
+    return sorted(plans, key=lambda p: (p.signed_at is not None, -p.service_date.toordinal()))
 
 
 def notify_directors(plan):
