@@ -122,15 +122,16 @@ case "$cmd" in
     shift; apply=""; flags=""
     for a in "$@"; do case "$a" in
       --apply) apply=1 ;; --deactivate-others|--reset-passwords) flags="$flags $a" ;; *) die "неизвестный флаг $a" ;; esac; done
-    ext=${file##*.}; remote="backups/import-users.$ext"
-    scp -q "${ssh_opts[@]}" "$file" "$HOST:$DIR/$remote"
-    trap 'run "rm -f $remote"' EXIT
+    # Straight into the web container (backups/ is root's and read-only there), removed afterwards.
+    ext=${file##*.}; remote="/tmp/import-users.$ext"
+    run "$DC exec -T web sh -c 'cat > $remote'" < "$file" || die "не удалось передать файл на сервер"
+    trap 'run "$DC exec -T web rm -f $remote"' EXIT
     if [[ -z "$apply" ]]; then
-      manage "create_pilot_users /backups/import-users.$ext --dry-run$flags"
+      manage "create_pilot_users $remote --dry-run$flags"
       echo; say "Это проверка. Если всё верно: harch import-users \"$file\" --apply$flags"
     else
       confirm "Записать пользователей в рабочую систему?"
-      manage "create_pilot_users /backups/import-users.$ext$flags"
+      manage "create_pilot_users $remote$flags"
       echo; say "Временные пароли выше показаны один раз — раздайте их лично."
     fi ;;
 
