@@ -27,11 +27,13 @@ from apps.workflow.models import Notification, Task, TaskStatus
 pytestmark = pytest.mark.django_db
 
 
-def correct(w, dept_name, deltas, *, from_meal="lunch", reason="admission", transfer_from=None, approve=True):
+def correct(w, dept_name, deltas, *, from_meal="lunch", reason="admission", transfer_from=None, approve=True,
+            out=None):
     nurse = w.nurse[dept_name]
     c = corrections.open_correction(w.depts[dept_name], DAY, nurse)
     corrections.submit_correction(c, nurse, {diet(k).pk: v for k, v in deltas.items()}, from_meal=from_meal,
-                                  reason=reason, transfer_from=w.depts.get(transfer_from))
+                                  reason=reason, transfer_from=w.depts.get(transfer_from),
+                                  transfer_out={diet(k).pk: v for k, v in (out or {}).items()})
     if approve:
         wf.approve(c.task, w.dietician)
     c.refresh_from_db()
@@ -196,3 +198,56 @@ def test_day_status_lists_tomorrows_corrections(client, cooking_day):
     r = as_user(client, w.admin).get(f"/tasks/day/?date={(DAY - timedelta(days=1)).isoformat()}")
     tomorrow = r.context["cards"][0]
     assert any(row["what"] == "Коригування · Хірургічне" and row["status"] == "submitted" for row in tomorrow["rows"])
+
+
+# ------------------------------------------------------------------ transfers where the diet changes
+def test_transfer_with_a_diet_change(cooking_day):
+    """Surgery fed the patient ЩД; in therapy it is ОВД: +1 ОВД here, −1 ЩД there."""
+    w = cooking_day
+    c = correct(w, "Терапевтичне", {"ОВД": 1}, reason="transfer", transfer_from="Хірургічне", out={"ЩД": 1})
+    lines = {(l.department.name, l.diet.code): l.delta for l in c.lines.all()}
+    assert lines == {("Терапевтичне", "ОВД"): 1, ("Хірургічне", "ЩД"): -1}
+    assert corrections.department_portions(w.depts["Хірургічне"], DAY)[diet("ЩД").pk] == 19
+    assert "там ЩД -1" in c.task.events.get(kind="submitted").comment
+    note = Notification.objects.get(user=w.nurse["Хірургічне"], title__startswith="Переведення")
+    assert "знято: ЩД -1" in note.body
+
+
+def test_transfer_must_move_as_many_as_it_receives(cooking_day):
+    w = cooking_day
+    c = corrections.open_correction(w.depts["Терапевтичне"], DAY, w.nurse["Терапевтичне"])
+    with pytest.raises(ValidationError, match="Прийнято 2, а знято .* 1 — кількість пацієнтів має збігатися"):
+        corrections.save_correction(c, w.nurse["Терапевтичне"], {diet("ОВД").pk: 2}, from_meal="lunch",
+                                    reason="transfer", transfer_from=w.depts["Хірургічне"],
+                                    transfer_out={diet("ЩД").pk: 1})
+
+
+def test_transfer_from_a_diet_the_sender_lacks_explains_what_is_there(cooking_day):
+    """The pilot case: therapy takes ОВД +1 from surgery, which has no ОВД at all."""
+    w = cooking_day
+    c = corrections.open_correction(w.depts["Терапевтичне"], DAY, w.nurse["Терапевтичне"])
+    with pytest.raises(ValidationError) as exc:
+        corrections.save_correction(c, w.nurse["Терапевтичне"], {diet("ОВД").pk: 1}, from_meal="lunch",
+                                    reason="transfer", transfer_from=w.depts["Хірургічне"])
+    text = " ".join(exc.value.messages)
+    assert "ОВД: у відділенні «Хірургічне» лише 0 порц." in text
+    assert "На 01.10 у «Хірургічне»: ЩД 20" in text and "«знято там»" in text and "«Надходження»" in text
+
+
+def test_transfer_form_keeps_the_chosen_department_after_an_error(client, cooking_day):
+    w = cooking_day
+    nurse = w.nurse["Терапевтичне"]
+    c = corrections.open_correction(w.depts["Терапевтичне"], DAY, nurse)
+    client.force_login(nurse)
+    surgery = w.depts["Хірургічне"]
+    html = client.post(f"/orders/corrections/{c.pk}/", {
+        "action": "save", "reason": "transfer", "transfer_from": surgery.pk, "from_meal": "dinner",
+        f"diet_{diet('ОВД').pk}": "1"}).content.decode()
+    assert "лише 0 порц." in html
+    assert f'<option value="{surgery.pk}" selected>' in html
+    html = client.post(f"/orders/corrections/{c.pk}/", {
+        "action": "save", "reason": "transfer", "transfer_from": surgery.pk, "from_meal": "dinner",
+        f"diet_{diet('ОВД').pk}": "1", f"out_{diet('ЩД').pk}": "−1"}, follow=True).content.decode()
+    assert "Чернетку збережено" in html
+    assert {(l.department.name, l.diet.code): l.delta for l in c.lines.all()} == {
+        ("Терапевтичне", "ОВД"): 1, ("Хірургічне", "ЩД"): -1}
