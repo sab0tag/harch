@@ -50,11 +50,10 @@ def test_switched_off_department_takes_its_nurses_and_open_orders_along(seeded):
     assert Task.objects.get(pk=past.pk).status == TaskStatus.PENDING          # past days: the nightly expiry's job
     # the hospital's own departments are untouched; once they all close, the day's plan starts as usual
     live = Task.objects.filter(type=ORDER_SUBMISSION, service_date=TOMORROW, department__is_active=True)
-    assert live.count() == 8 and set(live.values_list("status", flat=True)) == {TaskStatus.PENDING}
-    # the new department (Реабілітаційне) has no task yet: the plan waits for it too (the scheduler creates it)
-    for dept in Department.objects.filter(is_active=True):
-        wf.ensure_task(ORDER_SUBMISSION, TOMORROW, department=dept)
-    for task in Task.objects.filter(type=ORDER_SUBMISSION, service_date=TOMORROW, department__is_active=True):
+    # 8 kept + the new Реабілітаційне, which joins tomorrow's orders right away (the deadline is still ahead)
+    assert live.count() == 9 and set(live.values_list("status", flat=True)) == {TaskStatus.PENDING}
+    assert live.filter(department__name="Реабілітаційне").exists()
+    for task in live:
         wf.close_by_system(task, "test", run_hook=True)
     assert all_orders_resolved(TOMORROW)          # the plan would start now (here no portions: none needed)
     assert therapy.is_active

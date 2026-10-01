@@ -11,7 +11,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from apps.orgstructure.models import Department
-from apps.workflow.definitions import ORDER_SUBMISSION, next_workday
+from apps.workflow.definitions import ORDER_SUBMISSION, next_workday, open_plan_if_ready
 from apps.workflow.services import ensure_task
 
 
@@ -39,4 +39,5 @@ class Command(BaseCommand):
         departments = list(Department.objects.filter(is_active=True).order_by("sort_order", "name"))
         for day in days:
             created = sum(ensure_task(ORDER_SUBMISSION, day, department=d)[1] for d in departments)
+            open_plan_if_ready(day)      # safety net: a day whose last missing department was switched off
             self.stdout.write(f"{day:%Y-%m-%d}: created {created}, departments {len(departments)}")

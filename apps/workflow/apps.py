@@ -6,4 +6,4 @@ class WorkflowConfig(AppConfig):
     verbose_name = "Задачі та сповіщення"
 
     def ready(self):
-        from . import definitions  # noqa: F401 — registers task types
+        from . import definitions, signals  # noqa: F401 — registers task types and department hooks

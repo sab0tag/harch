@@ -141,3 +141,40 @@ def test_browsing_far_ahead_creates_no_task(client, world):
     assert Task.objects.filter(service_date="2026-10-06", department=ther).exists()
     as_user(client, world.dietician).post("/orders/summary/", {"date": "2026-10-07", "action": "create_tasks"})
     assert not Task.objects.filter(service_date="2026-10-07").exists()
+
+
+# ------------------------------------------------------------------ 5. departments switched on and off
+def test_switching_off_the_missing_department_opens_the_plan(client, world):
+    for name in ("Терапевтичне", "Хірургічне"):
+        post_order(as_user(client, world.nurse[name]), world.depts[name], ОВД="10")
+        wf.approve(order_task(world, name), world.dietician)
+    assert not Task.objects.filter(type=MENU_PLANNING).exists()      # waits for Ендокринологічне
+    endo = world.depts[LATE]
+    endo.is_active = False
+    endo.save()
+    assert plan_task().status == TaskStatus.PENDING
+
+
+def test_switching_on_a_department_joins_the_days_still_collecting(client, world):
+    from apps.orgstructure.models import Department
+
+    post_order(as_user(client, world.nurse["Терапевтичне"]), world.depts["Терапевтичне"], ОВД="10")
+    new = Department.objects.filter(is_active=False).first()
+    new.is_active = True
+    new.save()
+    assert Task.objects.filter(type=ORDER_SUBMISSION, service_date=DAY, department=new).exists()   # deadline ahead
+    with time_machine.travel(AFTER_DEADLINE, tick=True):     # too late for 01.10: not added, the plan is forced
+        late = Department.objects.filter(is_active=False).first()
+        late.is_active = True
+        late.save()
+    assert not Task.objects.filter(type=ORDER_SUBMISSION, service_date=DAY, department=late).exists()
+
+
+# ------------------------------------------------------------------ 7. abandoned plans of past days
+def test_untouched_past_plan_is_closed_after_three_days(client, world, forced_plan):
+    with time_machine.travel(datetime(2026, 10, 3, 1, 0, tzinfo=KYIV), tick=True):
+        assert plan_task() not in wf.expire_stale_tasks()        # day over, but touched 2 days ago
+    with time_machine.travel(datetime(2026, 10, 4, 1, 0, tzinfo=KYIV), tick=True):
+        wf.expire_stale_tasks()
+    task = plan_task()
+    assert task.status == TaskStatus.CANCELLED and "план не чіпали 3 дні" in task.events.last().comment

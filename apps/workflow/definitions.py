@@ -68,18 +68,46 @@ def all_orders_resolved(service_date) -> bool:
 
 def _after_order_approved(task):
     from apps.orders.corrections import take_late_order
-    from apps.orders.services import approved_portions
 
     if take_late_order(task):       # the plan has already left the dietician: in as «Пізнє замовлення»
         return
-    # All in, but no portions at all (every department «пацієнтів немає»): there is nothing to plan.
-    if all_orders_resolved(task.service_date) and approved_portions(task.service_date):
-        from apps.planning.services import open_plan, sync_portions
+    open_plan_if_ready(task.service_date, parent=task)
 
-        from .services import ensure_task
 
-        ensure_task(MENU_PLANNING, task.service_date, parent=task)
-        sync_portions(open_plan(task.service_date))
+def open_plan_if_ready(service_date, parent=None):
+    """Open the day's menu planning once every active department's order is in and resolved. Not when there
+    are no portions at all (every department «пацієнтів немає»): there is nothing to plan. Idempotent."""
+    from apps.orders.services import approved_portions
+
+    if Task.objects.filter(type=MENU_PLANNING, service_date=service_date).exists():
+        return False
+    if not (all_orders_resolved(service_date) and approved_portions(service_date)):
+        return False
+    from apps.planning.services import open_plan, sync_portions
+
+    from .services import ensure_task
+
+    ensure_task(MENU_PLANNING, service_date, parent=parent)
+    sync_portions(open_plan(service_date))
+    return True
+
+
+def department_switched(department):
+    """The set of active departments changed (Django admin, sync_departments): days still collecting orders
+    follow. A department switched on gets its orders for the days whose deadline is still ahead; one switched
+    off may have been the last the plan was waiting for."""
+    from .services import ensure_task
+
+    today = timezone.localdate()
+    days = sorted(set(Task.objects.filter(type=ORDER_SUBMISSION, service_date__gte=today)
+                      .values_list("service_date", flat=True)))
+    now = timezone.now()
+    for day in days:
+        if department.is_active:
+            if order_deadline(day) > now and not Task.objects.filter(type=MENU_PLANNING, service_date=day).exists():
+                ensure_task(ORDER_SUBMISSION, day, department=department)
+        else:
+            open_plan_if_ready(day)
 
 
 # Hooks into the apps that own each task's document. Imported lazily: workflow must not

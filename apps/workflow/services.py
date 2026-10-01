@@ -306,6 +306,9 @@ def close_by_system(task, comment, *, run_hook=False, also_submitted=False):
     return task
 
 
+STALE_PLAN_DAYS = 3
+
+
 def expire_stale_tasks(today=None, dry_run=False):
     """Close what is left open of past days' expires_with_day tasks (nightly, deploy/crontab).
 
@@ -316,8 +319,21 @@ def expire_stale_tasks(today=None, dry_run=False):
     open_ = Q(status__in=OPEN_FOR_MAKER) | Q(status=TaskStatus.SUBMITTED)
     stale = list(Task.objects.filter(open_, type__in=_expiring_types(), service_date__lt=today)
                  .select_related("department").order_by("service_date", "department__name"))
+    # Menu plans of past days nobody has touched for STALE_PLAN_DAYS: the day was cooked without the system.
+    # (An admin catching up a past day keeps its plan alive by working on it.)
+    from django.db.models import Max
+
+    from .definitions import MENU_PLANNING
+
+    quiet_since = timezone.now() - timedelta(days=STALE_PLAN_DAYS)
+    stale += list(Task.objects.filter(open_, type=MENU_PLANNING, service_date__lt=today)
+                  .annotate(last=Max("events__created_at")).filter(last__lt=quiet_since).order_by("service_date"))
     if not dry_run:
         for task in stale:
+            if task.type == MENU_PLANNING:
+                close_by_system(task, f"День минув, план не чіпали {STALE_PLAN_DAYS} дні — закрито автоматично",
+                                also_submitted=True)
+                continue
             reason = ("Дата минула, не розглянуто — закрито автоматично" if task.status == TaskStatus.SUBMITTED
                       else "Дата минула — закрито автоматично")
             close_by_system(task, reason, also_submitted=True)
