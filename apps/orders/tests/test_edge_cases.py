@@ -87,12 +87,13 @@ def test_late_order_then_chef_returns_the_plan_counts_once(client, world, forced
     assert ovd_portions(forced_plan) == 40
 
 
-def test_late_order_with_a_diet_not_in_the_plan_is_refused(client, world, forced_plan):
+def test_late_order_with_a_diet_not_in_the_plan_uses_its_cycle_menu(client, world, forced_plan):
+    wf.approve(plan_task(), world.chef)
     post_order(as_user(client, world.nurse[LATE]), world.depts[LATE], N9="5")
-    with pytest.raises(ValidationError, match="немає дієт: №9"):
-        wf.approve(order_task(world, LATE), world.dietician)
-    assert order_task(world, LATE).status == TaskStatus.SUBMITTED
-    assert not OrderCorrection.objects.exists()
+    wf.approve(order_task(world, LATE), world.dietician)
+    lines = ConsumptionSnapshotLine.objects.filter(plan=forced_plan, diet_code="№9")
+    assert lines.exists() and all(l.correction_id for l in lines)            # «додаткова вимога», not the base
+    assert not forced_plan.entries.filter(diet__code="№9").exists()          # the approved plan itself is unchanged
 
 
 def test_late_order_without_patients_changes_nothing(client, world, forced_plan):
@@ -191,3 +192,56 @@ def test_late_order_reason_is_not_offered_to_the_nurse(client, world, forced_pla
     with pytest.raises(ValidationError, match="Оберіть причину"):
         save_correction(correction, nurse, {Diet.objects.get(code="ОВД").pk: 1}, from_meal="dinner",
                         reason=OrderCorrection.Reason.LATE_ORDER)
+
+
+# ------------------------------------------------------------------ 6. a correction with a diet the day lacks
+def test_correction_adds_a_diet_nobody_else_has(client, world, forced_plan):
+    from apps.orders.corrections import open_correction, submit_correction
+
+    wf.approve(plan_task(), world.chef)                       # the day cooks ОВД only
+    nurse = world.nurse["Хірургічне"]
+    correction = open_correction(world.depts["Хірургічне"], DAY, nurse)
+    html = as_user(client, nurse).get(f"/orders/corrections/{correction.pk}/").content.decode()
+    assert "у плані дня немає — готуватимуть за меню №" in html
+    submit_correction(correction, nurse, {Diet.objects.get(code="№9").pk: 2}, from_meal="lunch",
+                      reason=OrderCorrection.Reason.ADMISSION)
+    wf.approve(correction.task, world.dietician)
+    lines = ConsumptionSnapshotLine.objects.filter(plan=forced_plan, correction=correction)
+    assert lines.exists() and {l.diet_code for l in lines} == {"№9"}
+    assert {l.meal_slot for l in lines} <= {"lunch", "afternoon_snack", "dinner"}
+
+
+# ------------------------------------------------------------------ admin catches up a closed past day
+def test_admin_reopens_an_auto_closed_past_order(client, world):
+    ther = world.depts["Терапевтичне"]
+    task = wf.ensure_task(ORDER_SUBMISSION, DAY, department=ther)[0]
+    with time_machine.travel(datetime(2026, 10, 2, 1, 0, tzinfo=KYIV), tick=True):
+        wf.expire_stale_tasks()
+        task.refresh_from_db()
+        assert task.status == TaskStatus.CANCELLED
+        url = f"/orders/{ther.pk}/2026-10-01/"
+        assert "Відкрити заново" not in as_user(client, world.nurse["Терапевтичне"]).get(url).content.decode()
+        client.post(url, {"action": "reopen"})
+        task.refresh_from_db()
+        assert task.status == TaskStatus.CANCELLED                             # the nurse cannot
+        admin = as_user(client, world.admin)
+        assert "Відкрити заново" in admin.get(url).content.decode()
+        admin.post(url, {"action": "reopen"})
+        task.refresh_from_db()
+        assert task.status == TaskStatus.PENDING and task.events.last().kind == "reopened"
+        assert task not in wf.todo_for(world.nurse["Терапевтичне"])            # not handed back to the nurse
+        admin.post(url, {"action": "submit", f"diet_{Diet.objects.get(code='ОВД').pk}": "7"})
+        task.refresh_from_db()
+        assert task.status == TaskStatus.SUBMITTED
+    with time_machine.travel(datetime(2026, 10, 3, 1, 0, tzinfo=KYIV), tick=True):
+        assert task not in wf.expire_stale_tasks()                             # a reopened day gets 3 days
+    with time_machine.travel(datetime(2026, 10, 6, 1, 0, tzinfo=KYIV), tick=True):
+        assert task in wf.expire_stale_tasks()
+
+
+def test_presentation_link_only_on_the_demo(client, settings):
+    settings.DEMO_MODE = False
+    assert "Презентація системи" not in client.get("/login/").content.decode()
+    settings.DEMO_MODE = True
+    html = client.get("/login/").content.decode()
+    assert "Презентація системи" in html and settings.DEMO_PRESENTATION_URL in html

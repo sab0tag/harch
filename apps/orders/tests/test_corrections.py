@@ -97,7 +97,6 @@ def test_approved_before_the_freeze_is_added_when_the_plan_is_approved(world):
 
 @pytest.mark.parametrize("deltas, message", [
     ({"ОВД": -31}, "у відділенні 30 порц. — не можна зняти 31"),
-    ({"НКД": 1}, "немає в плані"),
     ({}, "хоча б для однієї дієти"),
 ])
 def test_impossible_corrections_are_refused(cooking_day, deltas, message):
@@ -106,6 +105,19 @@ def test_impossible_corrections_are_refused(cooking_day, deltas, message):
     with pytest.raises(ValidationError, match=message):
         corrections.save_correction(c, w.nurse["Терапевтичне"], {diet(k).pk: v for k, v in deltas.items()},
                                     from_meal="lunch", reason="discharge")
+
+
+def test_a_diet_outside_the_plan_needs_some_menu(cooking_day):
+    """НКД is not cooked that day: allowed from its cycle menu — unless it has no menu at all."""
+    from apps.menus.models import Menu
+
+    w = cooking_day
+    c = corrections.open_correction(w.depts["Терапевтичне"], DAY, w.nurse["Терапевтичне"])
+    corrections.save_correction(c, w.nurse["Терапевтичне"], {diet("НКД").pk: 1}, from_meal="lunch", reason="admission")
+    Menu.objects.filter(diet=diet("НКД")).update(is_active=False)
+    with pytest.raises(ValidationError, match="НКД немає жодного меню"):
+        corrections.save_correction(c, w.nurse["Терапевтичне"], {diet("НКД").pk: 1}, from_meal="lunch",
+                                    reason="admission")
 
 
 def test_transfer_cannot_take_more_than_the_sender_has(cooking_day):

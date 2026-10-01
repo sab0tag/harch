@@ -40,7 +40,7 @@
     <div class="d-flex align-items-center gap-3 py-2 border-bottom">
       <label for="diet_{{ row.diet.pk }}" class="flex-grow-1">
         <span class="fw-semibold">{{ row.diet.code }}</span> <span class="small text-secondary">{{ row.diet.name }}</span>
-        <div class="small text-secondary">зараз у відділенні: {{ row.have }}</div>
+        <div class="small text-secondary">зараз у відділенні: {{ row.have }}{% if row.outside_plan %} · <span class="text-warning-emphasis">у плані дня немає{% if row.cycle_menu %} — готуватимуть за меню №{{ row.cycle_menu.number }}{% else %} і меню немає{% endif %}</span>{% endif %}</div>
       </label>
       <input type="text" inputmode="numeric" name="diet_{{ row.diet.pk }}" id="diet_{{ row.diet.pk }}" value="{{ row.value }}"
              class="form-control form-control-lg text-end" style="width: 6.5rem" placeholder="+0" autocomplete="off">

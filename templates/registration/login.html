@@ -29,6 +29,7 @@
         <button class="btn btn-success btn-lg w-100" type="submit">Увійти</button>
       </form>
       {% if DEMO_MODE %}
+      {% if DEMO_PRESENTATION_URL %}<a class="btn btn-outline-secondary w-100 mt-3" href="{{ DEMO_PRESENTATION_URL }}" target="_blank" rel="noopener"><i class="bi bi-easel me-1"></i>Презентація системи</a>{% endif %}
       <div class="mt-4 small">
         <div class="fw-semibold mb-1">Навчальні входи · пароль <code>demo12345</code></div>
         <table class="table table-sm mb-0">

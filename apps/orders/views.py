@@ -105,6 +105,13 @@ class OrderEditView(RoleRequiredMixin, View):
             raise Http404 from exc     # only the nurse (or admin) opens an order
         diets = list(services.orderable_diets())
         action = request.POST.get("action", "save")
+        if action == "reopen":
+            try:
+                wf.reopen(order.task, request.user)
+                messages.success(request, "Замовлення відкрито заново — заповніть і подайте його.")
+            except (PermissionDenied, wf.InvalidTransition):
+                messages.error(request, "Це замовлення не можна відкрити заново.")
+            return redirect("orders:edit", dept_id, day.isoformat())
         no_patients = request.POST.get("no_patients") == "on"
         note = request.POST.get("note", "").strip()
         try:
@@ -149,6 +156,7 @@ class OrderEditView(RoleRequiredMixin, View):
             "prev_day": order.service_date - timedelta(days=1),
             "next_day": order.service_date + timedelta(days=1),
             "can_review": task is not None and wf.can(request.user, task, "approve"),
+            "can_reopen": task is not None and wf.can(request.user, task, "reopen"),
             "corrections": corrections.corrections_for(order.service_date, order.department),
             "can_correct": (task is not None and task.status == TaskStatus.APPROVED
                             and corrections.can_create(request.user, order.department)
@@ -318,9 +326,12 @@ class CorrectionView(RoleRequiredMixin, View):
         own = {l.diet_id: l.delta for l in correction.lines.all() if l.department_id == dept.pk}
         have = corrections.department_portions(dept, day, exclude=correction)
         rows = []
+        planned = corrections.planned_diet_ids(day)
         for d in corrections.available_diets(day):
             value = posted.get(f"diet_{d.pk}", "") if posted else (f"{own[d.pk]:+d}" if d.pk in own else "")
-            rows.append({"diet": d, "value": value, "have": have.get(d.pk, 0)})
+            menu = None if d.pk in planned else corrections.menu_for(d, day)
+            rows.append({"diet": d, "value": value, "have": have.get(d.pk, 0),
+                         "outside_plan": d.pk not in planned, "cycle_menu": menu})
         task = correction.task
         return render(request, "orders/correction.html", {
             "correction": correction,
