@@ -1,4 +1,4 @@
-"""The head doctor signs the approved menu-rozkladka in the system."""
+"""The director signs the approved menu-rozkladka in the system."""
 import pytest
 from django.core.exceptions import PermissionDenied
 from django.template.loader import render_to_string
@@ -61,7 +61,7 @@ def test_sign_page_is_for_director_and_admin_only(client, director, world):
     assert client.get("/plan/sign/").status_code == 403
     client.force_login(director)
     assert client.get("/plan/sign/").status_code == 200
-    assert client.get("/orders/summary/").status_code == 403          # no orders for the head doctor
+    assert client.get("/orders/summary/").status_code == 403          # no orders for the director
 
 
 def test_sign_list_latest_unsigned_first(world):
@@ -77,3 +77,16 @@ def test_sign_list_latest_unsigned_first(world):
         DailyPlan.objects.create(service_date=d, approved_at=now)
     DailyPlan.objects.filter(service_date=date(2026, 9, 29)).update(signed_at=now)
     assert [p.service_date.day for p in to_sign()] == [28, 27, 29]
+
+
+def test_signing_is_in_the_directors_history_and_the_task_timeline(client, director, cooking_day):
+    from apps.workflow import services as wf
+
+    plan = cooking_day.plan
+    sign_plan(plan, director)
+    assert plan.task in wf.history_for(director)
+    assert plan.task.events.last().kind == "signed" and plan.task.events.last().actor == director
+    client.force_login(director)
+    html = client.get("/tasks/?tab=history").content.decode()
+    assert "План меню на день" in html
+    assert "Підписано" in client.get(f"/tasks/{plan.task.pk}/").content.decode()

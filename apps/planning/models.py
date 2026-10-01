@@ -10,8 +10,8 @@ class DailyPlan(models.Model):
         "workflow.Task", null=True, blank=True, on_delete=models.SET_NULL, related_name="daily_plan"
     )
     approved_at = models.DateTimeField("Затверджено", null=True, blank=True)
-    # The head doctor's «Затверджую» on the printed menu-rozkladka, given in the system (no name is printed).
-    signed_at = models.DateTimeField("Підписано головним лікарем", null=True, blank=True)
+    # The director's «Затверджую» on the printed menu-rozkladka, given in the system (no name is printed).
+    signed_at = models.DateTimeField("Підписано директором", null=True, blank=True)
     signed_by = models.ForeignKey("accounts.User", null=True, blank=True, on_delete=models.PROTECT,
                                   related_name="signed_plans", verbose_name="Підписав")
     created_at = models.DateTimeField(auto_now_add=True)
