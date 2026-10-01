@@ -61,12 +61,12 @@ def test_example_table_creates_everyone_with_temporary_passwords(therapy):
 
 def test_one_bad_row_changes_nothing(tmp_path):
     path = write_csv(tmp_path, "ПІБ;роль;відділення\nІваненко Ольга;Бухгалтер;\nСидоренко Анна;Старша медсестра;Кардіологічне\n"
-                               "Бондар Ігор;Директор;\n")
+                               "Бондар Ігор;Сантехнік;\n")
     with pytest.raises(CommandError) as e:
         run(path)
     assert "Нічого не змінено" in str(e.value)
     assert "рядок 3: відділення «Кардіологічне» не знайдено (є: Терапевтичне)" in str(e.value)
-    assert "рядок 4: невідома роль «Директор»" in str(e.value)
+    assert "рядок 4: невідома роль «Сантехнік»" in str(e.value)
     assert not User.objects.filter(last_name="Іваненко").exists()
 
 
