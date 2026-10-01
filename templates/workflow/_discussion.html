@@ -5,7 +5,7 @@
   <ul class="list-group list-group-flush">
     {% for c in comments %}
     <li class="list-group-item">
-      <div class="small text-secondary">{{ c.actor.get_full_name|default:c.actor }} · {{ c.actor.get_role_display }} · {{ c.created_at|date:"d.m H:i" }}</div>
+      <div class="small text-secondary"><span class="fw-semibold text-body">{{ c.actor.get_full_name|default:c.actor }}</span> ({{ c.actor.get_role_display }}){% if c.addressees %} → <span class="fw-semibold text-body">{{ c.addressees|join:", " }}</span>{% endif %} · {{ c.created_at|date:"d.m H:i" }}</div>
       <div style="white-space: pre-line">{{ c.comment }}</div>
     </li>
     {% endfor %}
@@ -15,13 +15,13 @@
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
     <input type="hidden" name="next" value="{{ request.get_full_path }}">
     <label class="form-label small" for="discussion-text">Написати учасникам цього документа</label>
-    <textarea id="discussion-text" name="text" rows="2" maxlength="{{ max }}" class="form-control mb-2" placeholder="Наприклад: перевір меню №9 — замінила кашу"></textarea>
+    <textarea id="discussion-text" name="text" rows="2" maxlength="{{ max }}" class="form-control mb-2" placeholder="{{ example }}"></textarea>
     <div class="d-flex flex-wrap align-items-center gap-3">
-      <span class="small text-secondary">Покликати:</span>
+      <span class="small text-secondary">Кому окремо:</span>
       {% for value, label in roles %}<div class="form-check form-check-inline m-0"><input class="form-check-input" type="checkbox" name="call" value="{{ value }}" id="call-{{ value }}"><label class="form-check-label small" for="call-{{ value }}">{{ label }}</label></div>{% endfor %}
       <button class="btn btn-sm btn-primary ms-auto"><i class="bi bi-send me-1"></i>Надіслати</button>
     </div>
-    <div class="small text-secondary mt-2">Без прізвищ і діагнозів пацієнтів. Повідомлення отримають виконавець і перевіряючий цього документа (та покликані).</div>
+    <div class="small text-secondary mt-2">Без галочок — усім учасникам документа (виконавець, перевіряючий, хто вже працював з ним); з галочками — ще й обраним, і в повідомленні видно, кому воно. Без прізвищ і діагнозів пацієнтів.</div>
   </form>
 </div>
 {% endif %}

@@ -49,3 +49,23 @@ def test_a_reader_of_the_document_may_join(cooking_day):
     w = cooking_day
     wf.comment(w.plan.task, w.accountant, "Ціни на кефір змінились з 01.10")
     assert Notification.objects.filter(user=w.dietician, title__startswith="Коментар:").exists()
+
+
+def test_addressees_are_shown_and_in_the_notification(client, cooking_day):
+    w = cooking_day
+    task = w.plan.task
+    event = wf.comment(task, w.chef, "перевірила", call_roles=["dietician", "dietician", "bogus"])
+    assert event.addressed_to == "dietician"
+    note = Notification.objects.get(user=w.dietician, title__startswith="Коментар:")
+    assert "→ Дієтсестра / лікар-дієтолог: перевірила" in note.body
+    client.force_login(w.dietician)
+    html = client.get(f"/plan/{DAY.isoformat()}/").content.decode()
+    assert "→ <span class=\"fw-semibold text-body\">Дієтсестра / лікар-дієтолог</span>" in html
+
+
+def test_the_order_asks_about_head_counts_not_menus(client, world):
+    ther = world.depts["Терапевтичне"]
+    open_order(ther, DAY)
+    client.force_login(world.nurse["Терапевтичне"])
+    html = client.get(f"/orders/{ther.pk}/{DAY.isoformat()}/").content.decode()
+    assert "на №9 двоє чи один" in html and "замінила кашу" not in html

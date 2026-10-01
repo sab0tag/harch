@@ -122,6 +122,8 @@ class TaskEvent(models.Model):
 
     task = models.ForeignKey(Task, related_name="events", on_delete=models.CASCADE)
     kind = models.CharField(max_length=20, choices=Kind.choices)
+    # A comment's addressees picked by the author (role values, comma-separated); empty = the document's people.
+    addressed_to = models.CharField(max_length=200, blank=True, default="")
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     from_status = models.CharField(max_length=20, blank=True)
     to_status = models.CharField(max_length=20, blank=True)
