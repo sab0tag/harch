@@ -30,7 +30,7 @@
         <dt class="col-5 col-md-4 fw-normal text-secondary">Дедлайн</dt><dd class="col-7 col-md-8{% if overdue %} text-danger fw-semibold{% endif %}">{{ task.deadline|date:"d.m.Y H:i"|default:"—" }}</dd>
         {% if task.submitted_by %}<dt class="col-5 col-md-4 fw-normal text-secondary">Подав(ла)</dt><dd class="col-7 col-md-8">{{ task.submitted_by }} · {{ task.submitted_at|date:"d.m H:i" }}</dd>{% endif %}
         {% if task.resolved_by %}<dt class="col-5 col-md-4 fw-normal text-secondary">Рішення</dt><dd class="col-7 col-md-8">{{ task.resolved_by }} · {{ task.resolved_at|date:"d.m H:i" }}</dd>{% endif %}
-        {% if task.parent %}<dt class="col-5 col-md-4 fw-normal text-secondary">Попередній етап</dt><dd class="col-7 col-md-8"><a href="{% url 'workflow:task_detail' task.parent_id %}">{{ task.parent }}</a></dd>{% endif %}
+        {% if task.parent %}<dt class="col-5 col-md-4 fw-normal text-secondary">Попередній етап</dt><dd class="col-7 col-md-8">{% if parent_visible %}<a href="{% url 'workflow:task_detail' task.parent_id %}">{{ task.parent }}</a>{% else %}{{ task.parent }}{% endif %}</dd>{% endif %}
       </dl>
       {% if subject_url and not allowed.submit %}<a href="{{ subject_url }}" class="btn btn-outline-primary mt-3"><i class="bi bi-file-earmark-text me-1"></i>Переглянути документ</a>{% endif %}
     </div></div>

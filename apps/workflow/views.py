@@ -94,6 +94,7 @@ class TaskDetailView(RoleRequiredMixin, View):
             "rejection": task.last_rejection if task.status == "rejected" else None,
             "allowed": allowed,
             "overdue": task.is_overdue(),
+            "parent_visible": task.parent_id is not None and wf.can(request.user, task.parent, "view"),
         })
 
 
