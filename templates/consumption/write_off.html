@@ -35,16 +35,16 @@
     <thead><tr><th>Продукт</th><th class="text-end d-none d-sm-table-cell">План, кг</th><th class="text-end">До списання, кг</th><th class="text-end">Ціна/кг</th><th class="text-end">Сума, грн</th></tr></thead>
     <tbody>
     {% for r in rows %}
-      <tr{% if r.price_per_kg is None %} class="table-warning"{% endif %}>
+      <tr data-product="{{ r.product_id }}" data-qty-g="{{ r.quantity_g|stringformat:'s' }}"{% if r.price_per_kg is None %} class="table-warning"{% endif %}>
         <td>{{ r.product_name }}{% if r.reason %}<div class="small text-secondary">{{ r.reason }}</div>{% endif %}</td>
         <td class="text-end d-none d-sm-table-cell text-secondary">{{ r.planned_brutto_g|kg }}</td>
         <td class="text-end fw-semibold">{{ r.quantity_g|kg }}</td>
         <td class="text-end">{% if can_edit_prices and r.price_per_kg is not None %}<input name="price_{{ r.product_id }}" value="{{ r.price_per_kg }}" inputmode="decimal" class="form-control form-control-sm text-end ms-auto" style="width: 6.5rem" aria-label="Ціна за кг: {{ r.product_name }}">{% else %}{{ r.price_per_kg|money }}{% endif %}</td>
-        <td class="text-end">{{ r.cost|money }}</td>
+        <td class="text-end" data-cost>{{ r.cost|money }}</td>
       </tr>
     {% endfor %}
     </tbody>
-    <tfoot><tr class="border-top border-dark"><th>Разом</th><th class="d-none d-sm-table-cell"></th><th></th><th></th><th class="text-end">{{ total|money }}</th></tr></tfoot>
+    <tfoot><tr class="border-top border-dark"><th>Разом</th><th class="d-none d-sm-table-cell"></th><th></th><th></th><th class="text-end" data-total data-value="{{ total|stringformat:'s' }}">{{ total|money }}</th></tr></tfoot>
   </table>
   </div>
   {% if editable %}
@@ -65,6 +65,39 @@
   {% endif %}
 </div>
 </form>
+
+{% if can_edit_prices %}
+<script>
+  // The sums follow a price as it is typed; saving recalculates on the server the same way.
+  (() => {
+    const fmt = new Intl.NumberFormat("uk-UA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const rows = [...document.querySelectorAll("tr[data-product]")];
+    const total = document.querySelector("[data-total]");
+    rows.forEach(tr => { tr.dataset.cost = tr.querySelector("[data-cost]").textContent; });
+    const price = pid => {
+      const el = document.querySelector(`input[name="price_${pid}"]`);
+      if (!el) return undefined;
+      const v = parseFloat(el.value.replace(/\s/g, "").replace(",", "."));
+      return isNaN(v) || v < 0 ? null : v;
+    };
+    const recalc = () => {
+      let sum = 0;
+      rows.forEach(tr => {
+        const cell = tr.querySelector("[data-cost]"), p = price(tr.dataset.product);
+        if (p === undefined) {                       // no price field: keep the server's figure
+          sum += parseFloat(cell.textContent.replace(/\s/g, "").replace(",", ".")) || 0;
+          return;
+        }
+        const cost = p === null ? null : Math.round(parseFloat(tr.dataset.qtyG) / 1000 * p * 100) / 100;
+        cell.textContent = cost === null ? "—" : fmt.format(cost);
+        sum += cost || 0;
+      });
+      total.textContent = fmt.format(sum);
+    };
+    document.addEventListener("input", e => { if ((e.target.name || "").startsWith("price_")) recalc(); });
+  })();
+</script>
+{% endif %}
 
 {% if can_review %}
 <div class="card card-body mt-3">

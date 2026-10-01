@@ -37,7 +37,10 @@ def write_off_day(cooking_day):
     from apps.consumption.services import ensure_actuals
 
     ensure_actuals(w.plan)
-    wf.submit(w.cooking, w.chef)
+    from apps.core.testing import on_the_day
+
+    with on_the_day():
+        wf.submit(w.cooking, w.chef)
     wf.approve(w.cooking, w.dietician)
     w.write_off = Task.objects.get(type=WRITE_OFF, service_date=DAY)
     return w

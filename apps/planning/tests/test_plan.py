@@ -189,3 +189,14 @@ def test_access(client, approved_day):
 def test_no_plan_yet_page(client, world):
     html = as_user(client, world.dietician).get("/plan/2026-10-05/").content.decode()
     assert "План ще не сформовано" in html
+
+
+def test_plan_screen_opens_on_the_working_day_until_tomorrows_plan_starts(client, world):
+    from datetime import date
+
+    from apps.planning.services import default_plan_date
+    from apps.workflow import services as wf2
+
+    assert default_plan_date() == date(2026, 9, 29)                     # today: nothing planned for tomorrow yet
+    wf2.ensure_task(MENU_PLANNING, date(2026, 9, 30))
+    assert default_plan_date() == date(2026, 9, 30)

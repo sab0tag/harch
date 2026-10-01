@@ -149,6 +149,12 @@ def _validate_cooking(task):
     return validate_cooking_task(task)
 
 
+def _after_cooking_submitted(task):
+    from apps.orders.corrections import close_for_kitchen_fact
+
+    close_for_kitchen_fact(task.service_date)
+
+
 def _kitchen_url(task):
     from django.urls import reverse
 
@@ -225,6 +231,7 @@ register(TaskDefinition(
     subject_url=_kitchen_url,
     action_label="Внести факт",
     on_approved=_next(WRITE_OFF),
+    on_submitted=_after_cooking_submitted,
 ))
 
 register(TaskDefinition(

@@ -168,4 +168,6 @@ def portions_drift(plan):
 
 
 def default_plan_date():
-    return timezone.localdate() + timedelta(days=1)
+    """Tomorrow once its planning has started; until then today — the day being cooked."""
+    tomorrow = timezone.localdate() + timedelta(days=1)
+    return tomorrow if plan_task(tomorrow) is not None else timezone.localdate()

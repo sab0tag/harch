@@ -229,6 +229,10 @@ def deviation_errors(plan) -> list[str]:
 def validate_cooking_task(task) -> list[str]:
     from apps.planning.models import DailyPlan
 
+    from django.utils import timezone
+
+    if task.service_date > timezone.localdate():
+        return [f"Факт кухні подають у день приготування — не раніше {task.service_date:%d.%m}."]
     plan = DailyPlan.objects.filter(service_date=task.service_date).first()
     if plan is None or not plan.is_frozen:
         return ["План дня ще не затверджено."]
