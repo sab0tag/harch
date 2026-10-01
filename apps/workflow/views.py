@@ -124,6 +124,27 @@ class TaskActionView(RoleRequiredMixin, View):
         return redirect("workflow:task_detail", pk=pk)
 
 
+class TaskCommentView(RoleRequiredMixin, View):
+    """«Обговорення» under a document: a remark to its people, kept in the task's history."""
+
+    allowed_roles = roles_for("tasks")
+
+    def post(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        if not wf.can(request.user, task, "view"):
+            raise Http404
+        try:
+            wf.comment(task, request.user, request.POST.get("text", ""), request.POST.getlist("call"))
+            messages.success(request, "Коментар надіслано.")
+        except ValidationError as exc:
+            for msg in exc.messages:
+                messages.error(request, msg)
+        nxt = request.POST.get("next", "")
+        if nxt and url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}):
+            return redirect(nxt + "#discussion")
+        return redirect("workflow:task_detail", pk=pk)
+
+
 class DayStatusView(RoleRequiredMixin, View):
     """«Стан дня»: where tomorrow's orders, today's kitchen and yesterday's write-off stand (admin)."""
 

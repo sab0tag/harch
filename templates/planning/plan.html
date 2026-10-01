@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load harch %}
+{% extends "base.html" %}{% load harch %}{% load workflow_tags %}
 {% block title %}План меню {{ plan.service_date|date:"d.m.Y" }}{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -102,4 +102,5 @@
     {% if task %}<p class="mt-2 small"><a href="{% url 'workflow:task_detail' task.pk %}">Хронологія задачі</a></p>{% endif %}
   </div>
 </div>
+{% discussion task %}
 {% endblock %}

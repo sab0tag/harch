@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base.html" %}{% load workflow_tags %}
 {% block title %}Замовлення · {{ order.department }}{% endblock %}
 {% block content %}
 <div class="d-flex align-items-center gap-2 mb-1">
@@ -119,4 +119,5 @@
 </div>
 {% endif %}
 {% if task %}<p class="text-center mt-3"><a href="{% url 'workflow:task_detail' task.pk %}" class="small">Хронологія задачі</a></p>{% endif %}
+{% discussion task %}
 {% endblock %}

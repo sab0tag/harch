@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load harch %}
+{% extends "base.html" %}{% load harch %}{% load workflow_tags %}
 {% block title %}Списання · {{ plan.service_date|date:"d.m" }}{% endblock %}
 {% block content %}
 {% include "consumption/_day_header.html" with url_name="consumption:write_off_day" heading="Списання за" day=plan.service_date %}
@@ -118,4 +118,5 @@
 <p class="mt-3 small"><a href="{% url 'workflow:task_detail' task.pk %}">Хронологія задачі</a> ·
   <a href="{% url 'reports:menu_vymoha' plan.service_date.isoformat %}"><i class="bi bi-file-earmark-excel"></i> Меню-вимога З-4а</a> ·
   <a href="{% url 'reports:accumulative' plan.service_date|date:'Y-m' %}">Накопичувальна відомість З-13 за місяць</a></p>
+{% discussion task %}
 {% endblock %}

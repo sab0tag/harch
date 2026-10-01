@@ -1,0 +1,27 @@
+{% if show %}
+<div class="card mt-3 d-print-none" id="discussion" style="max-width: 760px; margin-left: auto; margin-right: auto">
+  <div class="card-header bg-white fw-semibold"><i class="bi bi-chat-left-text me-1"></i>Обговорення{% if comments %} <span class="badge text-bg-light border">{{ comments|length }}</span>{% endif %}</div>
+  {% if comments %}
+  <ul class="list-group list-group-flush">
+    {% for c in comments %}
+    <li class="list-group-item">
+      <div class="small text-secondary">{{ c.actor.get_full_name|default:c.actor }} · {{ c.actor.get_role_display }} · {{ c.created_at|date:"d.m H:i" }}</div>
+      <div style="white-space: pre-line">{{ c.comment }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  <form method="post" action="{% url 'workflow:task_comment' task.pk %}" class="card-body border-top">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <label class="form-label small" for="discussion-text">Написати учасникам цього документа</label>
+    <textarea id="discussion-text" name="text" rows="2" maxlength="{{ max }}" class="form-control mb-2" placeholder="Наприклад: перевір меню №9 — замінила кашу"></textarea>
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <span class="small text-secondary">Покликати:</span>
+      {% for value, label in roles %}<div class="form-check form-check-inline m-0"><input class="form-check-input" type="checkbox" name="call" value="{{ value }}" id="call-{{ value }}"><label class="form-check-label small" for="call-{{ value }}">{{ label }}</label></div>{% endfor %}
+      <button class="btn btn-sm btn-primary ms-auto"><i class="bi bi-send me-1"></i>Надіслати</button>
+    </div>
+    <div class="small text-secondary mt-2">Без прізвищ і діагнозів пацієнтів. Повідомлення отримають виконавець і перевіряючий цього документа (та покликані).</div>
+  </form>
+</div>
+{% endif %}
