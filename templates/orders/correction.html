@@ -25,9 +25,9 @@
     <label class="form-label fw-semibold" for="transfer_from">З якого відділення переведено</label>
     <select class="form-select" name="transfer_from" id="transfer_from">
       <option value="">—</option>
-      {% for d in departments %}<option value="{{ d.pk }}"{% if correction.transfer_from_id == d.pk %} selected{% endif %}>{{ d }}</option>{% endfor %}
+      {% for d in departments %}{% with pk=d.pk|stringformat:"s" %}<option value="{{ d.pk }}"{% if posted and posted.transfer_from == pk or not posted and correction.transfer_from_id == d.pk %} selected{% endif %}>{{ d }}</option>{% endwith %}{% endfor %}
     </select>
-    <div class="form-text">Вкажіть лише «+» у своєму відділенні — у відділенні, звідки переведено, порції знімуться самі.</div>
+    <div class="form-text">Вкажіть «+» у своєму відділенні — там, звідки переведено, порції знімуться самі. Якщо дієта змінилась (там ВБД, у вас ОВД), у колонці «знято там» вкажіть, з якої дієти зняти; порожньо — та сама дієта.</div>
   </div>
   <label class="form-label fw-semibold" for="from_meal">З якого прийому їжі</label>
   <select class="form-select mb-1" name="from_meal" id="from_meal">
@@ -35,7 +35,9 @@
   </select>
   <div class="form-text mb-3">На сьогодні: до {{ cutoff }} — з обіду, пізніше — лише з вечері.</div>
 
-  <div class="fw-semibold mb-1">Порції: + додати, − зняти</div>
+  <div class="d-flex align-items-end gap-3 mb-1"><span class="fw-semibold flex-grow-1">Порції: + додати, − зняти</span>
+    <span class="small text-secondary text-end transfer-only" style="width: 6.5rem"{% if correction.reason != 'transfer' and not posted or posted and posted.reason != 'transfer' %} hidden{% endif %}>у вас</span>
+    <span class="small text-secondary text-end transfer-only" style="width: 6.5rem"{% if correction.reason != 'transfer' and not posted or posted and posted.reason != 'transfer' %} hidden{% endif %}>знято там</span></div>
   {% for row in rows %}
     <div class="d-flex align-items-center gap-3 py-2 border-bottom">
       <label for="diet_{{ row.diet.pk }}" class="flex-grow-1">
@@ -44,6 +46,8 @@
       </label>
       <input type="text" inputmode="numeric" name="diet_{{ row.diet.pk }}" id="diet_{{ row.diet.pk }}" value="{{ row.value }}"
              class="form-control form-control-lg text-end" style="width: 6.5rem" placeholder="+0" autocomplete="off">
+      <input type="text" inputmode="numeric" name="out_{{ row.diet.pk }}" value="{{ row.out_value }}" aria-label="{{ row.diet.code }}: знято у відділенні, звідки переведено"
+             class="form-control form-control-lg text-end transfer-only" style="width: 6.5rem" placeholder="−0" autocomplete="off"{% if correction.reason != 'transfer' and not posted or posted and posted.reason != 'transfer' %} hidden{% endif %}>
     </div>
   {% empty %}
     <p class="text-secondary">На цей день ще немає дієт у плані.</p>
@@ -59,7 +63,11 @@
 <script>
   (() => {
     const reason = document.getElementById("reason"), box = document.getElementById("transfer-box");
-    reason.addEventListener("change", () => { box.hidden = reason.value !== "transfer"; });
+    reason.addEventListener("change", () => {
+      const transfer = reason.value === "transfer";
+      box.hidden = !transfer;
+      document.querySelectorAll(".transfer-only").forEach(el => { el.hidden = !transfer; });
+    });
   })();
 </script>
 {% else %}

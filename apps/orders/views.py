@@ -264,6 +264,19 @@ def read_deltas(post, diets):
     return deltas
 
 
+def read_transfer_out(post, diets):
+    """«Знято там» column of a transfer: portions taken off the sending department, per diet (sign ignored)."""
+    out = {}
+    for diet in diets:
+        raw = (post.get(f"out_{diet.pk}") or "").strip().replace("−", "-").replace(" ", "").lstrip("+-")
+        if raw in ("", "0"):
+            continue
+        if not raw.isdigit():
+            raise ValidationError(f"{diet.code}: у колонці «знято там» вкажіть ціле число.")
+        out[diet.pk] = int(raw)
+    return out
+
+
 class CorrectionNewView(RoleRequiredMixin, View):
     allowed_roles = roles_for("orders")
 
@@ -305,6 +318,7 @@ class CorrectionView(RoleRequiredMixin, View):
         }
         try:
             deltas = read_deltas(request.POST, diets)
+            fields["transfer_out"] = read_transfer_out(request.POST, diets)
             if action == "submit":
                 corrections.submit_correction(correction, request.user, deltas, **fields)
                 messages.success(request, "Коригування подано дієтсестрі.")
@@ -324,13 +338,16 @@ class CorrectionView(RoleRequiredMixin, View):
         day, dept = correction.service_date, correction.department
         meals, why = corrections.allowed_meals(dept, day)
         own = {l.diet_id: l.delta for l in correction.lines.all() if l.department_id == dept.pk}
+        out = {l.diet_id: -l.delta for l in correction.lines.all()
+               if correction.transfer_from_id and l.department_id == correction.transfer_from_id}
         have = corrections.department_portions(dept, day, exclude=correction)
         rows = []
         planned = corrections.planned_diet_ids(day)
         for d in corrections.available_diets(day):
             value = posted.get(f"diet_{d.pk}", "") if posted else (f"{own[d.pk]:+d}" if d.pk in own else "")
             menu = None if d.pk in planned else corrections.menu_for(d, day)
-            rows.append({"diet": d, "value": value, "have": have.get(d.pk, 0),
+            out_value = posted.get(f"out_{d.pk}", "") if posted else (f"−{out[d.pk]}" if d.pk in out else "")
+            rows.append({"diet": d, "value": value, "out_value": out_value, "have": have.get(d.pk, 0),
                          "outside_plan": d.pk not in planned, "cycle_menu": menu})
         task = correction.task
         return render(request, "orders/correction.html", {

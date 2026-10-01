@@ -125,8 +125,12 @@ def is_editable_by(correction, user):
 
 
 @transaction.atomic
-def save_correction(correction, user, deltas, *, from_meal, reason, transfer_from=None, note=""):
-    """deltas: {diet_id: ± portions} for the correcting department."""
+def save_correction(correction, user, deltas, *, from_meal, reason, transfer_from=None, note="", transfer_out=None):
+    """deltas: {diet_id: ± portions} for the correcting department.
+
+    A transfer: transfer_out = {diet_id: portions} taken off the sending department — the diet may change on
+    the way (ВБД in surgery, ОВД in therapy); empty = the same diets as received. As many patients leave
+    as arrive."""
     if not is_editable_by(correction, user):
         raise PermissionDenied("Коригування зараз не можна редагувати.")
     dept, day = correction.department, correction.service_date
@@ -149,11 +153,18 @@ def save_correction(correction, user, deltas, *, from_meal, reason, transfer_fro
         raise ValidationError(f"Для дієти {', '.join(no_menu)} немає жодного меню — узгодьте з дієтсестрою.")
 
     errors = []
+    out = {}
     if reason == OrderCorrection.Reason.TRANSFER:
         if transfer_from is None or transfer_from.pk == dept.pk:
             errors.append("Оберіть відділення, з якого переведено пацієнтів.")
         if any(v < 0 for v in deltas.values()):
             errors.append("При переведенні вкажіть, скільки пацієнтів прийнято (+); з іншого відділення їх знімуть самі.")
+        out = {d: abs(v) for d, v in (transfer_out or {}).items() if v} or {d: v for d, v in deltas.items() if v > 0}
+        if set(out) - set(diets):
+            errors.append("Невідома дієта у колонці «знято там».")
+        received, left = sum(v for v in deltas.values() if v > 0), sum(out.values())
+        if received != left:
+            errors.append(f"Прийнято {received}, а знято у відділенні, звідки переведено, {left} — кількість пацієнтів має збігатися.")
     else:
         transfer_from = None
     have = department_portions(dept, day, exclude=correction)
@@ -162,9 +173,15 @@ def save_correction(correction, user, deltas, *, from_meal, reason, transfer_fro
             errors.append(f"{diets[diet_id].code}: у відділенні {have.get(diet_id, 0)} порц. — не можна зняти {-v}.")
     if transfer_from is not None and not errors:
         sender = department_portions(transfer_from, day, exclude=correction)
-        for diet_id, v in deltas.items():
-            if sender.get(diet_id, 0) - v < 0:
-                errors.append(f"{diets[diet_id].code}: у відділенні «{transfer_from}» лише {sender.get(diet_id, 0)} порц.")
+        short = [d for d, n in out.items() if sender.get(d, 0) - n < 0]
+        for diet_id in short:
+            errors.append(f"{diets[diet_id].code}: у відділенні «{transfer_from}» лише {sender.get(diet_id, 0)} порц.")
+        if short:
+            codes = dict(Diet.objects.values_list("pk", "code"))
+            there = ", ".join(f"{codes[d]} {n}" for d, n in sorted(sender.items(), key=lambda x: codes[x[0]]) if n > 0)
+            errors.append(f"На {day:%d.%m} у «{transfer_from}»: {there or 'порцій немає'}. Якщо дієта змінилась — "
+                          f"у колонці «знято там» вкажіть, з якої дієти зняти. Якщо пацієнта не було в замовленні "
+                          f"«{transfer_from}» — оберіть причину «Надходження».")
     if errors:
         raise ValidationError(errors)
 
@@ -174,8 +191,8 @@ def save_correction(correction, user, deltas, *, from_meal, reason, transfer_fro
     correction.lines.all().delete()
     lines = [OrderCorrectionLine(correction=correction, department=dept, diet_id=d, delta=v) for d, v in deltas.items()]
     if transfer_from is not None:
-        lines += [OrderCorrectionLine(correction=correction, department=transfer_from, diet_id=d, delta=-v)
-                  for d, v in deltas.items()]
+        lines += [OrderCorrectionLine(correction=correction, department=transfer_from, diet_id=d, delta=-n)
+                  for d, n in out.items()]
     OrderCorrectionLine.objects.bulk_create(lines)
     if correction.task.status == TaskStatus.PENDING:
         wf.start(correction.task, user)
@@ -185,7 +202,11 @@ def save_correction(correction, user, deltas, *, from_meal, reason, transfer_fro
 def summary_text(correction):
     own = [l for l in correction.lines.all() if l.department_id == correction.department_id]
     parts = ", ".join(f"{l.diet.code} {l.delta:+d}" for l in own)
-    source = f" з «{correction.transfer_from}»" if correction.transfer_from_id else ""
+    source = ""
+    if correction.transfer_from_id:
+        there = ", ".join(f"{l.diet.code} {l.delta:+d}" for l in correction.lines.all()
+                          if l.department_id == correction.transfer_from_id)
+        source = f" з «{correction.transfer_from}» (там {there})"
     return f"{correction.get_reason_display()}{source}: {parts}, {correction.from_meal_phrase}"
 
 
@@ -268,8 +289,10 @@ def apply_approved(task):
         nurses = get_user_model().objects.filter(role=Role.DEPT_NURSE, department=correction.transfer_from,
                                                  is_active=True)
         moved = sum(l.delta for l in correction.lines.all() if l.department_id == correction.department_id)
+        taken = ", ".join(f"{l.diet.code} {l.delta:+d}" for l in correction.lines.select_related("diet")
+                          if l.department_id == correction.transfer_from_id)
         n.notify(nurses, task, f"Переведення: {correction.department} прийняло {moved} з вашого відділення",
-                 f"На {correction.service_date:%d.%m} у вашому відділенні знято {moved} порц. "
+                 f"На {correction.service_date:%d.%m} у вашому відділенні знято: {taken}, "
                  f"{correction.from_meal_phrase}.")
 
 
