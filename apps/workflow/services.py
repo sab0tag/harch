@@ -60,6 +60,18 @@ def _expiring_types():
     return [d.type for d in all_definitions() if d.expires_with_day]
 
 
+# Day-wide tasks whose document has its own screen: whoever may open the screen may read the task's
+# history too (the accountant the plan's, the director the write-off's). Department tasks stay per department.
+DOCUMENT_SCREEN = {"menu_planning": "plan", "cooking": "kitchen", "write_off": "write-off"}
+
+
+def _sees_document(user, task):
+    from apps.core.navigation import roles_for
+
+    screen = DOCUMENT_SCREEN.get(task.type)
+    return screen is not None and user.role in roles_for(screen)
+
+
 def can(user, task, action) -> bool:
     """Single permission check used by services, views and templates."""
     if action == "view":
@@ -67,6 +79,7 @@ def can(user, task, action) -> bool:
             user.role == Role.ADMIN
             or is_maker(user, task)
             or is_checker(user, task)
+            or _sees_document(user, task)
             or task.events.filter(actor=user).exists()
         )
     if action in ("start", "submit"):

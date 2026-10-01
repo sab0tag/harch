@@ -90,3 +90,20 @@ def test_signing_is_in_the_directors_history_and_the_task_timeline(client, direc
     html = client.get("/tasks/?tab=history").content.decode()
     assert "План меню на день" in html
     assert "Підписано" in client.get(f"/tasks/{plan.task.pk}/").content.decode()
+
+
+def test_document_readers_open_its_task_history_and_see_only_their_links(client, director, cooking_day):
+    """Crawl of the demo: the accountant and the director got 404 on «Хронологія задачі» and 403 on
+    menu and kitchen links from the plan page."""
+    w = cooking_day
+    plan_task = w.plan.task
+    for user in (w.accountant, director):
+        client.force_login(user)
+        assert client.get(f"/tasks/{plan_task.pk}/").status_code == 200
+        html = client.get(f"/plan/{DAY.isoformat()}/").content.decode()
+        assert "/menus/" not in html and "/kitchen/" not in html
+    client.force_login(w.nurse["Терапевтичне"])
+    assert client.get(f"/tasks/{plan_task.pk}/").status_code == 404          # not a reader of the plan
+    client.force_login(w.chef)
+    html = client.get(f"/plan/{DAY.isoformat()}/").content.decode()
+    assert "/menus/" in html and "/kitchen/" in html
