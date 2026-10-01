@@ -200,3 +200,22 @@ def test_plan_screen_opens_on_the_working_day_until_tomorrows_plan_starts(client
     assert default_plan_date() == date(2026, 9, 29)                     # today: nothing planned for tomorrow yet
     wf2.ensure_task(MENU_PLANNING, date(2026, 9, 30))
     assert default_plan_date() == date(2026, 9, 30)
+
+
+def test_undated_plan_page_submits(client, approved_day):
+    """Pilot demo: «Подати шеф-кухарю» on /plan/ (no date in the URL) gave a 500."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    import time_machine
+
+    w = approved_day
+    plan = DailyPlan.objects.get(service_date=DAY)
+    with time_machine.travel(datetime(2026, 9, 30, 15, 0, tzinfo=ZoneInfo("Europe/Kyiv")), tick=True):
+        client = as_user(client, w.dietician)                          # (idle logout counts the jump)
+        html = client.get("/plan/").content.decode()                  # tomorrow's planning has started: 01.10
+        assert f'action="{PLAN}"' in html
+        data = {**menus_form(plan, {"ОВД": 2, "ЩД": 81, "№9": 221}), "action": "submit"}
+        assert client.post("/plan/", data).status_code == 302           # an old undated page posts fine too
+    assert Task.objects.get(type=MENU_PLANNING).status == TaskStatus.SUBMITTED
+    assert plan.entries.get(diet__code="ОВД").menu.number == 2

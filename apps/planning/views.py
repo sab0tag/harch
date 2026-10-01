@@ -64,8 +64,9 @@ class PlanView(RoleRequiredMixin, View):
             services.sync_portions(plan)
         return self.render(request, plan, editable)
 
-    def post(self, request, day):
-        day = parse_date(day)
+    def post(self, request, day=None):
+        # The form posts to its dated URL; an undated /plan/ (an old page) means the default day.
+        day = parse_date(day, default=services.default_plan_date())
         plan = services.open_plan(day)
         entries = list(plan.entries.all())
         menus = read_menus(request.POST, entries)
