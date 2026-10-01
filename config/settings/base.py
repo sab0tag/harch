@@ -154,6 +154,8 @@ SESSION_COOKIE_AGE = 12 * 60 * 60
 
 # S6-06: the training copy (demo.<domain>) — banner, demo logins on the sign-in page, nightly reset_demo.
 DEMO_MODE = env("DEMO_MODE")
+# The demo deck (Claude artifact, shared by link); shown on the demo copy only.
+DEMO_PRESENTATION_URL = env("DEMO_PRESENTATION_URL", default="https://claude.ai/artifact/QKduhhVRXxmPxZi7VWfdE5")
 HOSPITAL_NAME = env("HOSPITAL_NAME")  # on screen: short name
 # Printed forms (PDF, typical forms З-4а / З-13): official name from the ЄДР, code, address, who approves.
 HOSPITAL_FULL_NAME = env("HOSPITAL_FULL_NAME") or HOSPITAL_NAME

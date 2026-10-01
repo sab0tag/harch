@@ -25,7 +25,8 @@ def demo_nurses():
 def site(request):
     year = timezone.localdate().year
     return {"HOSPITAL_NAME": settings.HOSPITAL_NAME, "HOSPITAL_CITY": settings.HOSPITAL_CITY,
-            "DEMO_MODE": settings.DEMO_MODE, "DEMO_NURSES": demo_nurses if settings.DEMO_MODE else (), "FOOTER_YEARS": f"{FIRST_YEAR}–{year}" if year > FIRST_YEAR else str(FIRST_YEAR)}
+            "DEMO_MODE": settings.DEMO_MODE, "DEMO_NURSES": demo_nurses if settings.DEMO_MODE else (),
+            "DEMO_PRESENTATION_URL": settings.DEMO_PRESENTATION_URL if settings.DEMO_MODE else "", "FOOTER_YEARS": f"{FIRST_YEAR}–{year}" if year > FIRST_YEAR else str(FIRST_YEAR)}
 
 
 def _href(item):

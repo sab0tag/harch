@@ -78,6 +78,9 @@
       {% if user.role == 'dept_nurse' %}<div class="mt-1">Потрібно виправити? Попросіть дієтсестру повернути замовлення — воно знову стане редагованим.</div>{% endif %}
     {% elif task.status == 'approved' %}Затверджено: {{ task.resolved_by }}, {{ task.resolved_at|date:"d.m H:i" }}. Саме замовлення вже не змінюється — зміни лише коригуванням нижче.
     {% elif task.status == 'cancelled' %}Скасовано.{% if task.events.last.comment %} {{ task.events.last.comment }}.{% endif %}
+      {% if can_reopen %}<form method="post" class="mt-2">{% csrf_token %}<input type="hidden" name="action" value="reopen">
+        <button class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-counterclockwise me-1"></i>Відкрити заново</button>
+        <span class="ms-1">— щоб внести замовлення заднім числом; медсестрі задача не повертається.</span></form>{% endif %}
     {% elif day_over %}Дата минула — замовлення не подано. Внести його заднім числом може лише адміністратор.
     {% else %}Заповнює старша медсестра відділення.{% endif %}
   </div>

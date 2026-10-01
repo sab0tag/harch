@@ -81,6 +81,9 @@ def can(user, task, action) -> bool:
         )
     if action == "cancel":
         return user.role == Role.ADMIN and task.status in OPEN_FOR_MAKER
+    if action == "reopen":
+        # A past day's order closed (at night, or by hand): the admin may open it again to catch the day up.
+        return user.role == Role.ADMIN and task.status == TaskStatus.CANCELLED and day_is_over(task)
     return False
 
 
@@ -161,6 +164,7 @@ _ALLOWED_FROM = {
     "approve": (TaskStatus.SUBMITTED,),
     "reject": (TaskStatus.SUBMITTED,),
     "cancel": OPEN_FOR_MAKER,
+    "reopen": (TaskStatus.CANCELLED,),
 }
 
 
@@ -261,6 +265,19 @@ def cancel(task, user, comment):
     return task
 
 
+def reopen(task, user, comment=""):
+    """Admin catch-up: a closed past day's order is open again (pending) for the admin to fill in on the screen.
+    Nobody is notified: it is not back in the nurse's list (see todo_for); the history says who reopened it."""
+    with transaction.atomic():
+        task = _locked(task)
+        _require(user, task, "reopen")
+        prev = task.status
+        task.status, task.resolved_at, task.resolved_by = TaskStatus.PENDING, None, None
+        task.save(update_fields=["status", "resolved_at", "resolved_by"])
+        _event(task, TaskEvent.Kind.REOPENED, user, prev, comment.strip() or "Відкрито заново для заповнення заднім числом")
+    return task
+
+
 # ------------------------------------------------------------------ deadlines
 def notify_overdue(now=None):
     """Notify once per overdue task: makers + all dieticians. Returns the tasks notified.
@@ -314,10 +331,14 @@ def expire_stale_tasks(today=None, dry_run=False):
 
     Submitted ones too: approving yesterday's order the next morning would open a plan for a day already
     cooked. No hook: a finished day must not start its menu planning now. Returns the tasks (to be) closed.
-    (An admin catching up a past day does it within the day: open, submit, and the dietician approves.)"""
+    An admin catching up a past day reopens its order (reopen) and then has STALE_PLAN_DAYS to finish it."""
     today = today or timezone.localdate()
     open_ = Q(status__in=OPEN_FOR_MAKER) | Q(status=TaskStatus.SUBMITTED)
+    # A day the admin reopened to catch up gets STALE_PLAN_DAYS to be finished.
+    quiet_since = timezone.now() - timedelta(days=STALE_PLAN_DAYS)
     stale = list(Task.objects.filter(open_, type__in=_expiring_types(), service_date__lt=today)
+                 .exclude(pk__in=TaskEvent.objects.filter(kind=TaskEvent.Kind.REOPENED, created_at__gte=quiet_since)
+                          .values("task_id"))
                  .select_related("department").order_by("service_date", "department__name"))
     # Menu plans of past days nobody has touched for STALE_PLAN_DAYS: the day was cooked without the system.
     # (An admin catching up a past day keeps its plan alive by working on it.)
@@ -325,7 +346,6 @@ def expire_stale_tasks(today=None, dry_run=False):
 
     from .definitions import MENU_PLANNING
 
-    quiet_since = timezone.now() - timedelta(days=STALE_PLAN_DAYS)
     stale += list(Task.objects.filter(open_, type=MENU_PLANNING, service_date__lt=today)
                   .annotate(last=Max("events__created_at")).filter(last__lt=quiet_since).order_by("service_date"))
     if not dry_run:

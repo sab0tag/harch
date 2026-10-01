@@ -58,8 +58,31 @@ def allowed_meals(department, day, now=None):
 
 
 def available_diets(day):
-    """Diets the day is cooked for: a correction can only add or remove portions of those."""
-    return Diet.objects.filter(pk__in=approved_portions(day)).order_by("sort_order", "code")
+    """Diets a correction may use: every orderable one. A diet the day's plan lacks (an admitted patient on a
+    diet nobody else has) is cooked from its 7-day cycle menu for that weekday — see menu_for."""
+    from .services import orderable_diets
+
+    return orderable_diets()
+
+
+def menu_for(diet, day, plan=None):
+    """The menu a correction's portions of `diet` are cooked from: the day plan's, else the cycle's (suggest_menu)."""
+    from apps.planning.models import DailyPlan
+    from apps.planning.services import suggest_menu
+
+    plan = plan or DailyPlan.objects.filter(service_date=day).first()
+    entry = plan.entries.filter(diet=diet, menu__isnull=False).select_related("menu").first() if plan else None
+    return entry.menu if entry else suggest_menu(diet, day)
+
+
+def planned_diet_ids(day):
+    """Diets the day's plan (or, before it exists, the approved orders) already cooks for."""
+    from apps.planning.models import DailyPlan
+
+    plan = DailyPlan.objects.filter(service_date=day).first()
+    if plan is not None and plan.entries.exists():
+        return set(plan.entries.values_list("diet_id", flat=True))
+    return set(approved_portions(day, include_late=True))
 
 
 def department_portions(department, day, exclude=None):
@@ -120,8 +143,10 @@ def save_correction(correction, user, deltas, *, from_meal, reason, transfer_fro
     diets = {d.pk: d for d in available_diets(day)}
     unknown = set(deltas) - set(diets)
     if unknown:
-        codes = ", ".join(d.code for d in Diet.objects.filter(pk__in=unknown))
-        raise ValidationError(f"Дієти {codes} на цей день немає в плані харчоблоку — узгодьте з дієтсестрою.")
+        raise ValidationError("Невідома дієта у коригуванні.")
+    no_menu = [diets[d].code for d, v in deltas.items() if v > 0 and menu_for(diets[d], day) is None]
+    if no_menu:
+        raise ValidationError(f"Для дієти {', '.join(no_menu)} немає жодного меню — узгодьте з дієтсестрою.")
 
     errors = []
     if reason == OrderCorrection.Reason.TRANSFER:
@@ -191,11 +216,10 @@ def add_extra_lines(correction, plan):
     from apps.consumption.calc import PlanInput, compute_lines
     from apps.consumption.models import ActualConsumption, ConsumptionSnapshotLine
 
-    menus = {e.diet_id: e.menu for e in plan.entries.select_related("menu") if e.menu_id}
     start = SLOTS.index(correction.from_meal)
     new = []
     for line in correction.lines.select_related("diet"):
-        menu = menus.get(line.diet_id)
+        menu = menu_for(line.diet, plan.service_date, plan)    # a diet the plan lacks: its cycle menu
         if menu is None:
             raise ValidationError(f"У плані на {plan.service_date:%d.%m} немає меню для дієти {line.diet.code}.")
         sign = 1 if line.delta > 0 else -1
@@ -278,12 +302,11 @@ def take_late_order(task):
     if cooking is not None and cooking.status in (TaskStatus.SUBMITTED, TaskStatus.APPROVED):
         raise ValidationError(f"Факт кухні за {day} уже подано — пізнє замовлення до розходу не додати.")
     plan = DailyPlan.objects.get(service_date=task.service_date)
-    planned = set(plan.entries.filter(menu__isnull=False).values_list("diet_id", flat=True))
-    missing = [d.code for d in Diet.objects.filter(pk__in=set(portions) - planned).order_by("sort_order", "code")]
+    # A diet the plan lacks is cooked from its cycle menu (menu_for), as for a correction; none at all: refuse.
+    missing = [d.code for d in Diet.objects.filter(pk__in=portions).order_by("sort_order", "code")
+               if menu_for(d, task.service_date, plan) is None]
     if missing:
-        hint = ("Узгодьте з шеф-кухарем окремо." if plan.is_frozen
-                else "Шеф-кухар може повернути план — тоді замовлення увійде до нього.")
-        raise ValidationError(f"План меню на {day} уже в шеф-кухаря, і в ньому немає дієт: {', '.join(missing)}. {hint}")
+        raise ValidationError(f"Для дієти {', '.join(missing)} немає жодного меню — пізнє замовлення до розходу не додати.")
     correction = OrderCorrection.objects.create(
         department=order.department, service_date=task.service_date, task=task, from_meal=SLOTS[0],
         reason=OrderCorrection.Reason.LATE_ORDER, created_by=task.resolved_by,
