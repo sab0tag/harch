@@ -19,7 +19,8 @@
   .muted { color: #555; font-size: 8pt; }
 </style></head>
 <body>
-<div class="approve">ЗАТВЕРДЖУЮ<br>{{ approver_title }}<br>_______________ / _______________<br>«____» ______________ 20___ р.</div>
+{% if signed_at %}<div class="approve">ЗАТВЕРДЖЕНО<br>{{ approver_title }}<br>підписано в системі «Харчоблок»<br>{{ signed_at|date:"d.m.Y H:i" }}</div>
+{% else %}<div class="approve">ЗАТВЕРДЖУЮ<br>{{ approver_title }}<br>_______________ / _______________<br>«____» ______________ 20___ р.</div>{% endif %}
 <div class="muted">{{ hospital }}{% if edrpou %}<br>Код за ЄДРПОУ {{ edrpou }}{% endif %}{% if address %} · {{ address }}{% endif %}</div>
 <h1>МЕНЮ-РОЗКЛАДКА</h1>
 <div class="sub">на {{ plan.service_date|date:"d.m.Y" }} ({{ plan.service_date|date:"l" }}) · всього порцій: {{ portions }}</div>

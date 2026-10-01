@@ -98,3 +98,26 @@ class WriteOffLine(models.Model):
     class Meta:
         ordering = ["write_off", "product_name"]
         constraints = [models.UniqueConstraint(fields=["write_off", "product"], name="uniq_writeoff_product")]
+
+
+class StoreIssue(models.Model):
+    """«Видано»: the store handed the day's requisition (correction=None) or one «додаткова вимога» to the kitchen.
+    A mark with who and when, not a document: quantities are the plan's; a difference goes in the note."""
+
+    plan = models.ForeignKey("planning.DailyPlan", on_delete=models.CASCADE, related_name="store_issues")
+    correction = models.ForeignKey("orders.OrderCorrection", null=True, blank=True, on_delete=models.CASCADE,
+                                   related_name="store_issues")
+    issued_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="Видав")
+    issued_at = models.DateTimeField("Видано", auto_now_add=True)
+    note = models.CharField("Примітка", max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = "Видача зі складу"
+        verbose_name_plural = "Видачі зі складу"
+        constraints = [
+            models.UniqueConstraint(fields=["plan"], condition=models.Q(correction__isnull=True), name="store_issue_one_main"),
+            models.UniqueConstraint(fields=["plan", "correction"], name="store_issue_one_per_correction"),
+        ]
+
+    def __str__(self):
+        return f"Видано {self.issued_at:%d.%m %H:%M}"

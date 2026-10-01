@@ -408,3 +408,77 @@ def period_consumption(date_from, date_to, group="product"):
         total_b += g_b
         total_c += g_c
     return {"groups": groups, "brutto_g": total_b, "cost": total_c, "days": days, "missing_prices": missing}
+
+
+# ====================================================================== the store's «Видано»
+def store_rows(plan):
+    """What the store has to hand over for the day: the main requisition and each approved correction."""
+    from apps.orders.corrections import corrections_for
+    from apps.workflow.models import TaskStatus
+
+    from .models import StoreIssue
+
+    issues = {i.correction_id: i for i in StoreIssue.objects.filter(plan=plan).select_related("issued_by")}
+    rows = [{"what": "Основна вимога", "correction": None, "issue": issues.get(None)}]
+    for c in corrections_for(plan.service_date):
+        if c.task and c.task.status == TaskStatus.APPROVED and c.applied_at:
+            rows.append({"what": f"Додаткова вимога · {c.department} ({c.get_reason_display().lower()})",
+                         "correction": c, "issue": issues.get(c.pk)})
+    return rows
+
+
+def can_issue(user):
+    from apps.accounts.models import Role
+
+    return user.role in (Role.STOREKEEPER, Role.ADMIN)
+
+
+@transaction.atomic
+def mark_issued(plan, user, correction=None, note=""):
+    from django.core.exceptions import PermissionDenied, ValidationError
+
+    from apps.workflow import notify as n
+
+    from .models import StoreIssue
+
+    if not can_issue(user):
+        raise PermissionDenied("Позначає видачу завідувач складу.")
+    if not plan.is_frozen:
+        raise ValidationError("План дня ще не затверджено — видавати нічого.")
+    if correction is not None and (correction.service_date != plan.service_date or correction.applied_at is None):
+        raise ValidationError("Це коригування ще не додано до вимоги дня.")
+    if StoreIssue.objects.filter(plan=plan, correction=correction).exists():
+        raise ValidationError("Уже позначено як видане.")
+    issue = StoreIssue.objects.create(plan=plan, correction=correction, issued_by=user, note=note.strip()[:300])
+    what = "основну вимогу" if correction is None else f"додаткову вимогу ({correction.department})"
+    from django.contrib.auth import get_user_model
+
+    from apps.accounts.models import Role
+
+    chefs = get_user_model().objects.filter(role=Role.CHEF, is_active=True)
+    task = cooking_task(plan)
+    if task is not None:
+        n.notify(chefs, task, f"Склад видав {what} на {plan.service_date:%d.%m}", issue.note)
+    return issue
+
+
+@transaction.atomic
+def unmark_issued(plan, user, correction=None):
+    """A mark made by mistake: the one who made it (or an admin) removes it while the kitchen has not
+    submitted its fact."""
+    from django.core.exceptions import PermissionDenied, ValidationError
+
+    from apps.accounts.models import Role
+    from apps.workflow.models import TaskStatus
+
+    from .models import StoreIssue
+
+    issue = StoreIssue.objects.filter(plan=plan, correction=correction).first()
+    if issue is None:
+        return
+    if not (user.role == Role.ADMIN or issue.issued_by_id == user.pk):
+        raise PermissionDenied("Зняти позначку може той, хто її поставив.")
+    task = cooking_task(plan)
+    if task is not None and task.status in (TaskStatus.SUBMITTED, TaskStatus.APPROVED):
+        raise ValidationError("Кухня вже подала факт — позначку видачі не змінити.")
+    issue.delete()

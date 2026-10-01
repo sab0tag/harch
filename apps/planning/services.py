@@ -141,6 +141,7 @@ def approve_plan(task):
     plan.approved_at = timezone.now()
     plan.save(update_fields=["approved_at"])
     apply_pending(plan)     # S7-01: corrections approved while the day was still being planned
+    notify_directors(plan)
 
 
 def force_planning(service_date, user):
@@ -171,3 +172,40 @@ def default_plan_date():
     """Tomorrow once its planning has started; until then today — the day being cooked."""
     tomorrow = timezone.localdate() + timedelta(days=1)
     return tomorrow if plan_task(tomorrow) is not None else timezone.localdate()
+
+
+# ---------------------------------------------------------------- the head doctor's signature
+def can_sign(user, plan):
+    """Only the head doctor signs — personally; an admin cannot stand in for a signature."""
+    from apps.accounts.models import Role
+
+    return user.role == Role.DIRECTOR and plan.is_frozen and plan.signed_at is None
+
+
+@transaction.atomic
+def sign_plan(plan, user):
+    plan = DailyPlan.objects.select_for_update().get(pk=plan.pk)
+    if not can_sign(user, plan):
+        raise PermissionDenied("Підписати меню-розкладку може лише головний лікар, і лише затверджену.")
+    plan.signed_at, plan.signed_by = timezone.now(), user
+    plan.save(update_fields=["signed_at", "signed_by"])
+    return plan
+
+
+def to_sign(days_back=14):
+    """Approved plans of the last two weeks and ahead, unsigned first."""
+    since = timezone.localdate() - timedelta(days=days_back)
+    plans = list(DailyPlan.objects.filter(approved_at__isnull=False, service_date__gte=since).select_related("signed_by"))
+    return sorted(plans, key=lambda p: (p.signed_at is not None, p.service_date if p.signed_at is None else -p.service_date.toordinal()))
+
+
+def notify_directors(plan):
+    """A plan is approved: its menu-rozkladka waits for the head doctor's signature."""
+    from django.contrib.auth import get_user_model
+
+    from apps.accounts.models import Role
+    from apps.workflow import notify as n
+
+    directors = get_user_model().objects.filter(role=Role.DIRECTOR, is_active=True)
+    n.notify(directors, plan.task, f"На підпис: меню-розкладка на {plan.service_date:%d.%m}",
+             "План меню затверджено шеф-кухарем.")

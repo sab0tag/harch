@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
 
@@ -49,8 +49,30 @@ class StoreView(RoleRequiredMixin, View):
         return render(request, "consumption/store.html", {
             "day": day, "plan": plan, "data": data,
             "corrections": [c for c in corrections_for(day) if c.task and c.task.status == TaskStatus.APPROVED],
+            "issues": services.store_rows(plan) if plan else [],
+            "can_issue": services.can_issue(request.user),
             **day_nav(day),
         })
+
+    def post(self, request, day=None):
+        from apps.orders.models import OrderCorrection
+
+        day = parse_date(day) if day else timezone.localdate()
+        plan = frozen_plan(day)
+        if plan is None:
+            raise Http404
+        cid = request.POST.get("correction") or None
+        correction = get_object_or_404(OrderCorrection, pk=cid, service_date=day) if cid else None
+        try:
+            if request.POST.get("action") == "undo":
+                services.unmark_issued(plan, request.user, correction)
+                messages.success(request, "Позначку видачі знято.")
+            else:
+                services.mark_issued(plan, request.user, correction, request.POST.get("note", ""))
+                messages.success(request, "Позначено: видано.")
+        except (ValidationError, PermissionDenied) as exc:
+            messages.error(request, " ".join(getattr(exc, "messages", [str(exc)])))
+        return redirect("consumption:store_day", day.isoformat())
 
 
 # ====================================================================== S4-01 kitchen
@@ -133,6 +155,7 @@ class KitchenView(RoleRequiredMixin, View):
             "threshold": services.DEVIATION_REASON_PCT,
             "corrections": [c for c in corrections_for(plan.service_date) if c.task and c.task.status == TaskStatus.APPROVED],
             "open_corrections": open_for_day(plan.service_date).count() if editable else 0,
+            "store_issues": services.store_rows(plan),
             **day_nav(plan.service_date),
         })
 

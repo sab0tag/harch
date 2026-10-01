@@ -9,8 +9,9 @@ from dataclasses import dataclass, field
 
 from apps.accounts.models import Role
 
-A, D, C, N, B, S = Role.ADMIN, Role.DIETICIAN, Role.CHEF, Role.DEPT_NURSE, Role.ACCOUNTANT, Role.STOREKEEPER
-ALL = (A, D, C, N, B, S)
+A, D, C, N, B, S, H = (Role.ADMIN, Role.DIETICIAN, Role.CHEF, Role.DEPT_NURSE, Role.ACCOUNTANT, Role.STOREKEEPER,
+                       Role.DIRECTOR)
+ALL = (A, D, C, N, B, S, H)
 
 # Who may change reference data (admin always passes has_role).
 CATALOG_EDITORS = (D,)
@@ -42,13 +43,14 @@ NAV_GROUPS: tuple[NavGroup, ...] = (
     NavGroup("", (
         NavItem("home", "Головна", "house", ALL, url_name="home"),
         NavItem("tasks", "Мої задачі", "check2-square", ALL, url_name="workflow:my_tasks"),
+        NavItem("sign", "На підпис", "pen", (A, H), url_name="planning:sign"),
         NavItem("orders", "Замовлення", "clipboard-plus", (A, D, N), url_name="orders:entry"),
-        NavItem("plan", "План меню на день", "calendar-week", (A, D, C, B), url_name="planning:today"),
+        NavItem("plan", "План меню на день", "calendar-week", (A, D, C, B, H), url_name="planning:today"),
         NavItem("kitchen", "Сьогодні на кухні", "fire", (A, D, C), url_name="consumption:kitchen"),
         NavItem("store", "Видача зі складу", "box-arrow-right", (A, D, C, S), url_name="consumption:store"),
-        NavItem("consumption", "Розхід продуктів", "box-seam", (A, D, C, B), url_name="consumption:report"),
-        NavItem("write-off", "Списання", "receipt", (A, D, B), url_name="consumption:write_off"),
-        NavItem("reports", "Звіти", "bar-chart", (A, D, B), url_name="reports:index"),
+        NavItem("consumption", "Розхід продуктів", "box-seam", (A, D, C, B, H), url_name="consumption:report"),
+        NavItem("write-off", "Списання", "receipt", (A, D, B, H), url_name="consumption:write_off"),
+        NavItem("reports", "Звіти", "bar-chart", (A, D, B, H), url_name="reports:index"),
     )),
     NavGroup("Довідники", (
         NavItem("dishes", "Картки-розкладки", "journal-text", (A, D, C, B), url_name="catalog:dish_list"),
