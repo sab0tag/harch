@@ -18,7 +18,7 @@
     <textarea id="discussion-text" name="text" rows="2" maxlength="{{ max }}" class="form-control mb-2" placeholder="{{ example }}"></textarea>
     <div class="d-flex flex-wrap align-items-center gap-3">
       <span class="small text-secondary">Кому окремо:</span>
-      {% for value, label in roles %}<div class="form-check form-check-inline m-0"><input class="form-check-input" type="checkbox" name="call" value="{{ value }}" id="call-{{ value }}"><label class="form-check-label small" for="call-{{ value }}">{{ label }}</label></div>{% endfor %}
+      {% for value, label in roles %}<div class="form-check form-check-inline m-0"><input class="form-check-input" type="checkbox" name="call" value="{{ value }}" id="call-{{ value|slugify }}"><label class="form-check-label small" for="call-{{ value|slugify }}">{{ label }}</label></div>{% endfor %}
       <button class="btn btn-sm btn-primary ms-auto"><i class="bi bi-send me-1"></i>Надіслати</button>
     </div>
     <div class="small text-secondary mt-2">Без галочок — усім учасникам документа (виконавець, перевіряючий, хто вже працював з ним); з галочками — ще й обраним, і в повідомленні видно, кому воно. Без прізвищ і діагнозів пацієнтів.</div>
