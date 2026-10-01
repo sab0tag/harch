@@ -298,6 +298,10 @@ COMMENT_MAX = 1000
 CALLABLE_ROLES = (Role.DIETICIAN, Role.CHEF, Role.STOREKEEPER, Role.ACCOUNTANT, Role.DIRECTOR)
 
 
+def addressee_labels(event):
+    return [Role(r).label for r in event.addressed_to.split(",") if r in Role.values]
+
+
 def discussion(task):
     return task.events.filter(kind=TaskEvent.Kind.COMMENT).select_related("actor").order_by("created_at")
 
@@ -313,18 +317,20 @@ def comment(task, user, text, call_roles=()):
     if not can(user, task, "view"):
         raise PermissionDenied("Недостатньо прав для цієї дії")
     with transaction.atomic():
+        called = [r for r in dict.fromkeys(call_roles) if r in CALLABLE_ROLES]
         event = TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.COMMENT, actor=user,
-                                         from_status=task.status, to_status=task.status, comment=text)
+                                         from_status=task.status, to_status=task.status, comment=text,
+                                         addressed_to=",".join(called))
         from django.contrib.auth import get_user_model
 
         people = {u.pk: u for u in n.makers(task)}
         people.update({u.pk: u for u in n.checkers(task)})
         actors = task.events.exclude(actor__isnull=True).values_list("actor", flat=True)
         people.update({u.pk: u for u in get_user_model().objects.filter(pk__in=actors, is_active=True)})
-        called = [r for r in call_roles if r in CALLABLE_ROLES]
         people.update({u.pk: u for u in get_user_model().objects.filter(role__in=called, is_active=True)})
         people.pop(user.pk, None)
-        n.notify(people.values(), task, f"Коментар: {task}", f"{user.get_full_name() or user}: {text[:300]}")
+        to = f" → {', '.join(addressee_labels(event))}" if called else ""
+        n.notify(people.values(), task, f"Коментар: {task}", f"{user.get_full_name() or user}{to}: {text[:300]}")
     return event
 
 
