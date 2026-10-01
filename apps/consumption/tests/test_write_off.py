@@ -190,3 +190,28 @@ def test_missing_prices_export_access_and_back_link_is_local(client, write_off_d
     assert as_user(client, w.chef).get(WO + "?export=missing-prices").status_code == 403
     html = as_user(client, w.accountant).get("/catalog/products/prices/import/?back=https://evil.example/x").content.decode()
     assert "evil.example" not in html
+
+
+def test_a_price_changed_in_a_write_off_is_that_days_only(client, priced):
+    """A correction of 25.09's price must not change the catalog (today's price) or other days."""
+    w = priced
+    pid = services.live_write_off_rows(w.plan)[0]["product_id"]
+    c = as_user(client, w.accountant)
+    c.post(WO, {"action": "prices", f"price_{pid}": "120"})
+    assert Product.objects.get(pk=pid).price_per_kg == Decimal("100.00")            # catalog untouched
+    row = next(r for r in services.live_write_off_rows(w.plan) if r["product_id"] == pid)
+    assert row["price_per_kg"] == Decimal("120") and row["day_price"]
+    assert "ціна дня" in c.get(WO).content.decode()
+    c.post(WO, {"action": "submit"})
+    line = WriteOff.objects.get(plan=w.plan).lines.get(product_id=pid)
+    assert line.price_per_kg == Decimal("120.00")                                   # frozen with the day's price
+
+
+def test_setting_the_catalog_price_back_drops_the_day_price(client, priced):
+    from apps.consumption.models import WriteOffPrice
+
+    pid = services.live_write_off_rows(priced.plan)[0]["product_id"]
+    c = as_user(client, priced.accountant)
+    c.post(WO, {"action": "prices", f"price_{pid}": "120"})
+    c.post(WO, {"action": "prices", f"price_{pid}": "100"})
+    assert not WriteOffPrice.objects.exists()

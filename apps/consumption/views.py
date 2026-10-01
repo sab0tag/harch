@@ -275,7 +275,7 @@ class WriteOffView(RoleRequiredMixin, View):
             if prices:
                 changed = services.set_prices(wo, request.user, prices)
                 if changed:
-                    messages.success(request, f"Ціни оновлено: {changed}.")
+                    messages.success(request, f"Ціни для цього дня оновлено: {changed}.")
             if request.POST.get("action") == "submit":
                 wf.submit(wo.task, request.user, request.POST.get("comment", ""))
                 messages.success(request, "Списання подано дієтсестрі на звірку.")

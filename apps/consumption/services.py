@@ -266,8 +266,16 @@ def cost_of(grams, price_per_kg):
     return (Decimal(grams) / KG * price_per_kg).quantize(Decimal("0.01"))
 
 
+def day_prices(plan):
+    """{product_id: price} set for this day in its write-off (WriteOffPrice) — they win over the catalog."""
+    from .models import WriteOffPrice
+
+    return dict(WriteOffPrice.objects.filter(write_off__plan=plan).values_list("product_id", "price_per_kg"))
+
+
 def live_write_off_rows(plan):
-    """Quantities: the chef's fact when it exists, else the frozen plan. Prices: current catalog."""
+    """Quantities: the chef's fact when it exists, else the frozen plan. Prices: the day's own (set in this
+    write-off), else the current catalog."""
     from apps.catalog.models import Product
 
     from .models import ActualConsumption
@@ -278,13 +286,14 @@ def live_write_off_rows(plan):
     else:
         base = [(pid, name, b, b, "") for pid, (name, b) in snapshot_by_product(plan).items()]
     prices = dict(Product.objects.filter(pk__in=[r[0] for r in base]).values_list("pk", "price_per_kg"))
+    own = day_prices(plan)
     rows = []
     for pid, name, planned, qty, reason in sorted(base, key=lambda r: uk_sort_key(r[1])):
         if not qty and not planned:
             continue
-        price = prices.get(pid)
+        price = own.get(pid, prices.get(pid))
         rows.append({"product_id": pid, "product_name": name, "planned_brutto_g": planned, "quantity_g": qty,
-                     "price_per_kg": price, "cost": cost_of(qty, price), "reason": reason})
+                     "price_per_kg": price, "cost": cost_of(qty, price), "reason": reason, "day_price": pid in own})
     return rows
 
 
@@ -349,20 +358,33 @@ def write_off_editable(wo, user):
 
 @transaction.atomic
 def set_prices(wo, user, prices: dict):
-    """Accountant fills missing/changed prices right from the write-off screen (history is kept)."""
+    """Prices typed in a write-off are this day's: stored on the write-off, the catalog is left alone — a
+    correction for 25.09 must not change today's price. A product with no catalog price at all gets it in
+    the catalog too (history is kept), so the next days need not ask again. Returns how many changed."""
     from django.core.exceptions import PermissionDenied
 
     from apps.catalog.models import Product
     from apps.core.navigation import PRICE_EDITORS
 
+    from .models import WriteOffPrice
+
     if not (write_off_editable(wo, user) and user.has_role(*PRICE_EDITORS)):
         raise PermissionDenied("Ціни зараз не можна змінювати.")
+    own = day_prices(wo.plan)
     changed = 0
     for product in Product.objects.filter(pk__in=prices):
-        if prices[product.pk] != product.price_per_kg:
-            product.price_per_kg = prices[product.pk]
+        price = prices[product.pk]
+        if price == own.get(product.pk, product.price_per_kg):
+            continue
+        if product.price_per_kg is None:
+            product.price_per_kg = price
             product.save()
-            changed += 1
+        if price == product.price_per_kg:
+            WriteOffPrice.objects.filter(write_off=wo, product=product).delete()   # back to the catalog's
+        else:
+            WriteOffPrice.objects.update_or_create(write_off=wo, product=product,
+                                                   defaults={"price_per_kg": price, "set_by": user})
+        changed += 1
     return changed
 
 
