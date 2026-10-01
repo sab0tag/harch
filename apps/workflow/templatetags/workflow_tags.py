@@ -23,6 +23,11 @@ def discussion(context, task):
     user = getattr(request, "user", None)
     if task is None or user is None or not user.is_authenticated or not wf.can(user, task, "view"):
         return {"show": False}
+    from apps.orgstructure.models import Department
+
+    nurses = [(f"{wf.NURSE_OF}{d.pk}", f"Старша медсестра · {d.name}")
+              for d in Department.objects.filter(pk__in=wf.nurse_departments(task))
+              if not (user.role == Role.DEPT_NURSE and user.department_id == d.pk)]
     comments = list(wf.discussion(task))
     for c in comments:
         c.addressees = wf.addressee_labels(c)
@@ -30,5 +35,5 @@ def discussion(context, task):
         "show": True, "task": task, "comments": comments, "request": request,
         "example": EXAMPLES.get(task.type, "Що уточнити"),
         "csrf_token": context.get("csrf_token"), "max": wf.COMMENT_MAX,
-        "roles": [(r, Role(r).label) for r in wf.CALLABLE_ROLES if r != user.role],
+        "roles": nurses + [(r, Role(r).label) for r in wf.CALLABLE_ROLES if r != user.role],
     }

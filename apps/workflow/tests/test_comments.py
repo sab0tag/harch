@@ -69,3 +69,36 @@ def test_the_order_asks_about_head_counts_not_menus(client, world):
     client.force_login(world.nurse["Терапевтичне"])
     html = client.get(f"/orders/{ther.pk}/{DAY.isoformat()}/").content.decode()
     assert "на №9 двоє чи один" in html and "замінила кашу" not in html
+
+
+def test_dietician_addresses_the_head_nurse_of_the_ordering_department(client, world):
+    ther, surgery = world.depts["Терапевтичне"], world.depts["Хірургічне"]
+    task = open_order(ther, DAY).task
+    client.force_login(world.dietician)
+    html = client.get(f"/orders/{ther.pk}/{DAY.isoformat()}/").content.decode()
+    assert "Старша медсестра · Терапевтичне" in html and "Старша медсестра · Хірургічне" not in html
+    event = wf.comment(task, world.dietician, "Уточніть: на №9 двоє чи один?",
+                       call_roles=[f"dept_nurse:{ther.pk}", f"dept_nurse:{surgery.pk}"])      # another dept: ignored
+    assert event.addressed_to == f"dept_nurse:{ther.pk}"
+    assert wf.addressee_labels(event) == ["Старша медсестра · Терапевтичне"]
+    note = Notification.objects.get(user=world.nurse["Терапевтичне"], title__startswith="Коментар:")
+    assert "→ Старша медсестра · Терапевтичне:" in note.body
+    assert not Notification.objects.filter(user=world.nurse["Хірургічне"], title__startswith="Коментар:").exists()
+    client.force_login(world.nurse["Терапевтичне"])
+    html = client.get(f"/orders/{ther.pk}/{DAY.isoformat()}/").content.decode()
+    assert "→ <span class=\"fw-semibold text-body\">Старша медсестра · Терапевтичне</span>" in html
+    assert 'value="dept_nurse:' not in html                   # she does not address herself
+
+
+def test_a_transfer_lets_the_sending_department_be_addressed(cooking_day):
+    from apps.orders import corrections
+    from apps.orders.tests.test_corrections import diet
+
+    w = cooking_day
+    c = corrections.open_correction(w.depts["Терапевтичне"], DAY, w.nurse["Терапевтичне"])
+    corrections.submit_correction(c, w.nurse["Терапевтичне"], {diet("ОВД").pk: 1}, from_meal="dinner",
+                                  reason="transfer", transfer_from=w.depts["Хірургічне"],
+                                  transfer_out={diet("ЩД").pk: 1})
+    assert set(wf.nurse_departments(c.task)) == {w.depts["Терапевтичне"].pk, w.depts["Хірургічне"].pk}
+    wf.comment(c.task, w.dietician, "Хірургія, підтвердіть ЩД", call_roles=[f"dept_nurse:{w.depts['Хірургічне'].pk}"])
+    assert Notification.objects.filter(user=w.nurse["Хірургічне"], title__startswith="Коментар:").exists()

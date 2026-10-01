@@ -298,8 +298,30 @@ COMMENT_MAX = 1000
 CALLABLE_ROLES = (Role.DIETICIAN, Role.CHEF, Role.STOREKEEPER, Role.ACCOUNTANT, Role.DIRECTOR)
 
 
+NURSE_OF = "dept_nurse:"     # an addressee «the head nurse of department <pk>», on department documents
+
+
+def nurse_departments(task):
+    """Departments whose head nurse may be addressed on this document: its own, and for a transfer the
+    department the patients came from."""
+    ids = [task.department_id] if task.department_id else []
+    correction = getattr(task, "order_correction", None) if task.type == "order_correction" else None
+    if correction is not None and correction.transfer_from_id:
+        ids.append(correction.transfer_from_id)
+    return ids
+
+
 def addressee_labels(event):
-    return [Role(r).label for r in event.addressed_to.split(",") if r in Role.values]
+    from apps.orgstructure.models import Department
+
+    labels = []
+    for r in event.addressed_to.split(","):
+        if r.startswith(NURSE_OF):
+            dept = Department.objects.filter(pk=r[len(NURSE_OF):]).first()
+            labels.append(f"Старша медсестра · {dept}" if dept else "Старша медсестра")
+        elif r in Role.values:
+            labels.append(Role(r).label)
+    return labels
 
 
 def discussion(task):
@@ -317,7 +339,8 @@ def comment(task, user, text, call_roles=()):
     if not can(user, task, "view"):
         raise PermissionDenied("Недостатньо прав для цієї дії")
     with transaction.atomic():
-        called = [r for r in dict.fromkeys(call_roles) if r in CALLABLE_ROLES]
+        nurse_ok = {f"{NURSE_OF}{d}" for d in nurse_departments(task)}
+        called = [r for r in dict.fromkeys(call_roles) if r in CALLABLE_ROLES or r in nurse_ok]
         event = TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.COMMENT, actor=user,
                                          from_status=task.status, to_status=task.status, comment=text,
                                          addressed_to=",".join(called))
@@ -328,6 +351,9 @@ def comment(task, user, text, call_roles=()):
         actors = task.events.exclude(actor__isnull=True).values_list("actor", flat=True)
         people.update({u.pk: u for u in get_user_model().objects.filter(pk__in=actors, is_active=True)})
         people.update({u.pk: u for u in get_user_model().objects.filter(role__in=called, is_active=True)})
+        nurse_depts = [r[len(NURSE_OF):] for r in called if r.startswith(NURSE_OF)]
+        people.update({u.pk: u for u in get_user_model().objects.filter(
+            role=Role.DEPT_NURSE, department_id__in=nurse_depts, is_active=True)})
         people.pop(user.pk, None)
         to = f" → {', '.join(addressee_labels(event))}" if called else ""
         n.notify(people.values(), task, f"Коментар: {task}", f"{user.get_full_name() or user}{to}: {text[:300]}")
