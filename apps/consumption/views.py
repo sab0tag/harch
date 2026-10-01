@@ -11,7 +11,7 @@ from django.views import View
 from apps.accounts.access import RoleRequiredMixin
 from apps.catalog.models import Product
 from apps.core.navigation import PRICE_EDITORS, roles_for
-from apps.orders.corrections import corrections_for
+from apps.orders.corrections import corrections_for, open_for_day
 from apps.orders.views import parse_date
 from apps.planning.models import DailyPlan
 from apps.workflow import services as wf
@@ -132,6 +132,7 @@ class KitchenView(RoleRequiredMixin, View):
             "rejection": task.last_rejection if task and task.status == TaskStatus.REJECTED else None,
             "threshold": services.DEVIATION_REASON_PCT,
             "corrections": [c for c in corrections_for(plan.service_date) if c.task and c.task.status == TaskStatus.APPROVED],
+            "open_corrections": open_for_day(plan.service_date).count() if editable else 0,
             **day_nav(plan.service_date),
         })
 

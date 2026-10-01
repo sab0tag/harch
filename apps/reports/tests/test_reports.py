@@ -5,6 +5,7 @@ from decimal import Decimal
 from io import BytesIO
 
 import pytest
+from apps.core.testing import on_the_day
 from openpyxl import load_workbook
 
 from apps.catalog.models import Product
@@ -89,6 +90,7 @@ def test_reports_access(client, world):
     assert as_user(client, world.accountant).get("/reports/").status_code == 200
 
 
+@on_the_day()
 def test_full_day_end_to_end(client, world):
     """Orders from 3 departments → plan → chef → kitchen fact → write-off closed. All through HTTP."""
     day = DAY.isoformat()

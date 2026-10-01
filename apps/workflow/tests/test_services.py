@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
+from apps.core.testing import on_the_day
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import connection
 
@@ -170,6 +171,7 @@ def test_cancelling_last_open_order_starts_planning(hospital):
     assert Task.objects.filter(type=MENU_PLANNING, service_date=DAY).count() == 1
 
 
+@on_the_day()
 def test_full_day_happy_path(hospital):
     h = hospital
     for i, t in enumerate(orders(h)):

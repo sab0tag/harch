@@ -2,6 +2,7 @@
 from decimal import Decimal
 
 import pytest
+from apps.core.testing import on_the_day
 
 from apps.catalog.models import DishIngredient, Product
 from apps.consumption import services
@@ -64,6 +65,7 @@ def fact_form(plan, changes=None, reasons=None):
     return data
 
 
+@on_the_day()
 def test_big_deviation_needs_reason_then_submits(client, cooking_day):
     c = as_user(client, cooking_day.chef)
     c.get(URL)
@@ -97,6 +99,7 @@ def test_replacement_product_is_added(client, cooking_day):
     assert (a.planned_brutto_g, a.actual_brutto_g, a.reason) == (0, Decimal("1500.00"), "замість судака")
 
 
+@on_the_day()
 def test_dietician_approves_fact_and_write_off_is_created(client, cooking_day):
     c = as_user(client, cooking_day.chef)
     c.get(URL)

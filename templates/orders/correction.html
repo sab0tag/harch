@@ -84,7 +84,7 @@
   <div class="card-body small text-secondary">
     {% if task.status == 'approved' %}Затверджено{% if correction.applied_at %} і додано до розходу дня{% else %} — додасться до розходу, щойно шеф-кухар затвердить план{% endif %}.
     {% elif task.status == 'submitted' %}Подано {{ task.submitted_at|date:"d.m H:i" }}. Очікує дієтсестру.
-    {% elif task.status == 'cancelled' %}Скасовано.
+    {% elif task.status == 'cancelled' %}Скасовано.{% if task.events.last.comment %} {{ task.events.last.comment }}.{% endif %}
     {% elif closed_reason %}{{ closed_reason }}{% else %}Заповнює старша медсестра відділення.{% endif %}
   </div>
   {% if can_review %}

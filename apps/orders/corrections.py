@@ -342,6 +342,21 @@ def take_late_order(task):
     return True
 
 
+def open_for_day(day):
+    """The day's corrections not yet decided: drafts and those waiting for the dietician."""
+    return Task.objects.filter(type=ORDER_CORRECTION, service_date=day).filter(
+        status__in=(*OPEN_FOR_MAKER, TaskStatus.SUBMITTED))
+
+
+def close_for_kitchen_fact(day):
+    """The kitchen has submitted its fact: the day's portions can no longer change, so open corrections are
+    closed (not left hanging with «Факт кухні вже подано»), and their department is told."""
+    for task in open_for_day(day).select_related("department"):
+        wf.close_by_system(task, "Факт кухні за цей день подано — коригування закрито", also_submitted=True)
+        n.notify(n.makers(task), task, f"Коригування закрито: {task}",
+                 "Кухня вже подала фактичний розхід за цей день — порції не змінити. Потрібно — зверніться до шеф-кухаря.")
+
+
 def corrections_for(day, department=None):
     qs = OrderCorrection.objects.filter(service_date=day).select_related(
         "department", "transfer_from", "task").prefetch_related("lines__diet", "lines__department")

@@ -197,6 +197,7 @@ def submit(task, user, comment=""):
         _event(task, TaskEvent.Kind.SUBMITTED, user, prev, comment)
         again = " повторно" if prev == TaskStatus.REJECTED else ""
         n.notify(n.checkers(task), task, f"Подано{again} на перевірку: {task}", comment)
+        task.definition.on_submitted(task)
     return task
 
 

@@ -251,3 +251,35 @@ def test_transfer_form_keeps_the_chosen_department_after_an_error(client, cookin
     assert "Чернетку збережено" in html
     assert {(l.department.name, l.diet.code): l.delta for l in c.lines.all()} == {
         ("Терапевтичне", "ОВД"): 1, ("Хірургічне", "ЩД"): -1}
+
+
+# ------------------------------------------------------------------ the kitchen fact closes the day's corrections
+def test_kitchen_fact_closes_open_corrections_and_tells_the_department(client, cooking_day):
+    from apps.consumption.services import ensure_actuals
+    from apps.core.testing import on_the_day
+
+    w = cooking_day
+    draft = corrections.open_correction(w.depts["Терапевтичне"], DAY, w.nurse["Терапевтичне"])
+    waiting = correct(w, "Хірургічне", {"ЩД": 1}, approve=False)
+    client.force_login(w.chef)
+    assert "незавершені коригування на цей день: 2" in client.get(f"/kitchen/{DAY.isoformat()}/").content.decode()
+    ensure_actuals(w.plan)
+    with on_the_day():
+        wf.submit(w.cooking, w.chef)
+    for c in (draft, waiting):
+        c.task.refresh_from_db()
+        assert c.task.status == TaskStatus.CANCELLED and "Факт кухні" in c.task.events.last().comment
+    assert Notification.objects.filter(user=w.nurse["Терапевтичне"], title__startswith="Коригування закрито").exists()
+    client.force_login(w.nurse["Терапевтичне"])
+    html = client.get(f"/orders/corrections/{draft.pk}/").content.decode()
+    assert "Скасовано. Факт кухні за цей день подано" in html
+
+
+def test_kitchen_fact_not_before_its_day(cooking_day):
+    from django.core.exceptions import ValidationError as VE
+
+    from apps.consumption.services import ensure_actuals
+
+    ensure_actuals(cooking_day.plan)
+    with pytest.raises(VE, match="не раніше 01.10"):
+        wf.submit(cooking_day.cooking, cooking_day.chef)
