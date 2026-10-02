@@ -5,26 +5,57 @@
   <p class="text-secondary mb-4">{{ user.get_role_display }}{% if user.department %} · {{ user.department }}{% endif %}</p>
 
   <div class="row g-3">
+    {% if to_sign is not None %}
     <div class="col-sm-6 col-lg-4">
-      <a href="{% url 'workflow:my_tasks' %}?tab=todo" class="card card-body text-decoration-none h-100">
-        <div class="text-secondary">Мені виконати</div>
-        <div class="display-6 fw-semibold">{{ todo_count }}</div>
-        {% if overdue_count %}<div class="text-danger small"><i class="bi bi-alarm"></i> прострочено: {{ overdue_count }}</div>{% endif %}
-      </a>
-    </div>
-    <div class="col-sm-6 col-lg-4">
-      <a href="{% url 'workflow:my_tasks' %}?tab=review" class="card card-body text-decoration-none h-100">
-        <div class="text-secondary">Мені перевірити</div>
-        <div class="display-6 fw-semibold">{{ review_count }}</div>
-      </a>
-    </div>
-    {% if sees_store %}
-    <div class="col-sm-6 col-lg-4">
-      <a href="{% url 'consumption:store' %}" class="card card-body text-decoration-none h-100">
-        <div class="text-secondary">Видача зі складу</div>
-        <div class="fs-5 fw-semibold mt-1"><i class="bi bi-box-arrow-right me-1"></i>на сьогодні</div>
+      <a href="{% url 'planning:sign' %}" class="card card-body text-decoration-none h-100 harch-tile">
+        <div class="text-secondary"><i class="bi bi-pen me-1"></i>На підпис</div>
+        <div class="display-6 fw-semibold">{{ to_sign }}</div>
+        <div class="small text-secondary">{% if to_sign %}меню-розкладки чекають підпису{% else %}усе підписано{% endif %}</div>
       </a>
     </div>
     {% endif %}
+    {% if shows_todo %}
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'workflow:my_tasks' %}?tab=todo" class="card card-body text-decoration-none h-100 harch-tile">
+        <div class="text-secondary"><i class="bi bi-pencil-square me-1"></i>Мені виконати</div>
+        <div class="display-6 fw-semibold">{{ todo_count }}</div>
+        {% if overdue_count %}<div class="text-danger small"><i class="bi bi-alarm"></i> прострочено: {{ overdue_count }}</div>{% elif not todo_count %}<div class="small text-secondary">усе зроблено</div>{% endif %}
+      </a>
+    </div>
+    {% endif %}
+    {% if shows_review %}
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'workflow:my_tasks' %}?tab=review" class="card card-body text-decoration-none h-100 harch-tile">
+        <div class="text-secondary"><i class="bi bi-check2-square me-1"></i>Мені перевірити</div>
+        <div class="display-6 fw-semibold">{{ review_count }}</div>
+        {% if not review_count %}<div class="small text-secondary">нічого не чекає</div>{% endif %}
+      </a>
+    </div>
+    {% endif %}
+    {% if sees_day %}
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'workflow:day_status' %}" class="card card-body text-decoration-none h-100 harch-tile">
+        <div class="text-secondary"><i class="bi bi-activity me-1"></i>Стан дня</div>
+        <div class="fs-5 fw-semibold mt-1">де зупинився ланцюжок</div>
+        <div class="small text-secondary">замовлення, план, кухня, списання</div>
+      </a>
+    </div>
+    {% endif %}
+    {% if sees_store %}
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'consumption:store' %}" class="card card-body text-decoration-none h-100 harch-tile">
+        <div class="text-secondary"><i class="bi bi-box-arrow-right me-1"></i>Видача зі складу</div>
+        <div class="fs-5 fw-semibold mt-1">на сьогодні</div>
+        <div class="small text-secondary">кількості за затвердженим планом</div>
+      </a>
+    </div>
+    {% endif %}
+    <div class="col-sm-6 col-lg-4">
+      <a href="{% url 'help' %}" class="card card-body text-decoration-none h-100 harch-tile">
+        <div class="text-secondary"><i class="bi bi-question-circle me-1"></i>Інструкція</div>
+        <div class="fs-5 fw-semibold mt-1">що я роблю щодня</div>
+        <div class="small text-secondary">коротко для вашої ролі</div>
+      </a>
+    </div>
   </div>
 {% endblock %}

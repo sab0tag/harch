@@ -153,3 +153,22 @@ def test_django_admin_speaks_as_harchoblok(client, settings):
     assert "Довідники, користувачі та налаштування" in html
     assert "Адміністрування Django" not in html and "Django administration" not in html
     assert "повернутися до системи" in html
+
+
+@pytest.mark.parametrize("role,shown,hidden", [
+    (Role.DEPT_NURSE, ["Мені виконати"], ["Мені перевірити", "На підпис", "Стан дня"]),
+    (Role.DIETICIAN, ["Мені виконати", "Мені перевірити", "Видача зі складу"], ["На підпис"]),
+    (Role.DIRECTOR, ["На підпис"], ["Мені виконати", "Мені перевірити"]),
+    (Role.STOREKEEPER, ["Видача зі складу"], ["Мені виконати", "Мені перевірити"]),
+    (Role.ADMIN, ["Стан дня"], ["Мені виконати"]),
+])
+def test_home_shows_only_tiles_a_role_can_use(login, role, shown, hidden):
+    html = login(role).get("/").content.decode()
+    main = html[html.index("<main"):]
+    assert all(t in main for t in shown) and not any(t in main for t in hidden)
+    assert "favicon.svg" in html
+
+
+def test_favicon_ico_points_to_the_icon(client):
+    r = client.get("/favicon.ico")
+    assert r.status_code == 301 and r.url.endswith("favicon.svg")

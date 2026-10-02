@@ -11,6 +11,14 @@ from . import health
 from .navigation import PLACEHOLDERS, roles_for
 
 
+def favicon(request):
+    """Tools that ask for /favicon.ico (PDF viewers, bookmarks) get the site icon."""
+    from django.shortcuts import redirect
+    from django.templatetags.static import static
+
+    return redirect(static("favicon.svg"), permanent=True)
+
+
 def robots_txt(request):
     """S6-04: nothing here is for search engines (the X-Robots-Tag header says the same)."""
     return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
@@ -31,12 +39,25 @@ def healthz_full(request):
 def home(request):
     from apps.workflow import services as wf
 
-    return render(request, "core/home.html", {
-        "todo_count": wf.todo_for(request.user).count(),
-        "review_count": wf.review_for(request.user).count(),
-        "overdue_count": wf.todo_for(request.user).overdue().count(),
-        "sees_store": request.user.has_role(*roles_for("store")),
-    })
+    from django.conf import settings
+
+    user = request.user
+    makes = user.role in (Role.DEPT_NURSE, Role.DIETICIAN, Role.CHEF, Role.ACCOUNTANT)
+    checks = user.role in (Role.DIETICIAN, Role.CHEF) or (user.role == Role.ADMIN and settings.ADMIN_CAN_APPROVE)
+    context = {
+        # Only the tiles a role can ever have something in: no «Мені перевірити 0» for a nurse forever.
+        "shows_todo": makes, "shows_review": checks,
+        "todo_count": wf.todo_for(user).count() if makes else 0,
+        "review_count": wf.review_for(user).count() if checks else 0,
+        "overdue_count": wf.todo_for(user).overdue().count() if makes else 0,
+        "sees_store": user.has_role(*roles_for("store")) and user.role != Role.ADMIN,
+        "sees_day": user.role == Role.ADMIN,
+    }
+    if user.role == Role.DIRECTOR:
+        from apps.planning.services import to_sign
+
+        context["to_sign"] = sum(p.signed_at is None for p in to_sign())
+    return render(request, "core/home.html", context)
 
 
 @login_required

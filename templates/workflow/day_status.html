@@ -2,9 +2,9 @@
 {% block title %}Стан дня{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-  <a class="btn btn-outline-secondary" href="?date={{ prev_day.isoformat }}" title="Попередній день">‹</a>
+  <div class="harch-daynav"><a class="btn btn-outline-secondary" href="?date={{ prev_day.isoformat }}" title="Попередній день">‹</a>
   <h1 class="h3 mb-0">Стан дня · {{ anchor|date:"d.m.Y, l" }}</h1>
-  <a class="btn btn-outline-secondary" href="?date={{ next_day.isoformat }}" title="Наступний день">›</a>
+  <a class="btn btn-outline-secondary" href="?date={{ next_day.isoformat }}" title="Наступний день">›</a></div>
   {% if anchor != today %}<a class="btn btn-link" href="?">сьогодні</a>{% endif %}
 </div>
 <p class="text-secondary mb-3">Де зараз кожен документ і де щось зупинилось. Лише перегляд: «Відкрити» веде до документа, де можна допомогти.</p>
