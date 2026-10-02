@@ -115,7 +115,7 @@ def open_correction(department, day, user):
         raise ValidationError(why)
     correction = OrderCorrection.objects.create(department=department, service_date=day, from_meal=meals[0],
                                                 created_by=user)
-    correction.task = wf.create_task(ORDER_CORRECTION, day, department=department, subject=correction)
+    correction.task = wf.create_task(ORDER_CORRECTION, day, department=department, subject=correction, actor=user)
     correction.save(update_fields=["task"])
     return correction
 
@@ -339,6 +339,8 @@ def take_late_order(task):
         for d, p in portions.items()])
     if plan.is_frozen:
         add_extra_lines(correction, plan)
+    wf.system_note(task, "План уже в шеф-кухаря — замовлення пішло на кухню, склад і в списання як «Пізнє замовлення» "
+                         + ("зі сніданку." if plan.is_frozen else "зі сніданку, щойно план затвердять."))
     return True
 
 

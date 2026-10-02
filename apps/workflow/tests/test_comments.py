@@ -102,3 +102,37 @@ def test_a_transfer_lets_the_sending_department_be_addressed(cooking_day):
     assert set(wf.nurse_departments(c.task)) == {w.depts["Терапевтичне"].pk, w.depts["Хірургічне"].pk}
     wf.comment(c.task, w.dietician, "Хірургія, підтвердіть ЩД", call_roles=[f"dept_nurse:{w.depts['Хірургічне'].pk}"])
     assert Notification.objects.filter(user=w.nurse["Хірургічне"], title__startswith="Коментар:").exists()
+
+
+# ------------------------------------------------------------------ what the system did on its own is visible
+def test_system_steps_are_named_with_their_reason(client, cooking_day):
+    from apps.workflow.models import Task, TaskEvent
+
+    w = cooking_day
+    created = w.plan.task.events.get(kind=TaskEvent.Kind.CREATED)
+    assert created.actor is None and "план меню відкрито автоматично" in created.comment
+    cooking = Task.objects.get(type="cooking", service_date=DAY).events.get(kind=TaskEvent.Kind.CREATED)
+    assert "кухні відкрито задачу автоматично" in cooking.comment
+    client.force_login(w.admin)
+    html = client.get("/tasks/audit/?by=system").content.decode()
+    assert "Система" in html and "план меню відкрито автоматично" in html
+    assert "Олена" not in html and str(w.dietician) not in html.split("<tbody>")[1]   # people filtered out
+    assert "Система" in client.get(f"/tasks/{w.plan.task.pk}/").content.decode()
+
+
+def test_an_order_opened_on_screen_names_who_opened_it(client, world):
+    from apps.workflow.models import TaskEvent
+
+    ther = world.depts["Терапевтичне"]
+    client.force_login(world.nurse["Терапевтичне"])
+    client.get(f"/orders/{ther.pk}/{DAY.isoformat()}/")
+    e = TaskEvent.objects.get(task__department=ther, kind=TaskEvent.Kind.CREATED)
+    assert e.actor == world.nurse["Терапевтичне"]
+
+
+def test_seeded_events_are_marked_in_the_timeline(client, cooking_day):
+    from apps.workflow.models import TaskEvent
+
+    TaskEvent.objects.update(seeded=True)
+    client.force_login(cooking_day.admin)
+    assert "навчальні дані" in client.get(f"/tasks/{cooking_day.plan.task.pk}/").content.decode()

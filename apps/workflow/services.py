@@ -105,8 +105,10 @@ def can(user, task, action) -> bool:
 
 
 # ------------------------------------------------------------------ creation
-def ensure_task(definition: TaskDefinition | str, service_date: date, *, department=None, parent=None, subject=None):
-    """Create the task once; repeated calls (or races) return the existing one."""
+def ensure_task(definition: TaskDefinition | str, service_date: date, *, department=None, parent=None, subject=None,
+                actor=None, reason=""):
+    """Create the task once; repeated calls (or races) return the existing one.
+    actor/reason go into its «Створено» event: who made it, or — with no actor — why the system did."""
     if isinstance(definition, str):
         definition = get(definition)
     if definition.per_department and department is None:
@@ -127,14 +129,15 @@ def ensure_task(definition: TaskDefinition | str, service_date: date, *, departm
                 parent=parent,
                 subject=subject,
             )
-            TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.CREATED, to_status=task.status)
+            TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.CREATED, to_status=task.status, actor=actor,
+                                     comment=reason or ("" if actor else "Створено автоматично"))
     except IntegrityError:
         return Task.objects.get(**lookup), False
     n.notify(n.makers(task), task, f"Нова задача: {task}", definition.description)
     return task, True
 
 
-def create_task(definition: TaskDefinition | str, service_date: date, *, department=None, subject=None):
+def create_task(definition: TaskDefinition | str, service_date: date, *, department=None, subject=None, actor=None):
     """A new task every time — for repeatable types (a department may correct its order several times a day).
     The maker creates it for herself, so nobody is notified until it is submitted."""
     if isinstance(definition, str):
@@ -148,8 +151,14 @@ def create_task(definition: TaskDefinition | str, service_date: date, *, departm
         maker_role=definition.maker_role, checker_role=definition.checker_role,
         deadline=definition.deadline(service_date), subject=subject,
     )
-    TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.CREATED, to_status=task.status)
+    TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.CREATED, to_status=task.status, actor=actor)
     return task
+
+
+def system_note(task, text):
+    """A step the system took on its own (no person): visible in the timeline and the audit log."""
+    return TaskEvent.objects.create(task=task, kind=TaskEvent.Kind.AUTO, from_status=task.status,
+                                    to_status=task.status, comment=text)
 
 
 # ------------------------------------------------------------------ transitions

@@ -38,6 +38,8 @@ class Command(BaseCommand):
             days = [today + timedelta(days=i) for i in range(1, days_ahead + 1)]
         departments = list(Department.objects.filter(is_active=True).order_by("sort_order", "name"))
         for day in days:
-            created = sum(ensure_task(ORDER_SUBMISSION, day, department=d)[1] for d in departments)
+            created = sum(ensure_task(ORDER_SUBMISSION, day, department=d,
+                                      reason="Нічний планувальник: замовлення на наступний робочий день")[1]
+                          for d in departments)
             open_plan_if_ready(day)      # safety net: a day whose last missing department was switched off
             self.stdout.write(f"{day:%Y-%m-%d}: created {created}, departments {len(departments)}")

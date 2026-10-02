@@ -93,7 +93,7 @@
         <li class="list-group-item">
           <div class="d-flex gap-2 small"><span class="fw-semibold">{{ e.get_kind_display }}</span>
             <span class="text-secondary ms-auto text-nowrap">{{ e.created_at|date:"d.m H:i" }}</span></div>
-          <div class="small text-secondary">{{ e.actor|default:"система" }}</div>
+          <div class="small text-secondary">{% include "workflow/_event_actor.html" %}</div>
           {% if e.comment %}<div class="small mt-1" style="white-space: pre-line">{{ e.comment }}</div>{% endif %}
         </li>
       {% endfor %}

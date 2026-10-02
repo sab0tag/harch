@@ -182,8 +182,14 @@ class AuditView(RoleRequiredMixin, View):
         kind = request.GET.get("kind", "")
         if kind:
             qs = qs.filter(kind=kind)
+        by = request.GET.get("by", "")
+        if by == "system":
+            qs = qs.filter(actor__isnull=True)
+        elif by == "people":
+            qs = qs.filter(actor__isnull=False, seeded=False)
         page = Paginator(qs, 100).get_page(request.GET.get("page"))
-        return render(request, "workflow/audit.html", {"page": page, "kinds": TaskEvent.Kind.choices, "kind": kind})
+        return render(request, "workflow/audit.html", {"page": page, "kinds": TaskEvent.Kind.choices, "kind": kind,
+                                                       "by": by})
 
 
 # ------------------------------------------------------------- notifications

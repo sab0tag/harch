@@ -75,7 +75,7 @@ class OrderEditView(RoleRequiredMixin, View):
         # An admin may still open a past day to catch it up (docs/08_ops.md).
         if department.is_active and services.opens_on(day) <= timezone.localdate() and (
                 user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and day >= timezone.localdate())):
-            return services.open_order(department, day)
+            return services.open_order(department, day, user)
         order = DailyOrder.objects.filter(department=department, service_date=day).select_related("task").first()
         if order is None:
             raise OrderNotOpened(department)
@@ -221,7 +221,8 @@ class OrderSummaryView(RoleRequiredMixin, View):
             return back
         if action == "create_tasks":
             created = sum(
-                wf.ensure_task(ORDER_SUBMISSION, day, department=d)[1]
+                wf.ensure_task(ORDER_SUBMISSION, day, department=d, actor=request.user,
+                               reason="Створено кнопкою «Створити задачі для відділень»")[1]
                 for d in Department.objects.filter(is_active=True)
             )
             messages.success(request, f"Створено задач: {created}.")
