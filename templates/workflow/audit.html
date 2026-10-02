@@ -3,10 +3,15 @@
 {% block content %}
 <h1 class="h3 mb-3">Журнал подій</h1>
 {% include "workflow/_audit_tabs.html" with tab="tasks" %}
-<form method="get" class="mb-3" style="max-width: 320px">
-  <select name="kind" class="form-select" onchange="this.form.submit()">
+<form method="get" class="d-flex flex-wrap gap-2 mb-3">
+  <select name="kind" class="form-select" style="max-width: 280px" onchange="this.form.submit()" aria-label="Подія">
     <option value="">Усі події</option>
     {% for value, label in kinds %}<option value="{{ value }}"{% if value == kind %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="by" class="form-select" style="max-width: 280px" onchange="this.form.submit()" aria-label="Хто">
+    <option value="">Хто: усі</option>
+    <option value="system"{% if by == 'system' %} selected{% endif %}>Хто: система (автоматично)</option>
+    <option value="people"{% if by == 'people' %} selected{% endif %}>Хто: люди</option>
   </select>
 </form>
 <div class="card"><div class="table-responsive">
@@ -18,8 +23,8 @@
         <td class="text-nowrap small">{{ e.created_at|date:"d.m.Y H:i" }}</td>
         <td>{{ e.get_kind_display }}</td>
         <td><a href="{% url 'workflow:task_detail' e.task_id %}">{{ e.task }}</a></td>
-        <td class="small">{{ e.actor|default:"система" }}</td>
-        <td class="small text-secondary">{{ e.comment|truncatechars:80 }}</td>
+        <td class="small">{% include "workflow/_event_actor.html" %}</td>
+        <td class="small text-secondary">{{ e.comment|truncatechars:160 }}</td>
       </tr>
     {% empty %}<tr><td colspan="5" class="text-center text-secondary py-4">Подій ще немає</td></tr>{% endfor %}
     </tbody>

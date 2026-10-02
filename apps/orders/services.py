@@ -33,9 +33,10 @@ def orderable_diets():
     return Diet.objects.filter(is_active=True, has_own_menus=True).order_by("sort_order", "code")
 
 
-def open_order(department, service_date):
+def open_order(department, service_date, user=None):
     """Order + its task for (department, date); creates both if the scheduler hasn't yet."""
-    task, _ = wf.ensure_task(ORDER_SUBMISSION, service_date, department=department)
+    task, _ = wf.ensure_task(ORDER_SUBMISSION, service_date, department=department, actor=user,
+                             reason="Відкрито на екрані замовлення" if user else "")
     order, created = DailyOrder.objects.get_or_create(
         department=department, service_date=service_date, defaults={"task": task}
     )

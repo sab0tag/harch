@@ -150,7 +150,8 @@ def force_planning(service_date, user):
         raise PermissionDenied
     if not approved_portions(service_date):
         raise ValidationError("Немає затверджених замовлень з порціями — план не потрібен.")
-    task, _ = wf.ensure_task(MENU_PLANNING, service_date)
+    task, _ = wf.ensure_task(MENU_PLANNING, service_date, actor=user,
+                             reason="Сформовано після терміну подачі — не всі відділення подали замовлення")
     plan = open_plan(service_date)
     sync_portions(plan)
     return plan

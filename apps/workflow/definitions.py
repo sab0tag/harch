@@ -87,7 +87,8 @@ def open_plan_if_ready(service_date, parent=None):
 
     from .services import ensure_task
 
-    ensure_task(MENU_PLANNING, service_date, parent=parent)
+    ensure_task(MENU_PLANNING, service_date, parent=parent,
+                reason="Усі відділення подали замовлення, їх затверджено — план меню відкрито автоматично")
     sync_portions(open_plan(service_date))
     return True
 
@@ -105,7 +106,8 @@ def department_switched(department):
     for day in days:
         if department.is_active:
             if order_deadline(day) > now and not Task.objects.filter(type=MENU_PLANNING, service_date=day).exists():
-                ensure_task(ORDER_SUBMISSION, day, department=department)
+                ensure_task(ORDER_SUBMISSION, day, department=department,
+                            reason="Відділення увімкнено — додано до днів, що ще збирають замовлення")
         else:
             open_plan_if_ready(day)
 
@@ -179,11 +181,17 @@ def _after_write_off_approved(task):
     approve_write_off(task)
 
 
+NEXT_REASON = {
+    COOKING: "План меню затверджено — кухні відкрито задачу автоматично",
+    WRITE_OFF: "Факт кухні затверджено — бухгалтерії відкрито списання автоматично",
+}
+
+
 def _next(type_):
     def hook(task):
         from .services import ensure_task
 
-        ensure_task(type_, task.service_date, parent=task)
+        ensure_task(type_, task.service_date, parent=task, reason=NEXT_REASON.get(type_, ""))
 
     return hook
 

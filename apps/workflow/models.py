@@ -119,12 +119,15 @@ class TaskEvent(models.Model):
         REOPENED = "reopened", "Відкрито заново"
         SIGNED = "signed", "Підписано"
         RECALLED = "recalled", "Відкликано"
+        AUTO = "auto", "Автоматично"
         COMMENT = "comment", "Коментар"
 
     task = models.ForeignKey(Task, related_name="events", on_delete=models.CASCADE)
     kind = models.CharField(max_length=20, choices=Kind.choices)
     # A comment's addressees picked by the author (role values, comma-separated); empty = the document's people.
     addressed_to = models.CharField(max_length=200, blank=True, default="")
+    # Training copy: written by the nightly replay of «yesterday and today» (reset_demo), not by a person.
+    seeded = models.BooleanField("навчальні дані", default=False)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     from_status = models.CharField(max_length=20, blank=True)
     to_status = models.CharField(max_length=20, blank=True)

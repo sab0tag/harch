@@ -31,4 +31,7 @@ class Command(BaseCommand):
         call_command("load_seed", str(Path(settings.BASE_DIR) / "seed"), verbosity=0, stdout=quiet)
         call_command("sync_departments", stdout=quiet)       # the hospital's real departments, as on the live site
         call_command("demo_days", days=days, live=True, stdout=self.stdout)
+        from apps.workflow.models import TaskEvent
+
+        TaskEvent.objects.update(seeded=True)    # the replay acted «as» the training users: say so
         self.stdout.write(self.style.SUCCESS("training copy reset"))
