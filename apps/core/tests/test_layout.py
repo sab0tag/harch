@@ -139,3 +139,17 @@ def test_create_demo_users_is_idempotent(settings):
     assert User.objects.count() == len(DEMO) + Department.objects.filter(is_active=True).count()
     assert User.objects.get(username="nurse").department is not None
     assert User.objects.get(username="nurse-therapy").department.name == "Терапевтичне"
+
+
+def test_django_admin_speaks_as_harchoblok(client, settings):
+    from apps.accounts.tests.factories import UserFactory
+
+    admin = UserFactory(role=Role.ADMIN, is_staff=True, is_superuser=True)
+    client.force_login(admin)
+    html = client.get("/admin/").content.decode()
+    from django.utils.html import escape
+
+    assert "Харчоблок" in html and escape(settings.HOSPITAL_NAME) in html
+    assert "Довідники, користувачі та налаштування" in html
+    assert "Адміністрування Django" not in html and "Django administration" not in html
+    assert "повернутися до системи" in html
