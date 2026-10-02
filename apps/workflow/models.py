@@ -118,6 +118,7 @@ class TaskEvent(models.Model):
         OVERDUE = "overdue", "Прострочено"
         REOPENED = "reopened", "Відкрито заново"
         SIGNED = "signed", "Підписано"
+        RECALLED = "recalled", "Відкликано"
         COMMENT = "comment", "Коментар"
 
     task = models.ForeignKey(Task, related_name="events", on_delete=models.CASCADE)

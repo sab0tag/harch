@@ -44,11 +44,13 @@
                     hx-get="{% url 'planning:preview' plan.service_date.isoformat %}" hx-include="#plan-form"
                     hx-target="#plan-consumption" hx-swap="outerHTML" hx-trigger="change">
               <option value="">— оберіть меню —</option>
-              {% for m in b.options %}<option value="{{ m.pk }}"{% if m.pk == b.entry.menu_id %} selected{% endif %}>Меню №{{ m.number }} · {{ m.n_kcal|num:0 }} ккал{% if not m.verified %} · не перевірено{% endif %}</option>{% endfor %}
+              {% for m in b.options %}<option value="{{ m.pk }}"{% if m.pk == b.entry.menu_id %} selected{% endif %}>Меню №{{ m.number }} · {{ m.n_kcal|num:0 }} ккал{% if m.recent_day %} · було {{ m.recent_day|date:"d.m" }}{% endif %}{% if not m.verified %} · не перевірено{% endif %}</option>{% endfor %}
             </select>
           {% else %}
             <div>{% if b.entry.menu %}{% if can_see_menus %}<a href="{% url 'menus:detail' b.entry.menu.number %}">Меню №{{ b.entry.menu.number }}</a>{% else %}Меню №{{ b.entry.menu.number }}{% endif %}{% else %}<span class="text-danger">меню не обрано</span>{% endif %}</div>
           {% endif %}
+          {% if b.repeat %}<div class="small text-warning-emphasis mt-1"><i class="bi bi-arrow-repeat me-1"></i>Це меню вже було {{ b.repeat|date:"d.m" }} — для різноманіття можна обрати інше.</div>{% endif %}
+          {% if b.recent %}<div class="small text-secondary mt-1">Останні дні: {% for day, number in b.recent %}{{ day|date:"d.m" }} №{{ number }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>{% endif %}
           {% if b.norms %}
           <div class="d-flex flex-wrap gap-3 small mt-2">
             {% for r in b.norms %}<span>{{ r.label }}: {% include "menus/_norm_cell.html" %}</span>{% endfor %}
@@ -72,7 +74,13 @@
       </div>
     {% endif %}
     </form>
-    {% if not editable and task.status == 'submitted' and not can_review %}
+    {% if can_recall %}
+      <form method="post" action="{% url 'workflow:task_action' task.pk 'recall' %}" class="card card-body mb-3">{% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <p class="small text-secondary mb-2"><i class="bi bi-info-circle me-1"></i>План подано шеф-кухарю. Поки він не вирішив, план можна забрати й змінити меню.</p>
+        <div><button class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Відкликати план</button></div>
+      </form>
+    {% elif not editable and task.status == 'submitted' and not can_review %}
       <p class="small text-secondary"><i class="bi bi-info-circle me-1"></i>План подано — редагування закрите. Потрібно змінити? Попросіть шеф-кухаря повернути план з коментарем.</p>
     {% endif %}
 

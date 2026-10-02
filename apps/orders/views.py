@@ -156,6 +156,7 @@ class OrderEditView(RoleRequiredMixin, View):
             "prev_day": order.service_date - timedelta(days=1),
             "next_day": order.service_date + timedelta(days=1),
             "can_review": task is not None and wf.can(request.user, task, "approve"),
+            "can_recall": task is not None and wf.can(request.user, task, "recall"),
             "copy_from": services.previous_portions(order.department, order.service_date)
                          if services.is_editable_by(order, request.user) else None,
             "can_reopen": task is not None and wf.can(request.user, task, "reopen"),

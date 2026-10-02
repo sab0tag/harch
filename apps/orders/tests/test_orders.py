@@ -251,3 +251,17 @@ def test_copy_from_the_last_approved_day_with_its_corrections(client, world):
     html = as_user(client, nurse).get(URL.format(ther.pk)).content.decode()
     assert "Як 30.09" in html and "ОВД 12, №9 2" in html and 'id="copy-prev-data"' in html
     assert not DailyOrder.objects.get(department=ther, service_date=DAY).lines.exists()   # nothing copied by itself
+
+
+def test_nurse_recalls_her_submitted_order(client, world):
+    ther = world.depts["Терапевтичне"]
+    c = as_user(client, world.nurse["Терапевтичне"])
+    post_order(c, ther, ОВД="10")
+    html = c.get(URL.format(ther.pk)).content.decode()
+    assert "Відкликати" in html
+    task = Task.objects.get(department=ther)
+    c.post(f"/tasks/{task.pk}/recall/")
+    task.refresh_from_db()
+    assert task.status == TaskStatus.IN_PROGRESS
+    post_order(c, ther, ОВД="12")
+    assert DailyOrder.objects.get(department=ther).total_portions == 12

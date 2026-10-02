@@ -219,3 +219,48 @@ def test_undated_plan_page_submits(client, approved_day):
         assert client.post("/plan/", data).status_code == 302           # an old undated page posts fine too
     assert Task.objects.get(type=MENU_PLANNING).status == TaskStatus.SUBMITTED
     assert plan.entries.get(diet__code="ОВД").menu.number == 2
+
+
+def test_dietician_recalls_a_submitted_plan_and_changes_a_menu(client, approved_day):
+    from apps.workflow.models import Notification
+
+    w = approved_day
+    plan = DailyPlan.objects.get(service_date=DAY)
+    c = as_user(client, w.dietician)
+    c.post(PLAN, {**menus_form(plan, {"ОВД": 1, "ЩД": 81, "№9": 221}), "action": "submit"})
+    task = Task.objects.get(type=MENU_PLANNING)
+    assert "Відкликати план" in c.get(PLAN).content.decode()
+    c.post(f"/tasks/{task.pk}/recall/", {"next": PLAN})
+    task.refresh_from_db()
+    assert task.status == TaskStatus.IN_PROGRESS and task.events.last().kind == "recalled"
+    assert Notification.objects.filter(user=w.chef, title__startswith="Відкликано").exists()
+    assert 'name="menu_' in c.get(PLAN).content.decode()                 # the dropdowns are back
+    c.post(PLAN, {**menus_form(plan, {"ОВД": 2, "ЩД": 81, "№9": 221}), "action": "submit"})
+    assert plan.entries.get(diet__code="ОВД").menu.number == 2
+
+
+def test_recall_only_by_the_submitter_and_before_a_decision(client, approved_day):
+    from django.core.exceptions import PermissionDenied
+
+    w = approved_day
+    plan = DailyPlan.objects.get(service_date=DAY)
+    as_user(client, w.dietician).post(PLAN, {**menus_form(plan, {"ОВД": 1, "ЩД": 81, "№9": 221}), "action": "submit"})
+    task = Task.objects.get(type=MENU_PLANNING)
+    with pytest.raises(PermissionDenied):
+        wf.recall(task, w.chef)                                           # the checker returns, not recalls
+    wf.approve(task, w.chef)
+    with pytest.raises(wf.InvalidTransition):
+        wf.recall(task, w.dietician)                                      # decided: too late
+
+
+def test_plan_points_out_a_menu_repeated_within_six_days(client, approved_day):
+    from datetime import timedelta
+
+    w = approved_day
+    ovd = diet("ОВД")
+    prev = DailyPlan.objects.create(service_date=DAY - timedelta(days=2))
+    prev.entries.create(diet=ovd, menu=Menu.objects.get(number=5), portions=3)
+    plan = DailyPlan.objects.get(service_date=DAY)
+    plan.entries.filter(diet=ovd).update(menu=Menu.objects.get(number=5))
+    html = as_user(client, w.dietician).get(PLAN).content.decode()
+    assert "Останні дні: 29.09 №5" in html and "Це меню вже було 29.09" in html and "· було 29.09" in html
