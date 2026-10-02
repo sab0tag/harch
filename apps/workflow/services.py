@@ -94,6 +94,10 @@ def can(user, task, action) -> bool:
         )
     if action == "cancel":
         return user.role == Role.ADMIN and task.status in OPEN_FOR_MAKER
+    if action == "recall":
+        # The one who submitted takes it back while nobody has decided yet (e.g. to change a menu).
+        return task.status == TaskStatus.SUBMITTED and user.pk == task.submitted_by_id and is_maker(user, task) \
+            and (user.role == Role.ADMIN or not day_is_over(task))
     if action == "reopen":
         # A past day's order closed (at night, or by hand): the admin may open it again to catch the day up.
         return user.role == Role.ADMIN and task.status == TaskStatus.CANCELLED and day_is_over(task)
@@ -178,6 +182,7 @@ _ALLOWED_FROM = {
     "reject": (TaskStatus.SUBMITTED,),
     "cancel": OPEN_FOR_MAKER,
     "reopen": (TaskStatus.CANCELLED,),
+    "recall": (TaskStatus.SUBMITTED,),
 }
 
 
@@ -225,6 +230,21 @@ def approve(task, user, comment=""):
         _event(task, TaskEvent.Kind.APPROVED, user, prev, comment)
         n.notify([task.submitted_by], task, f"Затверджено: {task}", comment)
         task.definition.on_approved(task)
+    return task
+
+
+def recall(task, user, comment=""):
+    """The submitter takes a submitted task back before the checker decides: it is theirs to edit again
+    (in progress, not «returned»), and the checkers are told so they don't open it in vain."""
+    with transaction.atomic():
+        task = _locked(task)
+        _require(user, task, "recall")
+        prev = task.status
+        task.status = TaskStatus.IN_PROGRESS
+        task.save(update_fields=["status"])
+        _event(task, TaskEvent.Kind.RECALLED, user, prev, comment.strip())
+        n.notify(n.checkers(task), task, f"Відкликано: {task}",
+                 f"{user.get_full_name() or user} забрав(ла) документ на доопрацювання до вашого рішення.")
     return task
 
 

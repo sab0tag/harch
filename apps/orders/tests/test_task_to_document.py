@@ -37,7 +37,7 @@ def test_submitted_order_explains_how_to_get_it_back(client, world, order_task):
     diet_pk = world.depts["Терапевтичне"].default_diet_id
     c.post(doc_url(world), {"action": "submit", f"diet_{diet_pk}": "10"})
     assert Task.objects.get(pk=order_task.pk).status == "submitted"
-    assert "Попросіть дієтсестру повернути" in c.get(doc_url(world)).content.decode()
+    assert "Відкликати" in c.get(doc_url(world)).content.decode()            # she can take it back herself
     assert "повернув(ла) задачу" in c.get(f"/tasks/{order_task.pk}/").content.decode()
 
 

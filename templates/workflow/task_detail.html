@@ -45,6 +45,11 @@
     {% endif %}
     {% if correction_hint %}<p class="small text-secondary"><i class="bi bi-info-circle me-1"></i>{{ correction_hint }}</p>{% endif %}
 
+    {% if allowed.recall %}
+    <form method="post" action="{% url 'workflow:task_action' task.pk 'recall' %}" class="mb-3">{% csrf_token %}
+      <button class="btn btn-outline-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Відкликати</button>
+      <span class="small text-secondary ms-1">— забрати на доопрацювання, поки ніхто не вирішив</span></form>
+    {% endif %}
     {% if allowed.submit and not subject_url or allowed.approve or allowed.reject or allowed.cancel %}
     <div class="card mb-3"><div class="card-body">
       <h2 class="h6 mb-3">Дії</h2>

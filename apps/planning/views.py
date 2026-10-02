@@ -43,6 +43,9 @@ def consumption_rows(entries_with_menus):
     return [(t.product_name, t.brutto_g, t.netto_g) for t in totals]
 
 
+REPEAT_DAYS = 6     # the same menu again within this many days is pointed out (a 7-day cycle repeats on day 7)
+
+
 class PlanView(RoleRequiredMixin, View):
     allowed_roles = roles_for("plan")
 
@@ -91,13 +94,28 @@ class PlanView(RoleRequiredMixin, View):
         options = {}
         for m in with_menu_nutrition(Menu.objects.filter(diet_id__in=diet_ids, is_active=True).order_by("number")):
             options.setdefault(m.diet_id, []).append(m)
+        from apps.planning.models import DailyPlanEntry
+
+        since = plan.service_date - timedelta(days=REPEAT_DAYS)
+        recent = {}
+        for diet_id, day, number in (DailyPlanEntry.objects
+                                     .filter(diet_id__in=diet_ids, menu__isnull=False,
+                                             plan__service_date__gte=since, plan__service_date__lt=plan.service_date)
+                                     .order_by("-plan__service_date").values_list("diet_id", "plan__service_date", "menu__number")):
+            recent.setdefault(diet_id, []).append((day, number))
+        for diet_id, items in options.items():
+            last = {num: day for day, num in reversed(recent.get(diet_id, []))}
+            for m in items:
+                m.recent_day = last.get(m.number)
         blocks = []
         for e in entries:
             chosen = next((m for m in options.get(e.diet_id, []) if e.menu_id == m.pk), None)
             norms = None
             if chosen:
                 norms = norm_rows(Nutrition(chosen.n_protein, chosen.n_fat, chosen.n_carbs, chosen.n_kcal).rounded(), e.diet)
-            blocks.append({"entry": e, "options": options.get(e.diet_id, []), "chosen": chosen, "norms": norms})
+            repeat = chosen.recent_day if chosen else None
+            blocks.append({"entry": e, "options": options.get(e.diet_id, []), "chosen": chosen, "norms": norms,
+                           "recent": recent.get(e.diet_id, []), "repeat": repeat})
         if plan.is_frozen:
             consumption = snapshot_totals(plan)
         else:
@@ -114,6 +132,7 @@ class PlanView(RoleRequiredMixin, View):
             "can_review": task is not None and wf.can(request.user, task, "approve"),
             "drift": services.portions_drift(plan),
             "can_sign": services.can_sign(request.user, plan),
+            "can_recall": task is not None and wf.can(request.user, task, "recall"),
             "can_see_menus": request.user.has_role(*roles_for("menus")),
             "can_see_kitchen": request.user.has_role(*roles_for("kitchen")),
             "prev_day": plan.service_date - timedelta(days=1),
