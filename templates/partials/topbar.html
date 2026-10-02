@@ -6,7 +6,7 @@
     </button>
     <div class="me-auto" style="min-width: 0">
       <div class="fw-semibold text-truncate">{% if DEMO_MODE %}<span class="badge text-bg-warning me-1">Навчання</span>{% endif %}{{ HOSPITAL_NAME }}</div>
-      <div class="small text-secondary text-truncate">Сьогодні: {% now "l, j E Y" %}</div>
+      <div class="small text-secondary text-truncate"><span class="d-none d-sm-inline">Сьогодні: {% now "l, j E Y" %}</span><span class="d-sm-none">{% now "l, j E" %}</span></div>
     </div>
     <div class="dropdown">
       <button class="btn btn-light position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false"

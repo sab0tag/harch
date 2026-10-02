@@ -65,3 +65,47 @@ body { background: #f4f6f5; }
 }
 
 .harch-footer { font-size: .8rem; color: #8a968f; text-align: center; padding: .75rem 1rem 1rem; }
+
+/* ---------------------------------------------------------------- brand green instead of Bootstrap blue */
+:root {
+  --bs-primary: #2f6f4f; --bs-primary-rgb: 47, 111, 79;
+  --bs-link-color: #2f6f4f; --bs-link-color-rgb: 47, 111, 79;
+  --bs-link-hover-color: #1f3a2d; --bs-link-hover-color-rgb: 31, 58, 45;
+  --bs-primary-text-emphasis: #1f3a2d; --bs-primary-bg-subtle: #e3eee8; --bs-primary-border-subtle: #b9d4c5;
+  --bs-focus-ring-color: rgba(47, 111, 79, .25);
+}
+.btn-primary {
+  --bs-btn-bg: #2f6f4f; --bs-btn-border-color: #2f6f4f;
+  --bs-btn-hover-bg: #275d42; --bs-btn-hover-border-color: #275d42;
+  --bs-btn-active-bg: #1f3a2d; --bs-btn-active-border-color: #1f3a2d;
+  --bs-btn-disabled-bg: #2f6f4f; --bs-btn-disabled-border-color: #2f6f4f;
+  --bs-btn-focus-shadow-rgb: 47, 111, 79;
+}
+.btn-outline-primary {
+  --bs-btn-color: #2f6f4f; --bs-btn-border-color: #2f6f4f;
+  --bs-btn-hover-bg: #2f6f4f; --bs-btn-hover-border-color: #2f6f4f;
+  --bs-btn-active-bg: #1f3a2d; --bs-btn-active-border-color: #1f3a2d;
+  --bs-btn-disabled-color: #2f6f4f; --bs-btn-disabled-border-color: #2f6f4f;
+  --bs-btn-focus-shadow-rgb: 47, 111, 79;
+}
+.btn-link { --bs-btn-color: #2f6f4f; --bs-btn-hover-color: #1f3a2d; }
+.nav-tabs .nav-link, .nav-pills .nav-link { color: #2f6f4f; }
+.nav-pills { --bs-nav-pills-link-active-bg: #2f6f4f; }
+.nav-tabs .nav-link.active { color: #1f3a2d; }
+.form-control:focus, .form-select:focus, .form-check-input:focus { border-color: #8fbfa5; box-shadow: 0 0 0 .25rem rgba(47, 111, 79, .2); }
+.form-check-input:checked { background-color: #2f6f4f; border-color: #2f6f4f; }
+.page-link { --bs-pagination-color: #2f6f4f; --bs-pagination-active-bg: #2f6f4f; --bs-pagination-active-border-color: #2f6f4f; }
+.dropdown-menu { --bs-dropdown-link-active-bg: #2f6f4f; }
+.text-primary { color: #2f6f4f !important; }
+
+/* ---------------------------------------------------------------- day navigation: ‹ title › stay on one row */
+.harch-daynav { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.harch-daynav h1 { min-width: 0; }
+@media (max-width: 575.98px) {
+  .harch-daynav { width: 100%; }
+  .harch-daynav h1 { flex: 1 1 auto; font-size: 1.2rem; }
+}
+
+/* ---------------------------------------------------------------- home tiles */
+a.card.harch-tile { transition: box-shadow .15s, border-color .15s; color: inherit; }
+a.card.harch-tile:hover { border-color: #8fbfa5; box-shadow: 0 .25rem .75rem rgba(31, 58, 45, .08); }

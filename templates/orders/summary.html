@@ -2,9 +2,9 @@
 {% block title %}Замовлення на {{ day|date:"d.m.Y" }}{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-  <a class="btn btn-outline-secondary" href="?date={{ prev_day.isoformat }}">‹</a>
+  <div class="harch-daynav"><a class="btn btn-outline-secondary" href="?date={{ prev_day.isoformat }}">‹</a>
   <h1 class="h3 mb-0">Замовлення на {{ day|date:"d.m.Y, l" }}</h1>
-  <a class="btn btn-outline-secondary" href="?date={{ next_day.isoformat }}">›</a>
+  <a class="btn btn-outline-secondary" href="?date={{ next_day.isoformat }}">›</a></div>
   <form method="get" class="ms-auto"><input type="date" name="date" value="{{ day.isoformat }}" class="form-control" onchange="this.form.submit()"></form>
 </div>
 

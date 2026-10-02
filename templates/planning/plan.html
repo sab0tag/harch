@@ -2,9 +2,9 @@
 {% block title %}План меню {{ plan.service_date|date:"d.m.Y" }}{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' prev_day.isoformat %}">‹</a>
+  <div class="harch-daynav"><a class="btn btn-outline-secondary" href="{% url 'planning:plan' prev_day.isoformat %}">‹</a>
   <h1 class="h3 mb-0">План меню на {{ plan.service_date|date:"d.m.Y, l" }}</h1>
-  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' next_day.isoformat %}">›</a>
+  <a class="btn btn-outline-secondary" href="{% url 'planning:plan' next_day.isoformat %}">›</a></div>
   {% if task %}<span class="badge badge-status-{{ task.status }} fs-6 ms-md-2">{{ task.get_status_display }}</span>{% endif %}
   {% if plan.is_frozen %}<span class="badge text-bg-dark fs-6"><i class="bi bi-lock"></i> Розхід зафіксовано</span>{% endif %}
   {% if plan.signed_at %}<span class="badge text-bg-success fs-6"><i class="bi bi-pen"></i> Підписано {{ plan.signed_at|date:"d.m H:i" }}</span>

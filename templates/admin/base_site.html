@@ -3,6 +3,7 @@
 {% block title %}{% if DEMO_MODE %}[Навчання] {% endif %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title }}{% endblock %}
 
 {% block extrastyle %}{{ block.super }}
+<link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
 <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
 <style>
   :root, html[data-theme="light"], html[data-theme="dark"] {
@@ -15,6 +16,7 @@
   html[data-theme="dark"] { --link-fg: #8fd3ad; --link-hover-color: #b9e6cb; }
   #site-name a { display: inline-flex; align-items: center; gap: .5rem; }
   #site-name .hospital { font-size: .8rem; font-weight: 400; opacity: .8; }
+  .harch-demo-banner .d-md-none { display: none; }
   .harch-demo-banner { background: #f5b300; color: #2b2100; padding: .4rem 1rem; text-align: center; font-size: .9rem; }
   .harch-admin-footer { padding: 1rem 40px; color: var(--body-quiet-color); font-size: .8rem; }
 </style>
