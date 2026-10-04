@@ -15,3 +15,10 @@ demo.{$DOMAIN} {
 	encode zstd gzip
 	reverse_proxy demo-web:8000
 }
+
+# Протокол (a separate personal app, repo sab0tag/protocol): its API container lives in /opt/protocol-api and is
+# reached over the `harch_edge` network. Needs a DNS record for api too.
+api.{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy protocol-api:8080
+}

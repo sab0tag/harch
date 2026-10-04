@@ -131,9 +131,16 @@ services:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks: [default, edge]
     depends_on:
       web:
         condition: service_healthy
+
+# Caddy also fronts the Протокол API (a separate compose project in /opt/protocol-api): it joins only this
+# network, so it reaches Caddy but not the databases on `default`.
+networks:
+  edge:
+    name: harch_edge
 
 volumes:
   pgdata:
