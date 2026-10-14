@@ -1,0 +1,34 @@
+# Risk tier label on every PR, from the changed paths (.github/scripts/risk_tier.py).
+# risk:low PRs may be auto-merged once the tests are green; risk:high wait for the owner's approval.
+name: risk
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Classify
+        id: tier
+        run: echo "tier=$(python3 .github/scripts/risk_tier.py origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
+      - name: Label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          TIER: ${{ steps.tier.outputs.tier }}
+        run: |
+          gh label create risk:low  --color 2da44e --description "docs/tests/deps bounds only — may auto-merge" --force
+          gh label create risk:high --color d1242f --description "touches the app — needs the owner's approval" --force
+          other=$([ "$TIER" = low ] && echo high || echo low)
+          gh pr edit "$PR" --add-label "risk:$TIER" --remove-label "risk:$other"
+          echo "Risk tier: $TIER" >> "$GITHUB_STEP_SUMMARY"
