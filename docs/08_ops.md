@@ -128,3 +128,21 @@ docker compose -f compose.prod.yml start web scheduler
 
 `harch shell` — Django shell, `harch psql` — консоль базы, `harch manage <команда>` — любой `manage.py`,
 `harch follow web` — логи в реальном времени, `harch ssh` — на сервер в `/opt/harch`.
+
+## Автоматизация: агенты Claude (routines)
+
+Тексты заданий — `.claude/commands/`; рутины (claude.ai → Routines) только вызывают их. Каждая рутина —
+новая сессия, отчёт приходит на почту.
+
+| Кто | Когда | Делает | Не делает |
+|---|---|---|---|
+| Стюард (`steward`) | пт 17:47 | сверяет план с влитыми PR (docs-PR), пишет issue «План тижня»: пропозиції, «Чекаємо від лікарні», що в роботі | код, слияние |
+| Виконавець (`executor`) | щоночі | один issue с меткой `go` → ветка `exec/*`, тесты, `/code-review`, PR; чинит свои PR | слияние, `main`, больше одного пункта |
+| Залежності (`deps-check`) | пн 08:52 | `pip-audit`; PR только при уязвимости | мажоры, код |
+
+**Ворота.** CI вешает на каждый PR `risk:low` или `risk:high` по изменённым путям
+(`.github/scripts/risk_tier.py`): low — только `docs/`, `.claude/`, тесты, границы версий тех же пакетов.
+`risk:high` сливает только владелец. Автослияние `risk:low` включается после двух недель наблюдения
+(GitHub → Settings → General → «Allow auto-merge»; ветка `main` защищена: обязательны `pytest` и `label`).
+
+**Управление.** Взять пункт в работу — issue с меткой `go`. Остановить всё — выключить рутины в claude.ai.
