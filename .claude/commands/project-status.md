@@ -20,6 +20,11 @@ description: Еженедельная сверка плана спринтов �
   список того, что ждём, по-украински, коротко, каждому пункту — что именно прислать и зачем
   (без технических терминов: его пересылают дієтсестрі). Внизу — дата обновления.
 
+GitHub — через GitHub MCP, а если его инструментов нет — `gh api`: найти issue
+`gh api "repos/sab0tag/harch/issues?state=open&per_page=100"` (по `title`), создать
+`gh api -X POST repos/sab0tag/harch/issues -f title=… -f body=…`, переписать
+`gh api -X PATCH repos/sab0tag/harch/issues/<N> -f body=…`, PR — `gh api -X POST repos/sab0tag/harch/pulls …`.
+
 **Никогда:** код и миграции; новый issue каждую неделю (только редактировать тот же); закрывать чужие issue;
 слияние PR; персональные данные пациентов.
 

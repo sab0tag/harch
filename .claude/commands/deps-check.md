@@ -18,6 +18,8 @@ description: Еженедельная проверка зависимостей 
   (поднять нижнюю границу до исправленной версии), полный `pytest` и `python manage.py makemigrations --check`
   зелёные локально (Postgres 16: `pg_ctlcluster 16 main start`, база/пользователь `harch`/`harch`), PR в `main`
   с описанием: пакет, CVE/GHSA, было → стало, результаты тестов. Коммит: `deps: …`.
+  PR — через GitHub MCP, а если его инструментов нет — `gh api -X POST repos/sab0tag/harch/pulls
+  -f title=… -f head=deps/<дата> -f base=main -f body=…`.
 
 **Никогда:** мажорные обновления; правки кода, кроме минимально нужных для совместимости; слияние PR;
 пуш в `main`; добавление lock-файла без запроса.
