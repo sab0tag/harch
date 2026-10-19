@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
+from apps.accounts.models import Role
 from apps.catalog.models import Diet
 from apps.workflow import services as wf
 from apps.workflow.definitions import ORDER_SUBMISSION
@@ -34,7 +35,12 @@ def orderable_diets():
 
 
 def open_order(department, service_date, user=None):
-    """Order + its task for (department, date); creates both if the scheduler hasn't yet."""
+    """Open an order as its nurse/admin; user=None is reserved for trusted system callers."""
+    if user is not None and not (
+        user.is_authenticated and user.is_active
+        and (user.role == Role.ADMIN or (user.role == Role.DEPT_NURSE and user.department_id == department.pk))
+    ):
+        raise PermissionDenied("Відкрити замовлення може лише медсестра свого відділення або адміністратор.")
     task, _ = wf.ensure_task(ORDER_SUBMISSION, service_date, department=department, actor=user,
                              reason="Відкрито на екрані замовлення" if user else "")
     order, created = DailyOrder.objects.get_or_create(
