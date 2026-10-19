@@ -1,0 +1,41 @@
+name: Nuclei local DAST
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  nuclei-local:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create isolated CI environment
+        run: |
+          printf 'DJANGO_SECRET_KEY=local-nuclei-ci-only\\nDATABASE_URL=postgres://harch:harch@db:5432/harch\\nDJANGO_ALLOWED_HOSTS=127.0.0.1,localhost\\n' > .env
+      - name: Start isolated test app
+        run: docker compose up -d --build db web
+      - name: Wait for local HTTP service
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS --max-time 2 http://127.0.0.1:8000/ -o /dev/null; then exit 0; fi
+            sleep 2
+          done
+          docker compose logs --tail 100 web
+          exit 1
+      - name: Scan local service with checked-in template
+        run: |
+          docker run --rm --network host -v "$PWD/security/nuclei:/templates:ro" ghcr.io/projectdiscovery/nuclei:latest \
+            -u http://127.0.0.1:8000 -t /templates/headers.yaml \
+            -rate-limit 1 -concurrency 1 -timeout 5 -retries 0 -no-color \
+            -jsonl -output /dev/stdout > nuclei-report.jsonl
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuclei-local-report
+          path: nuclei-report.jsonl
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stop test environment
+        if: always()
+        run: docker compose down -v
