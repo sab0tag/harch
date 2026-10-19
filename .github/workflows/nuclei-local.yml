@@ -9,6 +9,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Create isolated CI environment
+        run: |
+          printf 'DJANGO_SECRET_KEY=local-nuclei-ci-only\\nDATABASE_URL=postgres://harch:harch@db:5432/harch\\nDJANGO_ALLOWED_HOSTS=127.0.0.1,localhost\\n' > .env
       - name: Start isolated test app
         run: docker compose up -d --build db web
       - name: Wait for local HTTP service
