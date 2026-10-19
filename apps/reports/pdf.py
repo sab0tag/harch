@@ -1,4 +1,4 @@
-"""Printable menu-rozkladka (WeasyPrint) — built only from the frozen snapshot."""
+"""Printable menu-rozkladka: frozen quantities and identifiers, historical diet labels."""
 from collections import OrderedDict
 from decimal import Decimal
 
@@ -8,20 +8,25 @@ from django.template.loader import render_to_string
 
 
 def menu_rozkladka_context(plan):
+    from apps.catalog.models import Diet
     from apps.consumption.models import ConsumptionSnapshotLine
     from apps.consumption.services import slot_label, slot_order, snapshot_totals
 
     lines = list(ConsumptionSnapshotLine.objects.filter(plan=plan, correction__isnull=True).order_by("id"))  # the plan as approved
     order = slot_order()
+    # Names are not copied into snapshot lines; recover labels at approval, never from today's catalog.
+    # Older imports may lack history: the frozen code still identifies the diet and keeps every dish.
+    labels = {d.code: d.name for d in Diet.history.as_of(plan.approved_at).filter(
+        code__in={line.diet_code for line in lines}
+    )} if plan.approved_at else {}
     diets = OrderedDict()
-    for e in plan.entries.select_related("diet", "menu").order_by("diet__sort_order"):
-        if e.menu_id:
-            diets[e.diet.code] = {"code": e.diet.code, "name": e.diet.name, "menu": e.menu.number,
-                                  "portions": e.portions, "slots": OrderedDict(), "kcal": Decimal(0)}
+    for line in lines:
+        diets.setdefault(line.diet_code, {
+            "code": line.diet_code, "name": labels.get(line.diet_code, ""), "menu": line.menu_number,
+            "portions": line.portions, "slots": OrderedDict(), "kcal": Decimal(0),
+        })
     for l in sorted(lines, key=lambda l: order.get(l.meal_slot, 99)):
-        d = diets.get(l.diet_code)
-        if d is None:
-            continue
+        d = diets[l.diet_code]
         d["kcal"] += l.kcal_total
         slot = d["slots"].setdefault(slot_label(l.meal_slot), OrderedDict())
         slot.setdefault(l.dish_card_no, {"card_no": l.dish_card_no, "name": l.dish_name, "output_g": l.dish_output_g})
