@@ -1,4 +1,5 @@
 """Bounded read-only parallel checks for core project invariants."""
+import argparse
 import concurrent.futures
 import json
 from pathlib import Path
@@ -45,6 +46,12 @@ def run():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", help="Write machine-readable report to this file")
+    args = parser.parse_args()
     report = run()
-    print(json.dumps(report, ensure_ascii=False, indent=2))
+    rendered = json.dumps(report, ensure_ascii=False, indent=2)
+    print(rendered)
+    if args.output:
+        Path(args.output).write_text(rendered + "\\n", encoding="utf-8")
     raise SystemExit(0 if report["complete"] else 1)
