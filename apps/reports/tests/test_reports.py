@@ -13,7 +13,7 @@ from apps.consumption.models import WriteOff
 from apps.consumption.tests.conftest import DAY, ORDERS, as_user, cooking_day, diet, write_off_day, world  # noqa: F401
 from apps.reports.pdf import menu_rozkladka_context
 from apps.workflow.definitions import COOKING, MENU_PLANNING, ORDER_SUBMISSION, WRITE_OFF
-from apps.workflow.models import Notification, Task
+from apps.workflow.models import Notification, Task, TaskStatus
 
 pytestmark = pytest.mark.django_db
 
@@ -208,6 +208,49 @@ def test_menu_vymoha_access(client, cooking_day):
     assert as_user(client, UserFactory(role=Role.STOREKEEPER)).get(url).status_code == 200
     assert as_user(client, cooking_day.nurse["Терапевтичне"]).get(url).status_code == 403
     assert as_user(client, cooking_day.dietician).get(url).status_code == 200
+
+
+@pytest.mark.parametrize("transition", ["reject", "recall"])
+def test_returned_write_off_export_uses_current_draft_prices(write_off_day, transition):
+    """A returned draft must not keep exporting the values frozen by its previous submission."""
+    from apps.consumption import services
+    from apps.consumption.models import WriteOff
+    from apps.planning.models import DailyPlan
+    from apps.reports.exports import menu_vymoha_data
+    from apps.workflow import services as wf
+
+    w = write_off_day
+    Product.objects.update(price_per_kg=Decimal("20.00"))
+    wf.submit(w.write_off, w.accountant)
+    frozen = WriteOff.objects.get(plan=w.plan).lines.first()
+    assert frozen.price_per_kg == Decimal("20.00")
+
+    if transition == "reject":
+        wf.reject(w.write_off, w.dietician, "Уточніть ціну")
+        expected_status = TaskStatus.REJECTED
+    else:
+        wf.recall(w.write_off, w.accountant)
+        expected_status = TaskStatus.IN_PROGRESS
+
+    wo = WriteOff.objects.select_related("task", "plan").get(plan=w.plan)
+    assert wo.task.status == expected_status
+    services.set_prices(wo, w.accountant, {frozen.product_id: Decimal("30.00")})
+    live = next(row for row in services.write_off_rows(wo) if row["product_id"] == frozen.product_id)
+    assert live["price_per_kg"] == Decimal("30.00")
+
+    exported = menu_vymoha_data(DailyPlan.objects.get(pk=w.plan.pk))
+    row = next(row for row in exported["rows"] if row["name"] == frozen.product_name)
+    assert row["price_per_kg"] == live["price_per_kg"]
+    assert row["cost"] == live["cost"]
+    assert exported["source"] == "fact"
+
+    wf.submit(wo.task, w.accountant)
+    resubmitted = WriteOff.objects.get(plan=w.plan)
+    assert resubmitted.lines.get(product_id=frozen.product_id).price_per_kg == Decimal("30.00")
+    exported = menu_vymoha_data(DailyPlan.objects.get(pk=w.plan.pk))
+    row = next(row for row in exported["rows"] if row["name"] == frozen.product_name)
+    assert row["price_per_kg"] == Decimal("30.00")
+    assert exported["source"] == "submitted"
 
 
 # ------------------------------------------------------------------ S7-03 бракеражний журнал
