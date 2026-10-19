@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CHECKS = {
+MARKERS = {\n    "apps/consumption/calc.py": ("Decimal", "brutto_pp", "netto_pp"),\n    "apps/consumption/models.py": ("ConsumptionSnapshotLine", "brutto_total_g"),\n    "apps/accounts/models.py": ("department", "Role"),\n    "apps/workflow/services.py": ("is_checker", "submitted_by_id", "TaskEvent"),\n    "apps/workflow/registry.py": ("TaskDefinition", "register"),\n    "apps/planning/models.py": ("plan_entry_unique_diet", "self.menu.diet_id"),\n}\n\nCHECKS = {
     "consumption": ["apps/consumption/calc.py", "apps/consumption/models.py"],
     "authorization": ["apps/accounts/models.py", "apps/workflow/services.py"],
     "workflow": ["apps/workflow/services.py", "apps/workflow/registry.py"],
@@ -21,8 +21,8 @@ def run():
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(inspect, scope, paths) for scope, paths in CHECKS.items()]
         workers = [future.result() for future in futures]
-    complete = len(workers) == len(CHECKS) and all(w["status"] == "complete" for w in workers)
-    return {"complete": complete, "workers": workers, "warning": "File-presence smoke check only; does not verify correctness or execute tests."}
+    complete = len(workers) == len(CHECKS) and all(w["status"] == "complete" and not w["findings"] for w in workers)
+    return {"complete": complete, "workers": workers, "warning": "Static invariant-marker smoke check only; does not prove correctness or execute application tests."}
 
 
 if __name__ == "__main__":
