@@ -53,5 +53,5 @@ if __name__ == "__main__":
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
     print(rendered)
     if args.output:
-        Path(args.output).write_text(rendered + "\\n", encoding="utf-8")
+        Path(args.output).write_text(rendered + "\n", encoding="utf-8")
     raise SystemExit(0 if report["complete"] else 1)
