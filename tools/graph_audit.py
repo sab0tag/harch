@@ -4,7 +4,16 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MARKERS = {\n    "apps/consumption/calc.py": ("Decimal", "brutto_pp", "netto_pp"),\n    "apps/consumption/models.py": ("ConsumptionSnapshotLine", "brutto_total_g"),\n    "apps/accounts/models.py": ("department", "Role"),\n    "apps/workflow/services.py": ("is_checker", "submitted_by_id", "TaskEvent"),\n    "apps/workflow/registry.py": ("TaskDefinition", "register"),\n    "apps/planning/models.py": ("plan_entry_unique_diet", "self.menu.diet_id"),\n}\n\nCHECKS = {
+MARKERS = {
+    "apps/consumption/calc.py": ("Decimal", "brutto_pp", "netto_pp"),
+    "apps/consumption/models.py": ("ConsumptionSnapshotLine", "brutto_total_g"),
+    "apps/accounts/models.py": ("department", "Role"),
+    "apps/workflow/services.py": ("is_checker", "submitted_by_id", "TaskEvent"),
+    "apps/workflow/registry.py": ("TaskDefinition", "register"),
+    "apps/planning/models.py": ("plan_entry_unique_diet", "self.menu.diet_id"),
+}
+
+CHECKS = {
     "consumption": ["apps/consumption/calc.py", "apps/consumption/models.py"],
     "authorization": ["apps/accounts/models.py", "apps/workflow/services.py"],
     "workflow": ["apps/workflow/services.py", "apps/workflow/registry.py"],
@@ -14,7 +23,17 @@ MARKERS = {\n    "apps/consumption/calc.py": ("Decimal", "brutto_pp", "netto_pp"
 
 def inspect(scope, paths):
     missing = [path for path in paths if not (ROOT / path).is_file()]
-    return {"scope": scope, "status": "failed" if missing else "complete", "inspected_files": [p for p in paths if p not in missing], "errors": ["Missing: " + p for p in missing], "findings": []}
+    findings = []
+    for path in paths:
+        if path in missing:
+            continue
+        content = (ROOT / path).read_text(encoding="utf-8")
+        for marker in MARKERS.get(path, ()):
+            if marker not in content:
+                findings.append({"path": path, "marker": marker, "status": "needs_human_review"})
+    return {"scope": scope, "status": "failed" if missing else "complete",
+            "inspected_files": [p for p in paths if p not in missing],
+            "errors": ["Missing: " + p for p in missing], "findings": findings}
 
 
 def run():
