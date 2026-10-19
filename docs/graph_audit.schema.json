@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Harch graph worker result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "scope",
+    "commit_sha",
+    "inspected_files",
+    "findings",
+    "errors"
+  ],
+  "properties": {
+    "status": {
+      "enum": [
+        "complete",
+        "failed"
+      ]
+    },
+    "scope": {
+      "enum": [
+        "consumption",
+        "authorization",
+        "workflow",
+        "data_integrity"
+      ]
+    },
+    "commit_sha": {
+      "type": "string",
+      "minLength": 7
+    },
+    "inspected_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "invariant",
+          "severity",
+          "path",
+          "line",
+          "claim",
+          "evidence",
+          "reproduction",
+          "confidence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "invariant": {
+            "type": "string",
+            "pattern": "^INV-0[1-9]$"
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reproduction": {
+            "type": "string"
+          },
+          "confidence": {
+            "enum": [
+              "unverified",
+              "confirmed",
+              "rejected",
+              "needs_human_review"
+            ]
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
