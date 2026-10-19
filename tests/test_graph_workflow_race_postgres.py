@@ -14,6 +14,7 @@ from django.db import connection
 
 from apps.workflow.models import Task, TaskEvent, TaskStatus
 from apps.workflow.services import InvalidTransition, approve
+from apps.workflow.registry import TaskDefinition, register, unregister
 
 
 @pytest.mark.django_db(transaction=True)
@@ -28,8 +29,9 @@ def test_two_simultaneous_approvals_produce_one_event(monkeypatch):
     checker_a = User.objects.create_user(username="race-checker-a", password="test-only", role="dietician")
     checker_b = User.objects.create_user(username="race-checker-b", password="test-only", role="dietician")
 
+    register(TaskDefinition(type="graph_race_test", title="Race test", maker_role="dietician", checker_role="dietician", deadline=lambda day: None))
     task = Task.objects.create(
-        type="menu_planning",
+        type="graph_race_test",
         service_date=date(2030, 1, 1),
         status=TaskStatus.SUBMITTED,
         maker_role="dietician",
@@ -42,9 +44,6 @@ def test_two_simultaneous_approvals_produce_one_event(monkeypatch):
     monkeypatch.setattr(services, "n", type("Notifications", (), {"notify": staticmethod(lambda *a, **kw: None)})())
     monkeypatch.setattr(services, "_substitution_mark", lambda task, user, comment: comment)
     monkeypatch.setattr(services, "_admin_mark", lambda user, verb, comment: comment)
-    monkeypatch.setattr(services, "_event", services._event)
-    definition = task.definition
-    monkeypatch.setattr(definition, "on_approved", lambda task: None)
 
     barrier = Barrier(2)
 
@@ -68,3 +67,4 @@ def test_two_simultaneous_approvals_produce_one_event(monkeypatch):
     assert sorted(outcomes) == ["approved", "rejected"]
     assert task.status == TaskStatus.APPROVED
     assert TaskEvent.objects.filter(task=task, kind=TaskEvent.Kind.APPROVED).count() == 1
+    unregister("graph_race_test")
