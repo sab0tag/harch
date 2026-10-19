@@ -4,6 +4,8 @@ from decimal import Decimal
 
 from django.db import transaction
 
+from apps.planning.models import DailyPlan
+
 from apps.core.text import uk_sort_key
 
 from .calc import PlanInput, compute_lines
@@ -16,6 +18,9 @@ class AlreadyFrozen(Exception):
 
 @transaction.atomic
 def freeze(plan):
+    # Serialize concurrent freeze attempts on the same plan before checking the snapshot.
+    # A second caller waits for the first transaction, then sees its committed rows.
+    plan = DailyPlan.objects.select_for_update().get(pk=plan.pk)
     if ConsumptionSnapshotLine.objects.filter(plan=plan).exists():
         raise AlreadyFrozen(f"Розхід для {plan} уже зафіксовано")
     entries = [PlanInput(e.menu.number, e.portions) for e in plan.entries.select_related("menu") if e.menu_id]
