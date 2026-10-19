@@ -178,6 +178,7 @@ def menu_vymoha_data(plan):
     from apps.catalog.models import MealSlot, Product
     from apps.consumption.models import ActualConsumption, ConsumptionSnapshotLine
     from apps.consumption.services import cost_of
+    from apps.workflow.models import TaskStatus
 
     snapshot = ConsumptionSnapshotLine.objects.filter(plan=plan)
     eaters = OrderedDict()
@@ -198,7 +199,11 @@ def menu_vymoha_data(plan):
         p["planned_g"] += grams
 
     wo = getattr(plan, "write_off", None)     # reverse one-to-one: None until the accountant opens it
-    lines = {l.product_id: l for l in wo.lines.all()} if wo is not None and wo.prepared_at else {}
+    frozen = (
+        wo is not None and wo.prepared_at
+        and wo.task is not None and wo.task.status in (TaskStatus.SUBMITTED, TaskStatus.APPROVED)
+    )
+    lines = {line.product_id: line for line in wo.lines.all()} if frozen else {}
     if lines:
         issued = {pid: (l.product_name, l.quantity_g, l.price_per_kg) for pid, l in lines.items()}
         source = "approved" if wo.approved_at else "submitted"
