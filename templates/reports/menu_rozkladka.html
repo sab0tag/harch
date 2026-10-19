@@ -27,7 +27,7 @@
 
 <table>
   <thead><tr><th>Дієта</th><th>Меню №</th><th class="num">Порцій</th><th class="num">Ккал на 1 особу</th></tr></thead>
-  <tbody>{% for d in diets %}<tr><td>{{ d.code }} — {{ d.name }}</td><td>{{ d.menu }}</td><td class="num">{{ d.portions }}</td><td class="num">{{ d.kcal_pp|num:0 }}</td></tr>{% endfor %}</tbody>
+  <tbody>{% for d in diets %}<tr><td>{{ d.code }}{% if d.name %} — {{ d.name }}{% endif %}</td><td>{{ d.menu }}</td><td class="num">{{ d.portions }}</td><td class="num">{{ d.kcal_pp|num:0 }}</td></tr>{% endfor %}</tbody>
 </table>
 
 {% for d in diets %}
