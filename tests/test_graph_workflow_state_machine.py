@@ -1,5 +1,6 @@
 """State-machine regressions for real workflow transitions and failed-action atomicity."""
 from datetime import date
+from dataclasses import replace
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -111,8 +112,7 @@ def test_submit_hook_failure_rolls_back_state_and_events(scenario, monkeypatch):
     def fail_hook(_task):
         raise RuntimeError("simulated downstream failure")
 
-    definition = task.definition
-    monkeypatch.setattr(definition, "on_submitted", fail_hook)
+    register(replace(task.definition, on_submitted=fail_hook))
     with pytest.raises(RuntimeError, match="simulated downstream failure"):
         wf.submit(task, maker)
     assert snapshot(task) == before
