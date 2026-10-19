@@ -2,6 +2,8 @@ name: Graph audit smoke
 on:
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
 permissions:
   contents: read
 jobs:
@@ -18,4 +20,12 @@ jobs:
       - name: Test graph runner
         run: python -m unittest discover -s tests -p test_graph_audit_runner.py -v
       - name: Run graph audit smoke
-        run: python tools/graph_audit.py
+        run: python tools/graph_audit.py --output graph-audit-report.json
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: graph-audit-report
+          path: graph-audit-report.json
+          if-no-files-found: warn
+          retention-days: 14
