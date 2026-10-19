@@ -1,0 +1,25 @@
+id: harch-security-headers
+
+info:
+  name: Harch HTTP security headers check
+  author: harch-security
+  severity: info
+  description: Inspect presence of browser security headers on a local test instance.
+  tags: harch,headers,local
+
+http:
+  - method: GET
+    path:
+      - '{{BaseURL}}/'
+    redirects: false
+    max-redirects: 0
+    matchers-condition: or
+    matchers:
+      - type: dsl
+        name: missing-nosniff
+        dsl:
+          - '!contains(to_lower(all_headers), "x-content-type-options: nosniff")'
+      - type: dsl
+        name: missing-frame-protection
+        dsl:
+          - '!contains(to_lower(all_headers), "x-frame-options:") && !contains(to_lower(all_headers), "content-security-policy:")'
