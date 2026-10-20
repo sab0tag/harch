@@ -5,6 +5,7 @@ Local prototype only. Never expose to agents as an approval authority.
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 from .controller import Controller, State, NEXT, AGENTS
@@ -26,7 +27,7 @@ def _digest(previous, task_id, sequence, payload):
 class EventStore:
     def __init__(self, path):
         self.path = str(Path(path))
-        with self._connect() as db:
+        with closing(self._connect()) as db:
             db.execute("""CREATE TABLE IF NOT EXISTS autonomy_events (
                 task_id TEXT NOT NULL,
                 sequence INTEGER NOT NULL CHECK (sequence > 0),
@@ -54,7 +55,7 @@ class EventStore:
         if not isinstance(expected_sequence, int) or expected_sequence < 0:
             raise ValueError("Invalid sequence")
         payload = _canonical(event)
-        with self._connect() as db:
+        with closing(self._connect()) as db:
             try:
                 db.execute("BEGIN IMMEDIATE")
                 row = db.execute(
@@ -80,7 +81,7 @@ class EventStore:
         """Verify hash chain and legal transitions, reconstruct a read-only snapshot."""
         if not isinstance(task_id, str) or not task_id:
             raise ValueError("Invalid task id")
-        with self._connect() as db:
+        with closing(self._connect()) as db:
             rows = db.execute(
                 "SELECT sequence,payload,previous_hash,event_hash FROM autonomy_events WHERE task_id=? ORDER BY sequence",
                 (task_id,),
@@ -129,7 +130,8 @@ class EventStore:
     def record_advance(self, task_id, *, evidence, passed, approved=False):
         """Replay authoritative history, advance once, atomically append by version."""
         snapshot = self.replay(task_id)
-        controller = Controller(task_id=task_id, state=State(snapshot["state"]), events=snapshot["events"])
+        # A copy: advance() appends to its list, and expected_sequence must be the length *before* it.
+        controller = Controller(task_id=task_id, state=State(snapshot["state"]), events=list(snapshot["events"]))
         controller.advance(evidence=evidence, passed=passed, approved=approved)
         self.append(task_id, controller.events[-1], expected_sequence=len(snapshot["events"]))
         return controller.snapshot()

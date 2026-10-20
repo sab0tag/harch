@@ -57,3 +57,34 @@ def test_isolation_between_tasks(tmp_path):
     store = EventStore(tmp_path / "events.db")
     store.record_advance("A", evidence="a", passed=True)
     assert store.replay("B") == {"task_id": "B", "state": "DISCOVER", "events": []}
+
+
+def test_record_advance_appends_exactly_one_event_with_the_next_sequence(tmp_path):
+    """Regression: the controller shared the replayed list, so expected_sequence came out one too high."""
+    store = EventStore(tmp_path / "events.db")
+    for expected in (1, 2, 3):
+        store.record_advance("R-6", evidence=f"step:{expected}", passed=True)
+        with sqlite3.connect(tmp_path / "events.db") as db:
+            rows = db.execute("SELECT sequence FROM autonomy_events WHERE task_id='R-6' ORDER BY sequence").fetchall()
+        assert [r[0] for r in rows] == list(range(1, expected + 1))
+
+
+def test_every_connection_is_closed(tmp_path, monkeypatch):
+    """Regression: `with sqlite3.connect()` commits but does not close — a long-lived process leaked handles."""
+    from tools.autonomy import event_store
+
+    opened, real_connect = [], sqlite3.connect
+
+    def tracking_connect(*args, **kwargs):
+        db = real_connect(*args, **kwargs)
+        opened.append(db)
+        return db
+
+    monkeypatch.setattr(event_store.sqlite3, "connect", tracking_connect)
+    store = EventStore(tmp_path / "events.db")
+    store.record_advance("R-7", evidence="e", passed=True)
+    store.replay("R-7")
+    assert len(opened) >= 3
+    for db in opened:
+        with pytest.raises(sqlite3.ProgrammingError):        # «Cannot operate on a closed database»
+            db.execute("SELECT 1")
