@@ -74,6 +74,8 @@ def _sees_document(user, task):
 
 def can(user, task, action) -> bool:
     """Single permission check used by services, views and templates."""
+    if not getattr(user, "is_authenticated", False) or not getattr(user, "is_active", False):
+        return False
     if action == "view":
         return (
             user.role == Role.ADMIN
