@@ -178,3 +178,47 @@ def test_substitution_login_links_to_the_main_one_in_any_order(tmp_path):
     bad = write_csv(tmp_path, "логін;ПІБ;роль;відділення;основний вхід\nx.y;Ікс Ігрек;Дієтсестра;;nobody\n")
     with pytest.raises(CommandError, match="основний вхід «nobody» не знайдено"):
         run(bad)
+
+
+def test_import_rejects_main_login_that_is_itself_a_substitution_login(tmp_path):
+    """S7-06: no chains — `main` may not be a substitution login (in the table or already stored) or the login itself."""
+    header = "логін;ПІБ;роль;відділення;основний вхід\n"
+    chain = write_csv(tmp_path, header + "a;Перша Особа;Шеф-кухар;;\nb;Перша Особа;Дієтсестра;;a\nc;Перша Особа;Бухгалтер;;b\n")
+    with pytest.raises(CommandError, match="рядок 4: «b» сам є входом заміщення"):
+        run(chain)
+    with pytest.raises(CommandError, match="рядок 2: Основний вхід не може збігатися"):
+        run(write_csv(tmp_path, header + "a;Перша Особа;Шеф-кухар;;a\n"))
+    assert not User.objects.filter(username__in=["a", "b", "c"]).exists()
+    main = UserFactory(username="stored.main", role=Role.CHEF)
+    UserFactory(username="stored.sub", role=Role.DIETICIAN, main_login=main)
+    with pytest.raises(CommandError, match="«stored.sub» сам є входом заміщення"):
+        run(write_csv(tmp_path, header + "x.y;Ікс Ігрек;Бухгалтер;;stored.sub\n"))
+    assert not User.objects.filter(username="x.y").exists()
+
+
+def test_import_dry_run_reports_the_chain_error():
+    from apps.accounts.services import import_users
+
+    rows = [{"line": 2, "name": "Перша Особа", "role": "Шеф-кухар", "login": "a", "main": ""},
+            {"line": 3, "name": "Перша Особа", "role": "Дієтсестра", "login": "b", "main": "a"},
+            {"line": 4, "name": "Перша Особа", "role": "Бухгалтер", "login": "c", "main": "b"}]
+    result = import_users(rows, dry_run=True)
+    assert result.errors == ["рядок 4: «b» сам є входом заміщення — вкажіть основний вхід цієї людини."]
+    assert not User.objects.filter(username="a").exists()
+
+
+def test_admin_form_rejects_a_substitution_login_as_main_login():
+    from django.core.exceptions import ValidationError
+
+    main = UserFactory(role=Role.CHEF)
+    sub = UserFactory(role=Role.DIETICIAN, main_login=main)
+    third = UserFactory(role=Role.ACCOUNTANT, main_login=sub)
+    with pytest.raises(ValidationError) as err:
+        third.full_clean(exclude=["password"])
+    assert "main_login" in err.value.message_dict
+    selfish = UserFactory(role=Role.CHEF)
+    selfish.main_login = selfish
+    with pytest.raises(ValidationError) as err:
+        selfish.full_clean(exclude=["password"])
+    assert "main_login" in err.value.message_dict
+    sub.full_clean(exclude=["password"])                      # the direct link stays valid

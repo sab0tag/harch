@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser, UserManager
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
@@ -66,8 +67,25 @@ class User(AbstractUser):
         """Two logins of one person (main + substitution login), or the same login."""
         if other is None:
             return False
-        mine, theirs = self.main_login_id or self.pk, other.main_login_id or other.pk
-        return mine == theirs
+        return self.person_root_id() == other.person_root_id()
+
+    def person_root_id(self):
+        """Pk of the end of the `main_login` chain (any depth); a loop entered by mistake stops the walk."""
+        path, user = [self.pk], self
+        while user.main_login_id:
+            if user.main_login_id in path:     # a loop: the same answer from every login on or leading into it
+                return min(path[path.index(user.main_login_id):])
+            path.append(user.main_login_id)
+            user = user.main_login
+        return user.pk
+
+    def clean(self):
+        super().clean()
+        from .services import main_login_error
+
+        error = main_login_error(self.username, self.main_login)
+        if error:
+            raise ValidationError({"main_login": error})
 
     def has_role(self, *roles) -> bool:
         """True if user has one of `roles`. Admin role passes every check."""
