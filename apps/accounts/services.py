@@ -101,6 +101,18 @@ def read_table(path):
     ]
 
 
+def main_login_error(login, main):
+    """S7-06: a substitution login points at a person's main login — not at itself and not at another
+    substitution login (no chains). `main` is a User or None; returns a message or None."""
+    if main is None:
+        return None
+    if main.username == login:
+        return "Основний вхід не може збігатися з самим входом."
+    if main.main_login_id:
+        return f"«{main.username}» сам є входом заміщення — вкажіть основний вхід цієї людини."
+    return None
+
+
 @dataclass
 class Result:
     created: list = field(default_factory=list)
@@ -152,6 +164,18 @@ def import_users(rows, *, reset_passwords=False, deactivate_others=False, dry_ru
     for p in planned:          # S7-06: a substitution login names the person's main login
         if p["main"] and p["main"] not in taken:
             result.errors.append(f"рядок {p['line']}: основний вхід «{p['main']}» не знайдено")
+    in_table = {p["login"]: p["main"] for p in planned}
+    for p in planned:          # S7-06: the target must be a person's main login, not another substitution login
+        if not p["main"] or p["main"] not in taken:
+            continue
+        if p["main"] == p["login"]:
+            error = main_login_error(p["login"], User(username=p["login"]))
+        else:
+            target_main = in_table.get(p["main"]) or User.objects.filter(
+                username=p["main"]).values_list("main_login_id", flat=True).first()
+            error = main_login_error(p["login"], User(username=p["main"], main_login_id=-1 if target_main else None))
+        if error:
+            result.errors.append(f"рядок {p['line']}: {error}")
     if result.errors:
         return result
 

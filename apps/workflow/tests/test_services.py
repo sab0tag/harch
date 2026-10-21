@@ -282,3 +282,25 @@ def test_substitution_login_may_approve_but_the_history_says_so(hospital):
     event = other.events.get(kind="approved")
     assert event.comment.startswith("Заміщення: затвердила та сама особа")
     assert Notification.objects.filter(user=hospital.admin, title__startswith="Заміщення").exists()
+
+
+def test_substitution_through_a_chain_of_logins_is_marked(hospital):
+    """S7-06: C -> B -> A is still one person; approving what A submitted is marked and the admins told."""
+    from apps.accounts.models import Role
+    from apps.accounts.tests.factories import UserFactory
+
+    a = hospital.chef
+    b = UserFactory(role=Role.DIETICIAN, main_login=a)
+    c = UserFactory(role=Role.DIETICIAN, main_login=b)
+    assert a.is_same_person(c) and c.is_same_person(a) and not hospital.dietician.is_same_person(c)
+    loop = UserFactory(role=Role.DIETICIAN)
+    other = UserFactory(role=Role.DIETICIAN, main_login=loop)
+    loop.main_login = other                                   # a mistaken loop must not hang the check
+    loop.save()
+    assert loop.is_same_person(other)
+    task = orders(hospital)[0]
+    task.status, task.submitted_by = S.SUBMITTED, a
+    task.save()
+    wf.approve(task, c)
+    assert task.events.get(kind="approved").comment.startswith("Заміщення: затвердила та сама особа")
+    assert Notification.objects.filter(user=hospital.admin, title__startswith="Заміщення").exists()
